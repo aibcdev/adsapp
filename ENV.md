@@ -97,6 +97,17 @@ stripe webhook_endpoints create --live \
 
 Account: **AIBC** (watchaibc@gmail.com)
 
+**Auto-sync from CLI:**
+```bash
+npm run stripe:sync    # updates .env + .env.fly template
+npm run dev:stripe     # forward webhooks to local API
+```
+
+Test webhook on Stripe (for when API is deployed): `https://api.aibcmedia.com/v1/webhooks/stripe`  
+Local dev uses `stripe listen` secret (synced by `stripe:sync`).
+
+Live webhook: CLI restricted key cannot create it — add in [Stripe Dashboard](https://dashboard.stripe.com/webhooks) when you switch to live payments.
+
 ---
 
 ## VS Code extension

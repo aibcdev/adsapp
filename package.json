@@ -18,6 +18,7 @@
     "dev:webview": "npm run dev --workspace=@aibc/webview",
     "dev": "npm run dev:api",
     "dev:stripe": "bash scripts/stripe-listen.sh",
+    "stripe:sync": "bash scripts/sync-stripe-env.sh",
     "package": "node scripts/package-vsix.mjs",
     "publish:marketplace": "node scripts/publish-marketplace.mjs",
     "publish:openvsx": "node scripts/publish-openvsx.mjs",

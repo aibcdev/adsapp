@@ -11,6 +11,7 @@ packages/api/**/*.db-wal
 .vscode-test/
 .env
 .env.local
+.env.fly
 .env.*.local
 !.env.example
 !.env.production
