@@ -107,6 +107,18 @@ for w in json.load(sys.stdin).get('data',[]):
 fi
 [[ -z "$PROD_WHSEC" ]] && PROD_WHSEC="whsec_Q48Jmolv7yxtagmad9i924DgsXhntzCM"
 
+# Google OAuth from .env (if set)
+GOOGLE_ID=""
+GOOGLE_SECRET=""
+if [[ -f .env ]]; then
+  GOOGLE_ID=$(grep -E '^GOOGLE_CLIENT_ID=' .env | cut -d= -f2- | tr -d '"' || true)
+  GOOGLE_SECRET=$(grep -E '^GOOGLE_CLIENT_SECRET=' .env | cut -d= -f2- | tr -d '"' || true)
+fi
+if [[ -n "$LIVE_SK" && -f .env ]]; then
+  LIVE_WHSEC=$(grep -E '^STRIPE_LIVE_WEBHOOK_SECRET=' .env | cut -d= -f2- || true)
+  [[ -n "$LIVE_WHSEC" ]] && PROD_WHSEC="$LIVE_WHSEC"
+fi
+
 cat > .env.fly << EOF
 # fly secrets set \$(grep -v '^#' .env.fly | xargs)
 AIBC_PUBLIC_URL=https://api.aibcmedia.com
@@ -114,8 +126,8 @@ AIBC_PORTAL_URL=https://aibcmedia.com
 AIBC_CORS_ORIGINS=https://aibcmedia.com,https://www.aibcmedia.com
 STRIPE_SECRET_KEY=${LIVE_STRIPE_KEY}
 STRIPE_WEBHOOK_SECRET=${PROD_WHSEC}
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
+GOOGLE_CLIENT_ID=${GOOGLE_ID}
+GOOGLE_CLIENT_SECRET=${GOOGLE_SECRET}
 EOF
 
 echo "[stripe] .env updated (test + local listen secret)"
