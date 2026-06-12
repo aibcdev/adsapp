@@ -7,12 +7,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/aibc-dev/aibc"
+    "url": "https://github.com/aibcdev/aibcmedia"
   },
   "bugs": {
-    "url": "https://github.com/aibc-dev/aibc/issues"
+    "url": "https://github.com/aibcdev/aibcmedia/issues"
   },
-  "qna": "https://github.com/aibc-dev/aibc/discussions",
+  "qna": "https://github.com/aibcdev/aibcmedia/discussions",
   "icon": "media/icon.png",
   "engines": {
     "vscode": "^1.85.0"

@@ -1,7 +1,0 @@
-{
-  "buildCommand": "npm run build --workspace=@aibc/portal",
-  "outputDirectory": "packages/portal/dist",
-  "installCommand": "npm ci",
-  "framework": "vite",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
-}

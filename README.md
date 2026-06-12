@@ -4,7 +4,7 @@ Get paid while you code. Developer discovery, spinner ads, earnings dashboard, a
 
 ## Go live
 
-See **[DEPLOY.md](./DEPLOY.md)** for API, website, and Marketplace steps.
+Env vars: **[ENV.md](./ENV.md)** · Pre-launch: **[PRE-LAUNCH.md](./PRE-LAUNCH.md)**
 
 ## Quick start (local dev)
 
@@ -81,7 +81,8 @@ Set `AIBC_DEV_BYPASS=1` (default in dev:api). Click **Sign in** — opens dev au
 
 ## Settings
 
-- `aibc.apiBase` — default `http://127.0.0.1:8787`
+- `aibc.apiBase` — default `https://api.aibcmedia.com`
+- `aibc.portalBase` — default `https://aibcmedia.com`
 - `aibc.viewThresholdSeconds` — default `5`
 - `aibc.posthogKey` — optional analytics
 
@@ -99,4 +100,4 @@ npm run publish:marketplace
 npm run publish:openvsx
 ```
 
-Replace publisher `aibc-dev` in `packages/extension/package.json` before publishing.
+Replace publisher `aibcdev` in `packages/extension/package.json` if needed before publishing.
