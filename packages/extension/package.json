@@ -1,0 +1,101 @@
+{
+  "name": "aibc",
+  "displayName": "aibc",
+  "description": "Get paid while you code. Developer discovery, spinner ads, and earnings in your IDE.",
+  "version": "0.1.0",
+  "publisher": "aibcdev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aibc-dev/aibc"
+  },
+  "bugs": {
+    "url": "https://github.com/aibc-dev/aibc/issues"
+  },
+  "qna": "https://github.com/aibc-dev/aibc/discussions",
+  "icon": "media/icon.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "extensionKind": ["ui", "workspace"],
+  "categories": ["Other"],
+  "keywords": ["discover", "mcp", "ads", "earnings", "claude-code", "developer tools"],
+  "homepage": "https://aibcmedia.com",
+  "main": "./dist/extension.js",
+  "activationEvents": ["onStartupFinished"],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "aibc",
+          "title": "aibc",
+          "icon": "media/aibc.svg"
+        }
+      ]
+    },
+    "views": {
+      "aibc": [
+        {
+          "type": "webview",
+          "id": "aibc.sidebar",
+          "name": "aibc"
+        }
+      ]
+    },
+    "commands": [
+      { "command": "aibc.signIn", "title": "aibc: Sign in" },
+      { "command": "aibc.signOut", "title": "aibc: Sign out" },
+      { "command": "aibc.restore", "title": "aibc: Restore Claude Code" },
+      { "command": "aibc.menu", "title": "aibc: Menu" },
+      { "command": "aibc.refresh", "title": "aibc: Refresh Content" },
+      { "command": "aibc.openSettings", "title": "aibc: Open Settings" }
+    ],
+    "configuration": {
+      "title": "aibc",
+      "properties": {
+        "aibc.apiBase": {
+          "type": "string",
+          "default": "https://api.aibcmedia.com",
+          "description": "aibc API base URL."
+        },
+        "aibc.portalBase": {
+          "type": "string",
+          "default": "https://aibcmedia.com",
+          "description": "aibc web dashboard base URL."
+        },
+        "aibc.feedUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Feed URL override. Empty uses apiBase/feed."
+        },
+        "aibc.viewThresholdSeconds": {
+          "type": "number",
+          "default": 5,
+          "minimum": 1,
+          "maximum": 600
+        },
+        "aibc.posthogKey": { "type": "string", "default": "" },
+        "aibc.posthogHost": {
+          "type": "string",
+          "default": "https://us.i.posthog.com"
+        },
+        "aibc.analyticsEnabled": { "type": "boolean", "default": true }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "watch": "node esbuild.mjs --watch"
+  },
+  "dependencies": {
+    "@aibc/shared": "*",
+    "posthog-node": "^4.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "@aibc/cli",
+  "version": "0.1.0",
+  "description": "aibc terminal CLI — ads in Claude Code terminal without an IDE",
+  "bin": {
+    "aibc": "./dist/index.js"
+  },
+  "files": ["dist", "assets"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && cp -r assets dist/assets",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@aibc/shared": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,0 +1,38 @@
+---
+description: aibc monorepo conventions — extension, API, portal, clean-room Kickbacks parity
+alwaysApply: true
+---
+
+# aibc Project Rules
+
+## Monorepo
+
+- `packages/extension` — VS Code extension host (esbuild)
+- `packages/webview` — IDE sidebar React UI (Vite)
+- `packages/portal` — Web dashboard Earn + Advertise (Vite)
+- `packages/api` — Backend API (Hono + SQLite dev)
+- `packages/shared` — Shared TypeScript types
+
+## Commands
+
+```bash
+npm install
+npm run dev:api      # http://127.0.0.1:8787
+npm run dev:portal   # http://127.0.0.1:5175
+npm run build
+npm run package
+```
+
+## API base
+
+- Dev: `http://127.0.0.1:8787`
+- Prod: `https://api.aibcmedia.com`
+- Env: `AIBC_API_BASE`, `AIBC_DEV_BYPASS=1` for demo auth
+
+## Clean-room policy
+
+Do NOT copy Kickbacks proprietary source. Reimplement behavior from public docs only.
+
+## Privacy
+
+Never collect source code, editor content, or clipboard data.

@@ -1,0 +1,16 @@
+node_modules/
+dist/
+packages/*/dist/
+packages/extension/webview/
+packages/api/*.db
+packages/api/**/*.db
+packages/api/**/*.db-shm
+packages/api/**/*.db-wal
+*.vsix
+.DS_Store
+.vscode-test/
+.env
+.env.local
+.env.*.local
+!.env.example
+!.env.production

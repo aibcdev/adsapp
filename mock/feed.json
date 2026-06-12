@@ -1,0 +1,116 @@
+{
+  "version": "1.0.0",
+  "flags": {
+    "tabs": {
+      "discover": true,
+      "featured": true,
+      "resources": true,
+      "updates": true,
+      "earn": true
+    },
+    "layout": "grid",
+    "refreshIntervalMinutes": 30
+  },
+  "discover": [
+    {
+      "id": "discover-mcp-filesystem",
+      "title": "Filesystem MCP",
+      "description": "Give your agent safe, scoped access to project files through the Model Context Protocol.",
+      "category": "MCP Server",
+      "imageUrl": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg",
+      "cta": { "label": "View docs", "url": "https://modelcontextprotocol.io" }
+    },
+    {
+      "id": "discover-mcp-github",
+      "title": "GitHub MCP",
+      "description": "Search repos, read issues, and manage pull requests without leaving your editor.",
+      "category": "MCP Server",
+      "cta": { "label": "Explore", "url": "https://github.com/modelcontextprotocol/servers" }
+    },
+    {
+      "id": "discover-cursor",
+      "title": "Cursor",
+      "description": "AI-native IDE built for pair programming with agents and fast codebase understanding.",
+      "category": "AI Product",
+      "cta": { "label": "Learn more", "url": "https://cursor.com" }
+    },
+    {
+      "id": "discover-supabase",
+      "title": "Supabase",
+      "description": "Postgres, auth, storage, and realtime — a complete backend for modern apps.",
+      "category": "Developer Tool",
+      "cta": { "label": "Get started", "url": "https://supabase.com" }
+    }
+  ],
+  "featured": [
+    {
+      "id": "featured-linear",
+      "title": "Linear",
+      "description": "Issue tracking built for high-performance product teams. Fast, focused, and keyboard-first.",
+      "category": "Developer Software",
+      "sponsored": true,
+      "cta": { "label": "Try Linear", "url": "https://linear.app", "affiliate": true }
+    },
+    {
+      "id": "featured-raycast",
+      "title": "Raycast",
+      "description": "A blazingly fast launcher with AI, snippets, and extensions for power users.",
+      "category": "AI Tool",
+      "sponsored": true,
+      "cta": { "label": "Download", "url": "https://raycast.com", "affiliate": true }
+    },
+    {
+      "id": "featured-vercel",
+      "title": "Vercel",
+      "description": "Deploy frontend apps and AI workloads with zero-config previews and edge functions.",
+      "category": "API Platform",
+      "cta": { "label": "Deploy now", "url": "https://vercel.com" }
+    }
+  ],
+  "resources": [
+    {
+      "id": "resource-cursor-rules",
+      "title": "Cursor Rules Starter",
+      "description": "A minimal set of project rules for consistent agent behavior across your codebase.",
+      "category": "Cursor Rules",
+      "cta": { "label": "Copy template", "url": "https://cursor.com/docs/context/rules" }
+    },
+    {
+      "id": "resource-agent-template",
+      "title": "Agent Workflow Template",
+      "description": "Plan → implement → test → review loop for reliable multi-step agent tasks.",
+      "category": "Agent Template",
+      "cta": { "label": "View guide", "url": "https://cursor.com/docs" }
+    },
+    {
+      "id": "resource-mcp-example",
+      "title": "MCP Server Example",
+      "description": "Reference implementation showing tools, resources, and prompts for MCP hosts.",
+      "category": "MCP Example",
+      "cta": { "label": "Open repo", "url": "https://github.com/modelcontextprotocol/servers" }
+    },
+    {
+      "id": "resource-prompt-pack",
+      "title": "Code Review Prompt Pack",
+      "description": "Battle-tested prompts for security review, performance checks, and PR summaries.",
+      "category": "Prompts",
+      "cta": { "label": "Browse", "url": "https://cursor.com/docs" }
+    }
+  ],
+  "updates": [
+    {
+      "id": "update-010",
+      "title": "aibc 0.1.0 — Initial release",
+      "summary": "Discover tools, MCP servers, and developer resources from a native sidebar. Remote content, feature flags, and privacy-safe analytics included.",
+      "date": "2026-06-12",
+      "version": "0.1.0",
+      "url": "https://aibcmedia.com/changelog"
+    },
+    {
+      "id": "update-roadmap",
+      "title": "Coming soon: Premium listings",
+      "summary": "Optional login and subscription tiers for exclusive templates and promoted inventory — still native, never intrusive.",
+      "date": "2026-06-12"
+    }
+  ]
+}
