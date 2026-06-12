@@ -95,18 +95,31 @@ stripe webhook_endpoints create --live \
   -d "enabled_events[0]=checkout.session.completed"
 ```
 
+## Stripe — webhooks & keys
+
 Account: **AIBC** (watchaibc@gmail.com)
 
-**Auto-sync from CLI:**
+### Why CLI looked “restricted”
+
+`stripe login` (browser) saves **`rk_live_*`** — a limited CLI key. It **cannot** create webhooks. That is normal Stripe security, not a bug.
+
+**Fix:** use the full **`sk_live_*`** secret key from the dashboard for webhooks and production.
+
 ```bash
-npm run stripe:sync    # updates .env + .env.fly template
-npm run dev:stripe     # forward webhooks to local API
+npm run stripe:fix-live   # paste sk_live once — saves to .env
+npm run stripe:sync       # refresh keys + ensure webhooks
+npm run dev:stripe        # local webhook forwarding
 ```
 
-Test webhook on Stripe (for when API is deployed): `https://api.aibcmedia.com/v1/webhooks/stripe`  
-Local dev uses `stripe listen` secret (synced by `stripe:sync`).
+| Key type | Prefix | Use for |
+|----------|--------|---------|
+| CLI OAuth live | `rk_live_` | `stripe listen` only |
+| Full secret | `sk_live_` | API, webhooks, production |
+| Test secret | `sk_test_` | Dev + pre-launch testing |
 
-Live webhook: CLI restricted key cannot create it — add in [Stripe Dashboard](https://dashboard.stripe.com/webhooks) when you switch to live payments.
+Test webhook: `https://api.aibcmedia.com/v1/webhooks/stripe` (test mode — active)
+
+Live webhook: created automatically when `STRIPE_LIVE_SECRET_KEY` is in `.env`
 
 ---
 
