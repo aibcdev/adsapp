@@ -55,7 +55,13 @@ for w in json.load(sys.stdin).get('data', []):
   secret=$(echo "$created" | python3 -c "import sys,json; print(json.load(sys.stdin).get('secret',''))" 2>/dev/null || true)
   if [[ -n "$id" ]]; then
     echo "[stripe] Created ${mode} webhook: $id"
-    [[ -n "$secret" ]] && echo "STRIPE_${mode^^}_WEBHOOK_SECRET=$secret"
+    if [[ -n "$secret" ]]; then
+      if [[ "$mode" == "live" ]]; then
+        echo "STRIPE_LIVE_WEBHOOK_SECRET=$secret"
+      else
+        echo "STRIPE_TEST_WEBHOOK_SECRET=$secret"
+      fi
+    fi
   else
     echo "$created" >&2
   fi
