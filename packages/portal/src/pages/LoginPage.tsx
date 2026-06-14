@@ -15,7 +15,7 @@ export function LoginPage() {
   const [state, setState] = useState(stateParam);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [authConfig, setAuthConfig] = useState({ google: false, devBypass: false });
+  const [authConfig, setAuthConfig] = useState({ google: true, devBypass: false });
 
   useEffect(() => {
     if (getToken()) {
@@ -32,7 +32,7 @@ export function LoginPage() {
           devBypass: Boolean(c.devBypass),
         }),
       )
-      .catch(() => {});
+      .catch(() => setAuthConfig({ google: true, devBypass: false }));
   }, []);
 
   useEffect(() => {
@@ -133,7 +133,6 @@ export function LoginPage() {
             compact
             showFooter={false}
             busy={busy}
-            googleEnabled={authConfig.google}
             devBypass={authConfig.devBypass}
             state={state}
             onGoogleSignIn={signInGoogle}
@@ -143,23 +142,6 @@ export function LoginPage() {
             }}
             error={error}
           />
-
-          <div className="mt-4 space-y-2">
-            <button
-              type="button"
-              disabled
-              className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 py-3 text-sm font-medium text-zinc-400"
-            >
-              Continue with Apple — coming soon
-            </button>
-            <button
-              type="button"
-              disabled
-              className="flex w-full cursor-not-allowed items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 py-3 text-sm font-medium text-zinc-400"
-            >
-              Continue with email — coming soon
-            </button>
-          </div>
 
           <p className="mt-8 text-center text-xs text-zinc-400">
             <Link to="/terms" className="underline hover:text-zinc-600">

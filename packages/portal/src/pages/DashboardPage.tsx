@@ -136,7 +136,6 @@ export function DashboardPage() {
           <GoogleSignInCard
             compact
             busy={authBusy}
-            googleEnabled={authConfig.google}
             devBypass={authConfig.devBypass}
             state={signInState}
             onGoogleSignIn={() => void signInGoogle()}
