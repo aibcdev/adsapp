@@ -17,6 +17,9 @@ import { AdminLimitsPage } from "./pages/admin/AdminLimitsPage";
 import { AdminCompetitivePage } from "./pages/admin/AdminCompetitivePage";
 import { ReferralPage } from "./pages/ReferralPage";
 import { ContactPage } from "./pages/ContactPage";
+import { HowItWorksPage } from "./pages/HowItWorksPage";
+import { PayoutsPage } from "./pages/PayoutsPage";
+import { IntegrationRoutePage } from "./pages/IntegrationRoutePage";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -33,6 +36,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Route path="/waitlist/success" element={<Navigate to="/#install" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/terms" element={<TermsPage />} />
+        <Route path="/developers/how-it-works" element={<HowItWorksPage />} />
+        <Route path="/developers/payouts" element={<PayoutsPage />} />
+        <Route path="/integrations/:slug" element={<IntegrationRoutePage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/referral" element={<ReferralPage />} />
         <Route path="/admin" element={<AdminShell />}>

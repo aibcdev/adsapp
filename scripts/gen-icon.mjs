@@ -10,9 +10,9 @@ const width = 128;
 const height = 128;
 const cx = 64;
 const cy = 64;
-const ringRadius = 44;
-const ringStroke = 10;
-const dotRadius = 16;
+const outerR = 56;
+const innerR = 36;
+const dotR = 14;
 
 const rgba = Buffer.alloc(width * height * 4);
 
@@ -27,9 +27,11 @@ for (let y = 0; y < height; y++) {
     let g = 255;
     let b = 255;
 
-    if (dist <= dotRadius) {
+    if (dist <= dotR) {
       r = g = b = 0;
-    } else if (Math.abs(dist - ringRadius) <= ringStroke / 2) {
+    } else if (dist <= innerR) {
+      r = g = b = 255;
+    } else if (dist <= outerR) {
       r = g = b = 0;
     }
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 — 2026-06-12
+
+- Updated display name to **ads by aibc - earn whilst you code**
+- Sharper marketplace icon (filled ring + center dot)
+
 ## 0.1.0 — 2026-06-12
 
 - Initial release

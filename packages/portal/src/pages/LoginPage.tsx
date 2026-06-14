@@ -32,7 +32,7 @@ export function LoginPage() {
 
   useEffect(() => {
     if (getToken()) {
-      navigate("/dashboard", { replace: true });
+      navigate("/dashboard?tab=developer", { replace: true });
     }
   }, [navigate]);
 
@@ -63,7 +63,7 @@ export function LoginPage() {
         navigate(`/login?poll=done&source=extension&email=${encodeURIComponent(result.email)}`, { replace: true });
         return;
       }
-      navigate("/dashboard", { replace: true });
+      navigate("/dashboard?tab=developer", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-in failed");
     } finally {
@@ -124,7 +124,7 @@ export function LoginPage() {
         navigate(`/login?poll=done&source=extension&email=${encodeURIComponent(result.email)}`, { replace: true });
         return;
       }
-      navigate("/dashboard", { replace: true });
+      navigate("/dashboard?tab=developer", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Email sign-in failed");
       throw err;

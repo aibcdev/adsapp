@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api, getToken, setToken } from "../lib/api";
 import {
   completeAuthFromState,
@@ -8,14 +8,14 @@ import {
   ensureAuthSession,
   googleRedirectUrl,
 } from "../lib/auth";
-import { DashboardLayout } from "../components/dashboard/DashboardLayout";
-import { StatCards } from "../components/dashboard/StatCards";
-import { EarningsChart } from "../components/dashboard/EarningsChart";
-import { PayoutsPanel } from "../components/dashboard/PayoutsPanel";
-import { ActivityLedger } from "../components/dashboard/ActivityLedger";
-import { AccountSection } from "../components/dashboard/AccountSection";
-import { ReferralSection } from "../components/dashboard/ReferralSection";
 import { LoginAuthCard } from "../components/auth/LoginAuthCard";
+import {
+  DashboardHubShell,
+  type DashboardTab,
+} from "../components/dashboard/DashboardHubShell";
+import { DeveloperDashboardPanel } from "../components/dashboard/DeveloperDashboardPanel";
+import { AdvertiserDashboardPanel } from "../components/dashboard/AdvertiserDashboardPanel";
+import { PublisherDashboardPanel } from "../components/dashboard/PublisherDashboardPanel";
 
 type Earnings = {
   today: number;
@@ -23,12 +23,7 @@ type Earnings = {
   lifetime: number;
   pending: number;
   payable: number;
-  caps: {
-    hourlyEarned: number;
-    dailyEarned: number;
-    hourlyCap: number;
-    dailyCap: number;
-  };
+  caps: { hourlyEarned: number; dailyEarned: number; hourlyCap: number; dailyCap: number };
   payoutLimits?: {
     requestsToday: number;
     requestsThisWeek: number;
@@ -52,9 +47,30 @@ type ReferralStats = {
 
 type Activity = { id: string; type: string; adId: string; amount: number; createdAt: string };
 
+const LOGIN_COPY: Record<DashboardTab, { headline: string; sub: string }> = {
+  developer: {
+    headline: "Sign in to see your earnings",
+    sub: "Track balance, request payouts, and view ad activity.",
+  },
+  advertiser: {
+    headline: "Sign in to manage campaigns",
+    sub: "View spend, add funds, and launch ads to developers.",
+  },
+  publisher: {
+    headline: "Sign in to publisher dashboard",
+    sub: "Monitor inventory and revenue share (SDK preview).",
+  },
+};
+
+function parseTab(raw: string | null): DashboardTab {
+  if (raw === "advertiser" || raw === "publisher") return raw;
+  return "developer";
+}
+
 export function DashboardPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
+  const tab = parseTab(params.get("tab"));
   const [email, setEmail] = useState<string>();
   const [authBusy, setAuthBusy] = useState(false);
   const [authError, setAuthError] = useState("");
@@ -75,6 +91,13 @@ export function DashboardPage() {
   const [foundingMember, setFoundingMember] = useState(false);
   const [referral, setReferral] = useState<ReferralStats | null>(null);
   const [authConfig, setAuthConfig] = useState({ devBypass: false });
+
+  const loggedIn = Boolean(getToken());
+
+  const setTab = (t: DashboardTab) => {
+    params.set("tab", t);
+    setParams(params, { replace: true });
+  };
 
   const loadEarnings = async () => {
     const e = await api<Earnings>("/v1/me/earnings");
@@ -97,7 +120,7 @@ export function DashboardPage() {
     setReferral(me.referral ?? null);
   };
 
-  const loadAll = async () => {
+  const loadDeveloperData = async () => {
     if (!getToken()) return;
     await Promise.all([loadEarnings(), loadPayoutMethod(), loadProfile()]);
   };
@@ -116,7 +139,7 @@ export function DashboardPage() {
   useEffect(() => {
     const authState = params.get("auth_state");
     if (!authState) {
-      if (getToken()) void loadAll();
+      if (getToken()) void loadDeveloperData();
       return;
     }
     setAuthBusy(true);
@@ -126,9 +149,9 @@ export function DashboardPage() {
         setEmail(e);
         params.delete("auth_state");
         setParams(params, { replace: true });
-        return loadAll();
+        return loadDeveloperData();
       })
-      .catch(() => setAuthError("Sign-in failed. Try again from the login page."))
+      .catch(() => setAuthError("Sign-in failed. Try again."))
       .finally(() => setAuthBusy(false));
   }, []);
 
@@ -164,8 +187,8 @@ export function DashboardPage() {
       setSignInState(state);
       const result = await completeEmailSignIn(state, addr);
       setToken(result.accessToken);
-      navigate("/dashboard", { replace: true });
-      await loadAll();
+      navigate(`/dashboard?tab=${tab}`, { replace: true });
+      await loadDeveloperData();
     } catch (e) {
       setAuthError(e instanceof Error ? e.message : "Email sign-in failed");
       throw e;
@@ -181,82 +204,56 @@ export function DashboardPage() {
     setActivityLoaded(false);
   };
 
-  if (!getToken()) {
-    return (
-      <DashboardLayout email={undefined} onSignOut={signOut}>
-        <div className="mx-auto flex max-w-md justify-center py-8">
-          <LoginAuthCard
-            busy={authBusy}
-            error={authError}
-            devBypass={authConfig.devBypass}
-            onGoogleSignIn={signInGoogle}
-            onEmailSignIn={signInEmail}
-            onDevSignIn={() => {
-              void ensureAuthSession(signInState).then((s) => {
-                window.location.href = devSignInUrl(s);
-              });
-            }}
-          />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const loginCard = (
+    <LoginAuthCard
+      busy={authBusy}
+      error={authError}
+      devBypass={authConfig.devBypass}
+      onGoogleSignIn={signInGoogle}
+      onEmailSignIn={signInEmail}
+      onDevSignIn={() => {
+        void ensureAuthSession(signInState).then((s) => {
+          window.location.href = devSignInUrl(s);
+        });
+      }}
+    />
+  );
+
+  const copy = LOGIN_COPY[tab];
 
   return (
-    <DashboardLayout email={email} onSignOut={signOut}>
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-emerald-700">User earnings portal</p>
-          <h1 className="mt-1 font-brand-heading text-2xl text-zinc-950 md:text-3xl">Your balance & activity</h1>
-        </div>
-        <Link
-          to="/advertisers#launch"
-          className="text-sm font-medium text-emerald-700 underline decoration-emerald-300 underline-offset-4 hover:text-emerald-800"
-        >
-          Advertise on AIBC →
-        </Link>
-      </div>
-
-      <StatCards
-        today={earnings.today}
-        month={earnings.month}
-        lifetime={earnings.lifetime}
-        caps={earnings.caps}
-      />
-
-      <div className="mb-6 grid gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <EarningsChart activity={activity} />
-        </div>
-        <div className="lg:col-span-2">
-          <PayoutsPanel
-            payable={earnings.payable}
-            rail={payoutRail}
-            handle={payoutHandle}
-            payoutLimits={earnings.payoutLimits}
-            onSaveMethod={(rail, handle) =>
-              api("/v1/me/payout-method", { method: "POST", body: JSON.stringify({ rail, handle }) }).then(
-                loadPayoutMethod,
-              )
-            }
-            onRequestPayout={() => api("/v1/me/payout-request", { method: "POST" }).then(() => loadEarnings())}
-          />
-        </div>
-      </div>
-
-      <div className="mb-6">
-        <ActivityLedger
-          rows={activity}
-          loaded={activityLoaded}
-          loading={activityLoading}
-          onRetrieve={() => void retrieveActivity()}
+    <DashboardHubShell
+      tab={tab}
+      onTab={setTab}
+      email={email}
+      onSignOut={signOut}
+      loggedIn={loggedIn}
+      loginHeadline={copy.headline}
+      loginSub={copy.sub}
+      loginCard={loginCard}
+    >
+      {tab === "developer" ? (
+        <DeveloperDashboardPanel
+          earnings={earnings}
+          activity={activity}
+          activityLoaded={activityLoaded}
+          activityLoading={activityLoading}
+          payoutRail={payoutRail}
+          payoutHandle={payoutHandle}
+          email={email}
+          foundingMember={foundingMember}
+          referral={referral}
+          onSaveMethod={(rail, handle) =>
+            api("/v1/me/payout-method", { method: "POST", body: JSON.stringify({ rail, handle }) }).then(
+              loadPayoutMethod,
+            )
+          }
+          onRequestPayout={() => api("/v1/me/payout-request", { method: "POST" }).then(() => loadEarnings())}
+          onRetrieveActivity={() => void retrieveActivity()}
         />
-      </div>
-
-      <div className="mb-6 grid gap-6 lg:grid-cols-2">
-        <ReferralSection stats={referral} />
-        {email ? <AccountSection email={email} foundingMember={foundingMember} /> : null}
-      </div>
-    </DashboardLayout>
+      ) : null}
+      {tab === "advertiser" ? <AdvertiserDashboardPanel /> : null}
+      {tab === "publisher" ? <PublisherDashboardPanel /> : null}
+    </DashboardHubShell>
   );
 }

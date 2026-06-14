@@ -1,8 +1,8 @@
 {
   "name": "aibc",
-  "displayName": "aibc",
+  "displayName": "ads by aibc - earn whilst you code",
   "description": "Get paid while you code. Spinner ads in Claude Code — 70% revenue share to developers.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "AIBCMedia",
   "license": "MIT",
   "repository": {
@@ -28,7 +28,7 @@
       "activitybar": [
         {
           "id": "aibc",
-          "title": "aibc",
+          "title": "AIBC Ads",
           "icon": "media/aibc.svg"
         }
       ]
@@ -38,7 +38,7 @@
         {
           "type": "webview",
           "id": "aibc.sidebar",
-          "name": "aibc"
+          "name": "ads by aibc"
         }
       ]
     },
@@ -51,7 +51,7 @@
       { "command": "aibc.openSettings", "title": "aibc: Open Settings" }
     ],
     "configuration": {
-      "title": "aibc",
+      "title": "AIBC Ads",
       "properties": {
         "aibc.apiBase": {
           "type": "string",
