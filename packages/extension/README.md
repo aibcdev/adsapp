@@ -7,7 +7,7 @@ Get paid while you code. Sponsored developer tools in your IDE — **70% revenue
 Search **aibc** in VS Code Extensions, or:
 
 ```bash
-code --install-extension aibcdev.aibc
+code --install-extension AIBCMedia.aibc
 ```
 
 Works in VS Code, Cursor, Windsurf, and VSCodium (OpenVSX).
@@ -51,5 +51,5 @@ See [aibc.dev/privacy](https://aibcmedia.com/privacy). We never read your source
 
 ## Support
 
-- Issues: [GitHub](https://github.com/aibcdev/adsapp/issues)
-- Email: watchaibc@gmail.com
+- Issues: [GitHub](https://github.com/aibcdev/aibcextensions/issues)
+- Contact: [aibcmedia.com/contact](https://aibcmedia.com/contact)

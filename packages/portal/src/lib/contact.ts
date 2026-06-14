@@ -18,7 +18,7 @@ export const CONTACT_TOPICS: { value: ContactTopic; label: string }[] = [
   { value: "privacy", label: "Privacy & legal" },
 ];
 
-export const SUPPORT_EMAIL = "watchaibc@gmail.com";
+export const SUPPORT_EMAIL = "aibcmedia@outlook.com";
 
 export function submitContactMessage(data: Omit<ContactMessage, "sentAt">) {
   const messages: ContactMessage[] = JSON.parse(localStorage.getItem(CONTACT_KEY) || "[]");

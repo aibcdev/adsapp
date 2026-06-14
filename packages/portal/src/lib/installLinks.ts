@@ -1,23 +1,23 @@
 export const INSTALL = {
   vscode: {
     label: "VS Code",
-    href: "vscode:extension/aibcdev.aibc",
-    fallback: "https://marketplace.visualstudio.com/items?itemName=aibcdev.aibc",
+    href: "vscode:extension/AIBCMedia.aibc",
+    fallback: "https://marketplace.visualstudio.com/items?itemName=AIBCMedia.aibc",
   },
   openvsx: {
     label: "Open VSX",
-    href: "https://open-vsx.org/extension/aibcdev/aibc",
-    fallback: "https://open-vsx.org/extension/aibcdev/aibc",
+    href: "https://open-vsx.org/extension/AIBCMedia/aibc",
+    fallback: "https://open-vsx.org/extension/AIBCMedia/aibc",
   },
   cursor: {
     label: "Cursor",
-    href: "cursor:extension/aibcdev.aibc",
-    fallback: "https://marketplace.visualstudio.com/items?itemName=aibcdev.aibc",
+    href: "cursor:extension/AIBCMedia.aibc",
+    fallback: "https://marketplace.visualstudio.com/items?itemName=AIBCMedia.aibc",
   },
   windsurf: {
     label: "Windsurf",
-    href: "https://open-vsx.org/extension/aibcdev/aibc",
-    fallback: "https://open-vsx.org/extension/aibcdev/aibc",
+    href: "https://open-vsx.org/extension/AIBCMedia/aibc",
+    fallback: "https://open-vsx.org/extension/AIBCMedia/aibc",
   },
 } as const;
 

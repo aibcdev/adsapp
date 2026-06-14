@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
-import { Check, Mail, MessageSquare, Send } from "lucide-react";
+import { Check, MessageSquare, Send } from "lucide-react";
 import { SiteHeader } from "../components/SiteHeader";
 import { SiteFooter } from "../components/SiteFooter";
 import { BrandHeading } from "../components/brand/BrandHeading";
@@ -8,7 +8,6 @@ import {
   buildContactMailto,
   CONTACT_TOPICS,
   submitContactMessage,
-  SUPPORT_EMAIL,
   type ContactTopic,
 } from "../lib/contact";
 
@@ -84,11 +83,7 @@ export function ContactPage() {
                 </div>
                 <h2 className="font-brand-heading text-3xl text-zinc-900">Message ready to send</h2>
                 <p className="mt-3 text-sm text-zinc-600">
-                  Your email app should have opened. If it didn&apos;t, email us directly at{" "}
-                  <a href={`mailto:${SUPPORT_EMAIL}`} className="font-semibold text-emerald-700 hover:underline">
-                    {SUPPORT_EMAIL}
-                  </a>
-                  .
+                  Your email app should have opened with your message ready to send.
                 </p>
                 <button
                   type="button"
@@ -191,24 +186,6 @@ export function ContactPage() {
           </div>
 
           <div className="space-y-6">
-            <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-6">
-              <div className="flex items-start gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
-                  <Mail className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-zinc-900">Email us directly</h3>
-                  <a
-                    href={`mailto:${SUPPORT_EMAIL}`}
-                    className="mt-2 inline-block text-sm font-semibold text-emerald-700 hover:underline"
-                  >
-                    {SUPPORT_EMAIL}
-                  </a>
-                  <p className="mt-2 text-sm text-zinc-600">For support, legal, and privacy questions.</p>
-                </div>
-              </div>
-            </div>
-
             <div className="rounded-2xl border border-zinc-200 bg-white p-6">
               <h3 className="font-bold text-zinc-900">Website</h3>
               <a

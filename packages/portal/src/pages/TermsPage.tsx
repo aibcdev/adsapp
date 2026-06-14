@@ -147,8 +147,7 @@ export function TermsPage() {
       <section id="contact">
         <h2>Contact</h2>
         <p>
-          Legal & support: <a href="mailto:watchaibc@gmail.com">watchaibc@gmail.com</a> — or use our{" "}
-          <a href="/contact">contact form</a>.
+          Legal & support: use our <a href="/contact">contact form</a>.
         </p>
         <p>
           See also our <a href="/privacy">Privacy Policy</a>.
