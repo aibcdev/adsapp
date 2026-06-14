@@ -17,4 +17,6 @@ export const PLATFORM_LOGO_BY_ID: Record<string, string> = {
   "claude-cli": "/logos/claude-cli.svg",
   "github-copilot": "/logos/github-copilot.svg",
   codex: "/logos/codex.svg",
+  v0: "/logos/v0.svg",
+  antigravity: "/logos/antigravity.svg",
 };

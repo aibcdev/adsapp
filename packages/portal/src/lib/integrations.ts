@@ -64,7 +64,7 @@ export const INTEGRATIONS: Record<string, IntegrationConfig> = {
     toolName: "V0",
     headline: "Get Paid Using V0",
     description: "Building with V0 means waiting on generations. AIBC turns that idle time into income.",
-    logoSrc: "/logos/platforms/openai.svg",
+    logoSrc: "/logos/v0.svg",
     whyTitle: "Perfect for V0 sessions",
     whyPoints: [
       "UI generation runs take time — ideal for non-intrusive ads.",
@@ -90,7 +90,7 @@ export const INTEGRATIONS: Record<string, IntegrationConfig> = {
     toolName: "Antigravity",
     headline: "Get Paid Using Antigravity",
     description: "Use Google's Antigravity IDE and earn while agent tasks run. AIBC fits naturally into long AI sessions.",
-    logoSrc: "/logos/platforms/visualstudiocode.svg",
+    logoSrc: "/logos/antigravity.svg",
     whyTitle: "Antigravity + passive income",
     whyPoints: [
       "Agent-first IDEs mean longer wait windows.",

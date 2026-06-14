@@ -94,6 +94,18 @@ export function DashboardPage() {
 
   const loggedIn = Boolean(getToken());
 
+  useEffect(() => {
+    if (params.get("tab")) return;
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("tab", "developer");
+        return next;
+      },
+      { replace: true },
+    );
+  }, [params, setParams]);
+
   const setTab = (t: DashboardTab) => {
     params.set("tab", t);
     setParams(params, { replace: true });
