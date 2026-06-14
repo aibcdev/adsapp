@@ -1,6 +1,6 @@
 # aibc
 
-Get paid while you code. Sponsored developer tools in your IDE — with a revenue share.
+Get paid while you code. Sponsored developer tools in your IDE — **70% revenue share** to you.
 
 ## Install
 
@@ -51,5 +51,5 @@ See [aibc.dev/privacy](https://aibcmedia.com/privacy). We never read your source
 
 ## Support
 
-- Issues: [GitHub](https://github.com/aibc-dev/aibc/issues)
+- Issues: [GitHub](https://github.com/aibcdev/adsapp/issues)
 - Email: watchaibc@gmail.com

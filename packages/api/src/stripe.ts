@@ -26,6 +26,16 @@ export function ensureStripeTables(db: DbType) {
       created_at INTEGER NOT NULL
     );
   `);
+  try {
+    db.exec("ALTER TABLE deposit_sessions ADD COLUMN kind TEXT DEFAULT 'deposit'");
+  } catch {
+    /* exists */
+  }
+  try {
+    db.exec("ALTER TABLE deposit_sessions ADD COLUMN campaign_id TEXT");
+  } catch {
+    /* exists */
+  }
 }
 
 export async function createDepositCheckout(
@@ -66,6 +76,89 @@ export async function createDepositCheckout(
   ).run(session.id, clientId, amountUsd, Date.now());
 
   return { url: session.url };
+}
+
+export async function createCampaignCheckout(
+  db: DbType,
+  opts: {
+    campaignId: string;
+    clientId: string;
+    buyerEmail: string;
+    totalUsd: number;
+    adLine: string;
+    blocks: number;
+    bidPer1k: number;
+  },
+): Promise<{ url: string } | { error: string }> {
+  const s = getStripe();
+  if (!s) return { error: "Stripe not configured" };
+
+  const amount = Math.round(opts.totalUsd * 100);
+  if (amount < 100) return { error: "Minimum order is $1.00" };
+
+  const session = await s.checkout.sessions.create({
+    mode: "payment",
+    customer_email: opts.buyerEmail,
+    line_items: [
+      {
+        quantity: 1,
+        price_data: {
+          currency: "usd",
+          unit_amount: amount,
+          product_data: {
+            name: "aibc ad campaign",
+            description: `${opts.adLine.slice(0, 80)} · ${opts.blocks} block(s) @ $${opts.bidPer1k}/1k imps`,
+          },
+        },
+      },
+    ],
+    success_url: `${config.portalUrl}/?purchase=success`,
+    cancel_url: `${config.portalUrl}/?purchase=cancel#advertise`,
+    metadata: {
+      kind: "impression",
+      campaign_id: opts.campaignId,
+      client_id: opts.clientId,
+      amount_usd: String(opts.totalUsd),
+    },
+  });
+
+  if (!session.url) return { error: "Failed to create checkout session" };
+
+  db.prepare(
+    "INSERT INTO deposit_sessions (session_id, client_id, amount, status, created_at, kind, campaign_id) VALUES (?, ?, ?, 'pending', ?, 'campaign', ?)",
+  ).run(session.id, opts.clientId, opts.totalUsd, Date.now(), opts.campaignId);
+
+  return { url: session.url };
+}
+
+export function activateCampaign(
+  db: DbType,
+  campaignId: string,
+  clientId: string,
+  amountUsd: number,
+  sessionId: string,
+): void {
+  db.prepare(
+    "UPDATE campaigns SET payment_status = 'paid' WHERE id = ? AND client_id = ?",
+  ).run(campaignId, clientId);
+
+  const row = db
+    .prepare("SELECT ad_line, destination_url, brand_name, bid_per_1k FROM campaigns WHERE id = ?")
+    .get(campaignId) as
+    | { ad_line: string; destination_url: string; brand_name: string | null; bid_per_1k: number }
+    | undefined;
+
+  if (row) {
+    const adId = `campaign-${campaignId.slice(0, 8)}`;
+    db.prepare(
+      "INSERT OR REPLACE INTO ads (ad_id, text, click_url, brand, bid_per_1k, active) VALUES (?, ?, ?, ?, ?, 1)",
+    ).run(adId, row.ad_line, row.destination_url, row.brand_name, row.bid_per_1k);
+  }
+
+  db.prepare("UPDATE deposit_sessions SET status = 'completed' WHERE session_id = ?").run(sessionId);
+  db.prepare(
+    "UPDATE campaigns SET spend = spend + ? WHERE id = ?",
+  ).run(amountUsd, campaignId);
 }
 
 export function creditAdvertiserBalance(
@@ -112,9 +205,13 @@ export async function handleStripeWebhook(
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
+    const kind = session.metadata?.kind || "deposit";
     const clientId = session.metadata?.client_id;
     const amountUsd = Number(session.metadata?.amount_usd || 0);
-    if (clientId && amountUsd > 0 && session.id) {
+
+    if (kind === "impression" && session.metadata?.campaign_id && clientId && session.id) {
+      activateCampaign(db, session.metadata.campaign_id, clientId, amountUsd, session.id);
+    } else if (clientId && amountUsd > 0 && session.id) {
       creditAdvertiserBalance(db, clientId, amountUsd, session.id);
     }
   }

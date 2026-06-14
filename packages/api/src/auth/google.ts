@@ -64,17 +64,31 @@ export async function completeGoogleAuth(
   return { ok: true, email };
 }
 
-export function googleCallbackHtml(success: boolean, email?: string): string {
+export function googleCallbackHtml(
+  success: boolean,
+  state?: string,
+  email?: string,
+): string {
+  if (success && state) {
+    const redirect = `${config.portalUrl}/dashboard?auth_state=${encodeURIComponent(state)}`;
+    return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Signing in…</title>
+<meta http-equiv="refresh" content="0;url=${redirect}">
+<style>body{font-family:system-ui;background:#f4f4f5;color:#18181b;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}</style>
+</head>
+<body><p>Signing you in…</p><script>location.replace(${JSON.stringify(redirect)})</script></body></html>`;
+  }
   if (success) {
     return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><title>Signed in</title>
-<style>body{font-family:system-ui;background:#0a0a0a;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
-.box{text-align:center;padding:2rem;border:1px solid #262626;border-radius:12px;background:#141414}
-h1{color:#86efac;font-size:1.5rem}</style></head>
-<body><div class="box"><h1>Signed in</h1><p>${email || ""}</p><p>Return to aibc and close this tab.</p></div></body></html>`;
+<style>body{font-family:system-ui;background:#f4f4f5;color:#18181b;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+.box{text-align:center;padding:2rem;border:1px solid #e4e4e7;border-radius:12px;background:#fff}
+h1{color:#059669;font-size:1.5rem}</style></head>
+<body><div class="box"><h1>Signed in</h1><p>${email || ""}</p><p>Return to AIBC Media and close this tab.</p></div></body></html>`;
   }
   return `<!DOCTYPE html>
-<html lang="en"><body style="font-family:system-ui;background:#0a0a0a;color:#fff;padding:2rem">
-<h1>Sign-in failed</h1><p>Close this tab and try again from aibc.</p></body></html>`;
+<html lang="en"><body style="font-family:system-ui;background:#f4f4f5;color:#18181b;padding:2rem">
+<h1>Sign-in failed</h1><p>Close this tab and try again.</p></body></html>`;
 }

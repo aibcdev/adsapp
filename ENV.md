@@ -46,19 +46,29 @@ Connect repo: `aibcdev/aibcmedia` on GitHub.
 
 ---
 
-## Fly.io — API (`api.aibcmedia.com`)
+## DigitalOcean — API (`api.aibcmedia.com`)
+
+On the Droplet, secrets live in `deploy/digitalocean/.env` (copy from `.env.fly` on your Mac):
 
 ```bash
-fly secrets set \
-  AIBC_PUBLIC_URL=https://api.aibcmedia.com \
-  AIBC_PORTAL_URL=https://aibcmedia.com \
-  AIBC_CORS_ORIGINS=https://aibcmedia.com,https://www.aibcmedia.com \
-  GOOGLE_CLIENT_ID=YOUR_VALUE \
-  GOOGLE_CLIENT_SECRET=YOUR_VALUE \
-  STRIPE_SECRET_KEY=sk_live_YOUR_VALUE \
-  STRIPE_WEBHOOK_SECRET=whsec_YOUR_VALUE \
-  AIBC_POSTHOG_KEY= \
-  AIBC_POSTHOG_HOST=https://us.i.posthog.com
+cp .env.fly deploy/digitalocean/.env
+./scripts/deploy-digitalocean.sh root@YOUR_DROPLET_IP
+```
+
+Required variables in that file:
+
+```bash
+AIBC_PUBLIC_URL=https://api.aibcmedia.com
+AIBC_PORTAL_URL=https://aibcmedia.com
+AIBC_CORS_ORIGINS=https://aibcmedia.com,https://www.aibcmedia.com
+AIBC_DB_PATH=/data/aibc.db
+GOOGLE_CLIENT_ID=YOUR_VALUE
+GOOGLE_CLIENT_SECRET=YOUR_VALUE
+STRIPE_SECRET_KEY=sk_live_YOUR_VALUE
+STRIPE_WEBHOOK_SECRET=whsec_YOUR_VALUE
+AIBC_ADMIN_KEY=generate-a-long-random-secret
+AIBC_POSTHOG_KEY=
+AIBC_POSTHOG_HOST=https://us.i.posthog.com
 ```
 
 | Variable | Where to get it |
@@ -67,6 +77,7 @@ fly secrets set \
 | `GOOGLE_CLIENT_SECRET` | Same OAuth client |
 | `STRIPE_SECRET_KEY` | [Stripe Dashboard](https://dashboard.stripe.com/apikeys) → Secret key (live) |
 | `STRIPE_WEBHOOK_SECRET` | Stripe → Webhooks → endpoint for `https://api.aibcmedia.com/v1/webhooks/stripe` |
+| `AIBC_ADMIN_KEY` | Random secret for `GET/PATCH /v1/admin/payouts` and portal `/admin/payouts` |
 
 **Do not set** `AIBC_DEV_BYPASS` in production.
 
@@ -147,20 +158,20 @@ After connecting the site, Netlify shows exact records. Usually:
 | A | `@` | Netlify load balancer IP *(from Netlify UI)* |
 | CNAME | `www` | `<your-site>.netlify.app` |
 
-### API — Fly.io
-
-After `fly certs add api.aibcmedia.com`:
+### API — DigitalOcean Droplet
 
 | Type | Name | Value |
 |------|------|--------|
-| CNAME | `api` | `<your-fly-app>.fly.dev` |
+| A | `api` | Your Droplet IP |
+
+HTTPS is handled by Caddy on the Droplet (Let's Encrypt).
 
 ---
 
 ## Quick copy — production `.env` template
 
 ```bash
-# API (Fly secrets — not a file on server)
+# API (DigitalOcean — deploy/digitalocean/.env on server)
 AIBC_PUBLIC_URL=https://api.aibcmedia.com
 AIBC_PORTAL_URL=https://aibcmedia.com
 AIBC_CORS_ORIGINS=https://aibcmedia.com,https://www.aibcmedia.com

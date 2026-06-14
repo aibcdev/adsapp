@@ -1,22 +1,41 @@
+import { randomUUID } from "node:crypto";
 import { ApiClient } from "./ApiClient";
 import { AuthService } from "./AuthService";
 
 export class MetricsService {
+  private sessionToken?: string;
+
   constructor(
     private readonly api: ApiClient,
     private readonly auth: AuthService,
   ) {}
 
+  setSessionToken(token: string | undefined): void {
+    this.sessionToken = token;
+  }
+
+  getSessionToken(): string | undefined {
+    return this.sessionToken;
+  }
+
   async send(
     event: string,
     payload: Record<string, unknown>,
   ): Promise<void> {
-    const path = this.auth.isSignedIn() ? "/v1/metrics" : "/v1/metrics/demo";
+    if (!this.auth.isSignedIn()) return;
+
     try {
-      await this.api.fetch(path, {
+      await this.api.fetch("/v1/metrics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ event, kind: event, ...payload }),
+        body: JSON.stringify({
+          event,
+          event_type: event,
+          kind: event,
+          nonce: randomUUID(),
+          session_token: this.sessionToken,
+          ...payload,
+        }),
       });
     } catch {
       /* offline */

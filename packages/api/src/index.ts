@@ -6,22 +6,32 @@ import {
   completeGoogleAuth,
   googleCallbackHtml,
 } from "./auth/google.js";
-import { authStartUrl, config, stripeEnabled } from "./config.js";
+import { authStartUrl, config, emailAuthEnabled, googleAuthUrl, stripeEnabled } from "./config.js";
 import {
   createDb,
-  creditEarnings,
   getFeedJson,
   getPortfolioAds,
   mintToken,
   resolveClient,
 } from "./db/schema.js";
+import { processMetricEvent, earningsCaps, settlePendingForClient } from "./billing/ledger.js";
+import {
+  ensurePortfolioSessionTables,
+  mintPortfolioSession,
+  purgeExpiredSessions,
+} from "./billing/portfolioSession.js";
+import { MIN_PAYOUT_USD } from "./billing/economics.js";
 import {
   createDepositCheckout,
   ensureStripeTables,
   handleStripeWebhook,
 } from "./stripe.js";
+import { auctionRoutes, BLOCK_IMPRESSIONS } from "./routes/auction.js";
+import { billingRoutes } from "./routes/billing.js";
+import { adminRoutes } from "./routes/admin.js";
 
 const db = createDb();
+ensurePortfolioSessionTables(db);
 ensureStripeTables(db);
 const app = new Hono();
 
@@ -39,14 +49,32 @@ app.use(
   }),
 );
 
+/** Block accidental public API docs exposure (#25). */
+app.use("*", async (c, next) => {
+  const path = c.req.path.toLowerCase();
+  if (
+    path === "/docs" ||
+    path === "/redoc" ||
+    path === "/openapi.json" ||
+    path.startsWith("/swagger")
+  ) {
+    return c.text("Not found", 404);
+  }
+  await next();
+});
+
 const VIEW_THRESHOLD = config.viewThresholdSeconds;
 const ROTATION_MS = 120_000;
 
-function portfolioPayload() {
+function portfolioPayload(clientId: string | null, deviceId?: string) {
+  purgeExpiredSessions(db);
+  const session = mintPortfolioSession(db, { clientId, deviceId });
   return {
     ads: getPortfolioAds(db),
     rotationIntervalMs: ROTATION_MS,
     view_threshold_seconds: VIEW_THRESHOLD,
+    session_token: session.sessionToken,
+    expires_at: session.expiresAt,
   };
 }
 
@@ -60,34 +88,116 @@ app.get("/v1/killswitch", (c) => {
 });
 
 app.get("/v1/portfolio/demo", (c) => {
-  const clientId = c.req.query("client_id") || "demo";
-  if (!clientId) return c.json({ error: "client_id required" }, 400);
-  return c.json(portfolioPayload());
+  const deviceId = c.req.query("client_id") || "demo";
+  if (!deviceId) return c.json({ error: "client_id required" }, 400);
+  return c.json(portfolioPayload(null, deviceId));
 });
 
 app.get("/v1/portfolio", (c) => {
   const client = resolveClient(db, c.req.header("authorization"));
   if (!client) return c.json({ error: "unauthorized" }, 401);
-  return c.json(portfolioPayload());
+  return c.json(portfolioPayload(client.clientId));
 });
 
 app.post("/v1/metrics/demo", async (c) => {
-  await c.req.json().catch(() => ({}));
+  if (!config.devBypass) {
+    return c.json({ error: "Demo metrics disabled in production" }, 403);
+  }
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const event = String(body.event || body.event_type || body.kind || "impression");
+  const adId = String(body.adId || body.ad_id || "unknown");
+  const eventUuid = body.nonce ? String(body.nonce) : body.event_uuid ? String(body.event_uuid) : undefined;
+  processMetricEvent(db, {
+    clientId: null,
+    adId,
+    eventType: event,
+    eventUuid,
+    demo: true,
+    sessionToken: body.session_token ? String(body.session_token) : undefined,
+  });
   return c.json({ ok: true, demo: true });
 });
 
 app.post("/v1/metrics", async (c) => {
   const client = resolveClient(db, c.req.header("authorization"));
-  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-  const event = String(body.event || body.kind || "impression");
-  const adId = String(body.adId || body.ad_id || "unknown");
+  if (!client) return c.json({ error: "unauthorized" }, 401);
 
-  if (client && (event === "view_threshold_met" || event === "click")) {
-    const amount = event === "click" ? 0.05 : 0.001;
-    creditEarnings(db, client.clientId, amount, adId, event);
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const event = String(body.event || body.event_type || body.kind || "impression");
+  const adId = String(body.adId || body.ad_id || "unknown");
+  const eventUuid = body.nonce ? String(body.nonce) : body.event_uuid ? String(body.event_uuid) : undefined;
+  const sessionToken = body.session_token ? String(body.session_token) : undefined;
+
+  const result = processMetricEvent(db, {
+    clientId: client.clientId,
+    adId,
+    eventType: event,
+    eventUuid,
+    demo: false,
+    sessionToken,
+  });
+
+  if (result.rejected) {
+    return c.json({ ok: false, rejected: result.rejected }, 403);
   }
 
-  return c.json({ ok: true });
+  return c.json(result);
+});
+
+app.get("/v1/auth/config", (c) =>
+  c.json({
+    google: Boolean(config.googleClientId),
+    email: emailAuthEnabled(),
+    devBypass: config.devBypass,
+    portalUrl: config.portalUrl,
+  }),
+);
+
+app.get("/v1/auth/google/redirect", (c) => {
+  const state = c.req.query("state");
+  if (!state) return c.json({ error: "state required" }, 400);
+  const row = db
+    .prepare("SELECT 1 FROM auth_states WHERE state = ? AND completed = 0")
+    .get(state);
+  if (!row) return c.json({ error: "invalid or expired session" }, 400);
+  try {
+    return c.redirect(googleAuthUrl(state));
+  } catch (error) {
+    return c.json(
+      { error: error instanceof Error ? error.message : "Auth unavailable" },
+      503,
+    );
+  }
+});
+
+app.post("/v1/auth/email/complete", async (c) => {
+  if (!emailAuthEnabled()) {
+    return c.json({ error: "Email sign-in is disabled in production. Use Google." }, 403);
+  }
+  const body = (await c.req.json().catch(() => ({}))) as {
+    state?: string;
+    email?: string;
+  };
+  const state = body.state?.trim();
+  const email = body.email?.trim().toLowerCase();
+  if (!state || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return c.json({ error: "Valid state and email required" }, 400);
+  }
+
+  const row = db
+    .prepare("SELECT client_id, completed FROM auth_states WHERE state = ?")
+    .get(state) as { client_id: string; completed: number } | undefined;
+
+  if (!row) return c.json({ error: "Invalid sign-in session" }, 400);
+  if (row.completed === 1) return c.json({ error: "Session already used" }, 400);
+
+  db.prepare("UPDATE clients SET email = ? WHERE id = ?").run(email, row.client_id);
+  const token = mintToken(db, row.client_id, email);
+  db.prepare(
+    "UPDATE auth_states SET completed = 1, token = ?, email = ? WHERE state = ?",
+  ).run(token, email, state);
+
+  return c.json({ ok: true, email });
 });
 
 app.post("/v1/auth/extension/start", (c) => {
@@ -118,7 +228,13 @@ app.get("/v1/auth/google/callback", async (c) => {
     return c.html(googleCallbackHtml(false), 400);
   }
   const result = await completeGoogleAuth(db, code, state);
-  return c.html(googleCallbackHtml(result.ok, result.ok ? result.email : undefined));
+  return c.html(
+    googleCallbackHtml(
+      result.ok,
+      result.ok ? state : undefined,
+      result.ok ? result.email : undefined,
+    ),
+  );
 });
 
 app.get("/v1/auth/dev-complete", (c) => {
@@ -135,7 +251,8 @@ app.get("/v1/auth/dev-complete", (c) => {
     "UPDATE auth_states SET completed = 1, token = ?, email = ? WHERE state = ?",
   ).run(token, "dev@aibc.local", state);
 
-  return c.html(`<html><body><h1>Signed in</h1><p>Return to aibc extension.</p></body></html>`);
+  const redirect = `${config.portalUrl}/dashboard?auth_state=${encodeURIComponent(state)}`;
+  return c.redirect(redirect);
 });
 
 app.get("/v1/auth/extension/poll", (c) => {
@@ -178,6 +295,8 @@ app.get("/v1/earnings", (c) => {
   const client = resolveClient(db, c.req.header("authorization"));
   if (!client) return c.json({ error: "unauthorized" }, 401);
 
+  settlePendingForClient(db, client.clientId);
+
   const row = db
     .prepare(
       "SELECT today, month, lifetime, pending, payable FROM earnings WHERE client_id = ?",
@@ -186,25 +305,64 @@ app.get("/v1/earnings", (c) => {
     | { today: number; month: number; lifetime: number; pending: number; payable: number }
     | undefined;
 
+  const caps = earningsCaps(db, client.clientId);
+
   return c.json({
     today: row?.today ?? 0,
+    today_usd: (row?.today ?? 0).toFixed(2),
     month: row?.month ?? 0,
     lifetime: row?.lifetime ?? 0,
+    lifetime_usd: (row?.lifetime ?? 0).toFixed(2),
     pending: row?.pending ?? 0,
     payable: row?.payable ?? 0,
-    caps: { hourlyCapHit: false, dailyCapHit: false },
+    developer_share: 0.7,
+    caps: {
+      hourlyCapHit: caps.hourlyCapHit,
+      dailyCapHit: caps.dailyCapHit,
+      hourlyEarned: caps.hourlyEarned,
+      dailyEarned: caps.dailyEarned,
+      hourlyCap: caps.hourlyCap,
+      dailyCap: caps.dailyCap,
+    },
   });
+});
+
+app.get("/v1/me", (c) => {
+  const client = resolveClient(db, c.req.header("authorization"));
+  if (!client) return c.json({ error: "unauthorized" }, 401);
+  return c.json({ email: client.email, clientId: client.clientId });
 });
 
 app.get("/v1/me/earnings", (c) => {
   const client = resolveClient(db, c.req.header("authorization"));
   if (!client) return c.json({ error: "unauthorized" }, 401);
+  settlePendingForClient(db, client.clientId);
   const row = db
     .prepare(
       "SELECT today, month, lifetime, pending, payable FROM earnings WHERE client_id = ?",
     )
     .get(client.clientId);
-  return c.json(row ?? { today: 0, month: 0, lifetime: 0, pending: 0, payable: 0 });
+  const caps = earningsCaps(db, client.clientId);
+  return c.json({
+    ...(row ?? { today: 0, month: 0, lifetime: 0, pending: 0, payable: 0 }),
+    caps: {
+      hourlyCapHit: caps.hourlyCapHit,
+      dailyCapHit: caps.dailyCapHit,
+      hourlyEarned: caps.hourlyEarned,
+      dailyEarned: caps.dailyEarned,
+      hourlyCap: caps.hourlyCap,
+      dailyCap: caps.dailyCap,
+    },
+  });
+});
+
+app.get("/v1/me/payout-method", (c) => {
+  const client = resolveClient(db, c.req.header("authorization"));
+  if (!client) return c.json({ error: "unauthorized" }, 401);
+  const method = db
+    .prepare("SELECT rail, handle FROM payout_methods WHERE client_id = ?")
+    .get(client.clientId) as { rail: string; handle: string } | undefined;
+  return c.json(method ?? { rail: "", handle: "" });
 });
 
 app.get("/v1/me/activity", (c) => {
@@ -212,7 +370,7 @@ app.get("/v1/me/activity", (c) => {
   if (!client) return c.json([]);
   const rows = db
     .prepare(
-      "SELECT id, event_type as type, ad_id as adId, amount, created_at as createdAt FROM impressions WHERE client_id = ? ORDER BY created_at DESC LIMIT 50",
+      "SELECT id, event_type as type, ad_id as adId, amount, created_at as createdAt FROM impressions WHERE client_id = ? ORDER BY created_at DESC LIMIT 200",
     )
     .all(client.clientId) as Array<{
       id: string;
@@ -247,18 +405,33 @@ app.post("/v1/me/payout-request", (c) => {
   const client = resolveClient(db, c.req.header("authorization"));
   if (!client) return c.json({ error: "unauthorized" }, 401);
 
+  settlePendingForClient(db, client.clientId);
+
   const row = db
     .prepare("SELECT payable FROM earnings WHERE client_id = ?")
     .get(client.clientId) as { payable: number } | undefined;
 
   const payable = row?.payable ?? 0;
-  if (payable < 5) return c.json({ error: "Minimum payout is $5.00" }, 400);
+  if (payable < MIN_PAYOUT_USD) {
+    return c.json({ error: `Minimum payout is $${MIN_PAYOUT_USD.toFixed(2)}` }, 400);
+  }
 
+  const method = db
+    .prepare("SELECT rail, handle FROM payout_methods WHERE client_id = ?")
+    .get(client.clientId) as { rail: string; handle: string } | undefined;
+
+  if (!method?.handle) {
+    return c.json({ error: "Save a payout method first" }, 400);
+  }
+
+  const payoutId = randomUUID();
   db.prepare(
-    "UPDATE earnings SET payable = 0, pending = pending - ? WHERE client_id = ?",
-  ).run(payable, client.clientId);
+    "INSERT INTO payouts (id, client_id, amount, rail, handle, status, created_at) VALUES (?, ?, ?, ?, ?, 'requested', ?)",
+  ).run(payoutId, client.clientId, payable, method.rail, method.handle, Date.now());
 
-  return c.json({ ok: true, amount: payable });
+  db.prepare("UPDATE earnings SET payable = 0 WHERE client_id = ?").run(client.clientId);
+
+  return c.json({ ok: true, amount: payable, payoutId, status: "requested" });
 });
 
 app.get("/v1/advertiser/balance", (c) => {
@@ -309,6 +482,10 @@ app.post("/v1/webhooks/stripe", async (c) => {
   return c.json({ received: true });
 });
 
+app.route("/", auctionRoutes(db));
+app.route("/", billingRoutes(db));
+app.route("/", adminRoutes(db));
+
 app.get("/health", (c) =>
   c.json({
     ok: true,
@@ -332,34 +509,76 @@ app.post("/v1/advertiser/campaigns", async (c) => {
   const client = resolveClient(db, c.req.header("authorization"));
   if (!client) return c.json({ error: "unauthorized" }, 401);
   const body = (await c.req.json()) as Record<string, unknown>;
-  const id = randomUUID();
   const adLine = String(body.adLine || "");
   const destinationUrl = String(body.destinationUrl || "");
   if (adLine.length < 3 || adLine.length > 60) {
     return c.json({ error: "Ad line must be 3-60 chars" }, 400);
   }
+  if (!destinationUrl.startsWith("https://")) {
+    return c.json({ error: "Destination URL must be https://" }, 400);
+  }
 
+  const bidPer1k = Number(body.bidPer1k || 5);
+  const blocks = Math.max(1, Number(body.blocks || 10));
+  const bidPerBlock = (bidPer1k * BLOCK_IMPRESSIONS) / 1000;
+  const totalCost = bidPerBlock * blocks;
+  const impressionsTarget = blocks * BLOCK_IMPRESSIONS;
+
+  if (stripeEnabled() && !config.devBypass) {
+    const deducted = db
+      .prepare(
+        "UPDATE advertiser_balance SET balance = balance - ? WHERE client_id = ? AND balance >= ?",
+      )
+      .run(totalCost, client.clientId, totalCost);
+
+    if (deducted.changes === 0) {
+      const balanceRow = db
+        .prepare("SELECT balance FROM advertiser_balance WHERE client_id = ?")
+        .get(client.clientId) as { balance: number } | undefined;
+      return c.json(
+        {
+          error:
+            "Insufficient prepaid balance. Add funds in the Advertise tab, or launch via Stripe at /advertisers.",
+          required: totalCost,
+          balance: balanceRow?.balance ?? 0,
+        },
+        402,
+      );
+    }
+  } else if (!config.devBypass) {
+    return c.json(
+      {
+        error: "Campaign checkout required. Use /advertisers or POST /v1/billing/checkout.",
+      },
+      403,
+    );
+  }
+
+  const id = randomUUID();
   db.prepare(`
-    INSERT INTO campaigns (id, client_id, ad_line, destination_url, brand_name, bid_per_1k, blocks, show_on_leaderboard, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO campaigns (
+      id, client_id, ad_line, destination_url, brand_name, bid_per_1k, blocks,
+      show_on_leaderboard, status, created_at, payment_status, impressions_target, impressions_served
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, 'paid', ?, 0)
   `).run(
     id,
     client.clientId,
     adLine,
     destinationUrl,
     body.brandName || null,
-    Number(body.bidPer1k || 5),
-    Number(body.blocks || 10),
+    bidPer1k,
+    blocks,
     body.showOnLeaderboard ? 1 : 0,
     Date.now(),
+    impressionsTarget,
   );
 
   const adId = `campaign-${id.slice(0, 8)}`;
   db.prepare(
     "INSERT INTO ads (ad_id, text, click_url, brand, bid_per_1k) VALUES (?, ?, ?, ?, ?)",
-  ).run(adId, adLine, destinationUrl, body.brandName || null, Number(body.bidPer1k || 5));
+  ).run(adId, adLine, destinationUrl, body.brandName || null, bidPer1k);
 
-  return c.json({ id, adId });
+  return c.json({ id, adId, charged: stripeEnabled() && !config.devBypass ? totalCost : 0 });
 });
 
 app.patch("/v1/advertiser/campaigns/:id", async (c) => {

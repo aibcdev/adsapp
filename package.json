@@ -20,10 +20,12 @@
     "dev:stripe": "bash scripts/stripe-listen.sh",
     "stripe:sync": "bash scripts/sync-stripe-env.sh",
     "stripe:fix-live": "bash scripts/stripe-fix-live.sh",
-    "deploy:api": "bash scripts/deploy-api.sh",
+    "deploy:api": "bash scripts/deploy-digitalocean.sh",
+    "deploy:do": "bash scripts/deploy-digitalocean.sh",
     "package": "node scripts/package-vsix.mjs",
     "publish:marketplace": "node scripts/publish-marketplace.mjs",
     "publish:openvsx": "node scripts/publish-openvsx.mjs",
+    "publish:all": "npm run publish:marketplace && npm run publish:openvsx",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {

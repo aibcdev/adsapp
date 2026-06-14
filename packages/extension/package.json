@@ -1,18 +1,18 @@
 {
   "name": "aibc",
   "displayName": "aibc",
-  "description": "Get paid while you code. Developer discovery, spinner ads, and earnings in your IDE.",
+  "description": "Get paid while you code. Spinner ads in Claude Code — 70% revenue share to developers.",
   "version": "0.1.0",
   "publisher": "aibcdev",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/aibcdev/aibcmedia"
+    "url": "https://github.com/aibcdev/aibcextensions"
   },
   "bugs": {
-    "url": "https://github.com/aibcdev/aibcmedia/issues"
+    "url": "https://github.com/aibcdev/aibcextensions/issues"
   },
-  "qna": "https://github.com/aibcdev/aibcmedia/discussions",
+  "qna": "https://github.com/aibcdev/aibcextensions/discussions",
   "icon": "media/icon.png",
   "engines": {
     "vscode": "^1.85.0"

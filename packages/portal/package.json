@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 5175",
+    "dev": "lsof -ti :5175 | xargs kill -9 2>/dev/null || true; vite",
     "build": "vite build",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
@@ -12,6 +12,7 @@
     "@aibc/shared": "*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "lucide-react": "^0.562.0",
     "react-router-dom": "^7.1.1"
   },
   "devDependencies": {

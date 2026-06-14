@@ -22,28 +22,37 @@ export const config = {
     .map((s) => s.trim())
     .filter(Boolean),
   viewThresholdSeconds: Number(process.env.AIBC_VIEW_THRESHOLD_SECONDS || 5),
+  /** Bearer token for /v1/admin/* routes (payout queue, etc.) */
+  adminKey: process.env.AIBC_ADMIN_KEY || "",
 };
 
-export function authStartUrl(state: string): string {
+export function emailAuthEnabled(): boolean {
+  return config.devBypass || !config.googleClientId;
+}
+
+export function googleAuthUrl(state: string): string {
+  if (!config.googleClientId) {
+    throw new Error("Google OAuth not configured");
+  }
+  const redirect = `${config.publicUrl}/v1/auth/google/callback`;
+  const params = new URLSearchParams({
+    client_id: config.googleClientId,
+    redirect_uri: redirect,
+    response_type: "code",
+    scope: "openid email profile",
+    state,
+    access_type: "offline",
+    prompt: "consent",
+  });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+}
+
+export function authStartUrl(state: string, source = "extension"): string {
   if (config.devBypass) {
     return `${config.publicUrl}/v1/auth/dev-complete?state=${encodeURIComponent(state)}`;
   }
-  if (config.googleClientId) {
-    const redirect = `${config.publicUrl}/v1/auth/google/callback`;
-    const params = new URLSearchParams({
-      client_id: config.googleClientId,
-      redirect_uri: redirect,
-      response_type: "code",
-      scope: "openid email profile",
-      state,
-      access_type: "offline",
-      prompt: "consent",
-    });
-    return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
-  }
-  throw new Error(
-    "Auth not configured. Set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET or AIBC_DEV_BYPASS=1 for local dev.",
-  );
+  const params = new URLSearchParams({ state, source });
+  return `${config.portalUrl}/login?${params}`;
 }
 
 export function stripeEnabled(): boolean {

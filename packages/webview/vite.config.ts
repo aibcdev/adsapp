@@ -2,13 +2,13 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
 
-const port = Number(process.env.AIBC_WEBVIEW_DEV_PORT || 5174);
+const port = Number(process.env.AIBC_WEBVIEW_DEV_PORT || process.env.FLUX_WEBVIEW_DEV_PORT || 5174);
 
 export default defineConfig(({ command }) => ({
   plugins: [react()],
   resolve: {
     alias: {
-      "@aibc/shared": resolve(__dirname, "../shared/src"),
+      "@aibc/shared": resolve(__dirname, "../shared/src/index.ts"),
     },
   },
   base: command === "serve" ? "/" : "./",

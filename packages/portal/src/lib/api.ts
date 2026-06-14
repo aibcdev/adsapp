@@ -19,6 +19,15 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   if (token) headers.set("Authorization", `Bearer ${token}`);
   if (init?.body) headers.set("Content-Type", "application/json");
   const res = await fetch(`${API}${path}`, { ...init, headers });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(body.error || `${path} ${res.status}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+export async function publicApi<T>(path: string): Promise<T> {
+  const res = await fetch(`${API}${path}`, { headers: { Accept: "application/json" } });
   if (!res.ok) throw new Error(`${path} ${res.status}`);
   return res.json() as Promise<T>;
 }
@@ -50,7 +59,7 @@ export async function startDeposit(amountUsd: number): Promise<void> {
     window.location.href = checkout.url;
     return;
   } catch {
-    /* fall through to dev deposit */
+    /* fall through */
   }
   await api("/v1/advertiser/deposit", {
     method: "POST",
@@ -58,5 +67,17 @@ export async function startDeposit(amountUsd: number): Promise<void> {
   });
 }
 
-/** @deprecated use signIn */
-export const devSignIn = signIn;
+export async function startCampaignCheckout(payload: Record<string, unknown>): Promise<void> {
+  const res = await fetch(`${API}/v1/billing/checkout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const body = (await res.json()) as { checkout_url?: string; detail?: unknown };
+  if (res.ok && body.checkout_url) {
+    window.location.assign(body.checkout_url);
+    return;
+  }
+  const detail = body.detail;
+  throw new Error(typeof detail === "string" ? detail : "Checkout failed");
+}

@@ -87,7 +87,7 @@ if [[ -n "$LIVE_SK" && "$LIVE_SK" == sk_live_* ]]; then
   PROD_WHSEC=$(echo "$out" | grep STRIPE_LIVE_WEBHOOK_SECRET | cut -d= -f2- || true)
   LIVE_STRIPE_KEY="$LIVE_SK"
 else
-  echo "[stripe] No STRIPE_LIVE_SECRET_KEY in .env — using test keys for Fly template."
+  echo "[stripe] No STRIPE_LIVE_SECRET_KEY in .env — using test keys for production template."
   echo "[stripe] To fix live: add STRIPE_LIVE_SECRET_KEY from https://dashboard.stripe.com/apikeys"
   LIVE_STRIPE_KEY="$TEST_SK"
   PROD_WHSEC=$(curl -s -u "${TEST_SK}:" "https://api.stripe.com/v1/webhook_endpoints?limit=10" \

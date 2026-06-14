@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
+import { atomicWriteFile } from "../util/atomicWrite.js";
 
 export const AIBC_DIR = path.join(os.homedir(), ".aibc");
 export const AD_CACHE_FILE = path.join(AIBC_DIR, "ad-cache.json");
@@ -8,12 +9,28 @@ export const STATUSLINE_FILE = path.join(AIBC_DIR, "statusline.cjs");
 export const SETTINGS_BACKUP = path.join(AIBC_DIR, "claude-settings.backup.json");
 export const CLAUDE_SETTINGS = path.join(os.homedir(), ".claude", "settings.json");
 
+const AIBC_STATUS_CMD = `node "${STATUSLINE_FILE}"`;
+
 export function writeAdCache(adText: string, clickUrl: string, adId: string): void {
   fs.mkdirSync(AIBC_DIR, { recursive: true });
-  fs.writeFileSync(
+  atomicWriteFile(
     AD_CACHE_FILE,
     JSON.stringify({ adText, clickUrl, adId, ts: Date.now() }, null, 2),
   );
+}
+
+/** Parse settings.json tolerating // line comments (no stripJsonc comma bug). */
+export function parseSettingsJson(raw: string): Record<string, unknown> {
+  try {
+    return JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    const stripped = raw
+      .split("\n")
+      .filter((line) => !/^\s*\/\//.test(line))
+      .join("\n")
+      .replace(/\/\*[\s\S]*?\*\//g, "");
+    return JSON.parse(stripped) as Record<string, unknown>;
+  }
 }
 
 export class ClaudeCliAdapter {
@@ -38,13 +55,17 @@ export class ClaudeCliAdapter {
   restore(): boolean {
     try {
       if (fs.existsSync(SETTINGS_BACKUP)) {
-        fs.writeFileSync(CLAUDE_SETTINGS, fs.readFileSync(SETTINGS_BACKUP, "utf8"));
+        atomicWriteFile(CLAUDE_SETTINGS, fs.readFileSync(SETTINGS_BACKUP, "utf8"));
         fs.unlinkSync(SETTINGS_BACKUP);
       }
       return true;
     } catch {
       return false;
     }
+  }
+
+  isInstalled(): boolean {
+    return this.installed;
   }
 
   private ensureStatuslineScript(): void {
@@ -57,8 +78,7 @@ export class ClaudeCliAdapter {
       return;
     }
 
-    // Fallback inline minimal script
-    fs.writeFileSync(
+    atomicWriteFile(
       STATUSLINE_FILE,
       `const fs=require("fs"),p=require("path"),c=p.join(require("os").homedir(),".aibc","ad-cache.json");
 try{const o=JSON.parse(fs.readFileSync(c,"utf8"));if(o.adText)process.stdout.write("ad· "+o.adText);}catch{}`,
@@ -71,16 +91,23 @@ try{const o=JSON.parse(fs.readFileSync(c,"utf8"));if(o.adText)process.stdout.wri
       : "{}";
 
     if (!fs.existsSync(SETTINGS_BACKUP)) {
-      fs.writeFileSync(SETTINGS_BACKUP, raw);
+      atomicWriteFile(SETTINGS_BACKUP, raw);
     }
 
-    const settings = JSON.parse(raw) as Record<string, unknown>;
+    const settings = parseSettingsJson(raw);
+    const existing = settings.statusLine as { command?: string } | undefined;
+    const existingCmd = existing?.command || "";
+
+    if (existingCmd.includes(AIBC_STATUS_CMD) || existingCmd.includes(".aibc/statusline.cjs")) {
+      return;
+    }
+
     settings.statusLine = {
       type: "command",
-      command: `node "${STATUSLINE_FILE}"`,
+      command: AIBC_STATUS_CMD,
     };
 
     fs.mkdirSync(path.dirname(CLAUDE_SETTINGS), { recursive: true });
-    fs.writeFileSync(CLAUDE_SETTINGS, JSON.stringify(settings, null, 2));
+    atomicWriteFile(CLAUDE_SETTINGS, JSON.stringify(settings, null, 2));
   }
 }

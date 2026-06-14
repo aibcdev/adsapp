@@ -1,62 +1,56 @@
 # Deploy aibc → aibcmedia.com
 
-**Read PRE-LAUNCH.md first.** Finish web + extension before deploying.
-
-Env vars: **ENV.md**
+**Read PRE-LAUNCH.md first.** Env vars: **ENV.md**
 
 ---
 
-## DNS records
+## DNS
 
-### Website — Netlify (`aibcmedia.com`)
+| Subdomain | Host | Record |
+|-----------|------|--------|
+| `aibcmedia.com` | Netlify | *(Netlify dashboard)* |
+| `api.aibcmedia.com` | **DigitalOcean Droplet** | **A** → droplet IP |
 
-1. Netlify → Add site → Import from Git → `aibcdev/aibcmedia`
-2. Build uses `netlify.toml` automatically
-3. Set env var: `VITE_AIBC_API` = `https://api.aibcmedia.com`
-4. Domain settings → add `aibcmedia.com` — Netlify shows DNS records
-
-Usually:
-
-| Type | Name | Value |
-|------|------|--------|
-| A or ALIAS | `@` | *(Netlify gives you an IP or ANAME)* |
-| CNAME | `www` | `<your-site-name>.netlify.app` |
-
-### API — Fly.io (`api.aibcmedia.com`)
-
-After `fly deploy`:
-
-```bash
-fly certs add api.aibcmedia.com
-```
-
-| Type | Name | Value |
-|------|------|--------|
-| CNAME | `api` | `<your-app>.fly.dev` |
-
-Check: `curl https://api.aibcmedia.com/health`
+Check API: `curl https://api.aibcmedia.com/health`
 
 ---
 
-## 1. API (Fly) — do this first
+## 1. API — DigitalOcean Droplet (do this first)
+
+### One-time setup
+
+1. DigitalOcean → **Create Droplet**
+   - Ubuntu 22.04 or 24.04
+   - Size: Basic $6/mo is enough to start
+   - Region: London (or nearest users)
+2. SSH in and install Docker:
+   ```bash
+   curl -fsSL https://get.docker.com | sh
+   apt install -y docker-compose-plugin git
+   ```
+3. DNS: add **A record** `api` → your droplet IP
+4. On your Mac:
+   ```bash
+   cp .env.fly deploy/digitalocean/.env
+   ./scripts/deploy-digitalocean.sh root@YOUR_DROPLET_IP
+   ```
+
+Caddy auto-gets HTTPS for `api.aibcmedia.com`.
+
+### Updates (redeploy)
 
 ```bash
-fly auth login
-fly launch
-fly volumes create aibc_data --region lhr --size 1
-fly secrets set ...   # see ENV.md
-fly deploy
-fly certs add api.aibcmedia.com
+./scripts/deploy-digitalocean.sh root@YOUR_DROPLET_IP
 ```
 
 ---
 
-## 2. Website (Netlify) — after API works
+## 2. Website — Netlify
 
-1. Connect `aibcdev/aibcmedia` on Netlify
-2. Set `VITE_AIBC_API=https://api.aibcmedia.com`
-3. Deploy
-4. Add custom domain `aibcmedia.com`
+1. Connect repo: `aibcdev/adsapp` (or `aibcmedia`)
+2. Env: `VITE_AIBC_API=https://api.aibcmedia.com`
+3. Build uses `netlify.toml`
+4. Domain: `aibcmedia.com`
 
 ---
 
@@ -71,5 +65,5 @@ See **MARKETPLACE.md**
 ```bash
 npm run dev:api
 npm run dev:portal
-npm run dev:stripe   # optional — Stripe webhooks
+npm run dev:stripe
 ```

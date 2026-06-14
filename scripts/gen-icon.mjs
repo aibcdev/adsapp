@@ -17,9 +17,9 @@ for (let y = 0; y < height; y++) {
     const cy = y - height / 2;
     const dist = Math.sqrt(cx * cx + cy * cy);
     const inCircle = dist < 46;
-    rgba[i] = inCircle ? 99 : 18;
-    rgba[i + 1] = inCircle ? 102 : 18;
-    rgba[i + 2] = inCircle ? 241 : 24;
+    rgba[i] = inCircle ? 255 : 5;
+    rgba[i + 1] = inCircle ? 94 : 5;
+    rgba[i + 2] = inCircle ? 30 : 5;
     rgba[i + 3] = 255;
   }
 }

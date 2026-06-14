@@ -58,6 +58,8 @@ export interface PortfolioResponse {
   ads: PortfolioAd[];
   rotationIntervalMs: number;
   view_threshold_seconds: number;
+  session_token: string;
+  expires_at: number;
 }
 
 export interface EarningsSnapshot {

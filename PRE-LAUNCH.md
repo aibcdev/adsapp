@@ -1,6 +1,6 @@
 # Pre-launch checklist
 
-Finish these **before** Netlify deploy, Fly deploy, or VS Code publish.
+Finish these **before** Netlify deploy, DigitalOcean deploy, or VS Code publish.
 
 ## Website (portal)
 
@@ -19,27 +19,26 @@ Finish these **before** Netlify deploy, Fly deploy, or VS Code publish.
 - [x] Prod API + portal defaults
 - [x] README + CHANGELOG for Marketplace
 - [x] Publisher ID → `aibcdev`
-- [ ] `npm run build && npm run package` — test VSIX locally
-- [ ] F5 smoke test in Cursor
-- [ ] VS Code publisher created + PAT
-- [ ] `npm run publish:marketplace`
+- [x] `npm run build && npm run package` — VSIX ready
+- [ ] Test install VSIX locally
+- [ ] VS Code publisher + Open VSX namespace created
+- [ ] `npm run publish:all` → **MARKETPLACE.md**
 
 ## API
 
 - [x] Google OAuth flow coded
 - [x] Stripe checkout + webhook coded
-- [x] Docker + Fly config
-- [ ] Fly app deployed
-- [ ] DNS `api` → Fly
-- [ ] Live Stripe webhook secret on Fly
-- [ ] `curl https://api.aibcmedia.com/health` passes
+- [x] Docker + DigitalOcean config
+- [x] DigitalOcean Droplet deployed
+- [x] DNS `api` → Droplet IP
+- [x] `curl https://api.aibcmedia.com/health` passes
 
 ## Order
 
 1. Fill env vars → **ENV.md**
-2. Deploy API (Fly) + DNS
+2. ~~Deploy API (DigitalOcean) + DNS~~ **Done**
 3. Test API + Google login + Stripe
 4. Deploy website (Netlify) — connect GitHub repo
-5. Publish extension (Marketplace)
+5. Publish extension → **MARKETPLACE.md**
 
 **Do not deploy website until API is live** — sign-in and payments need the API.

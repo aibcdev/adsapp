@@ -79,7 +79,17 @@ export class AuthService {
     }>("/v1/auth/extension/start", { method: "POST" });
 
     this.clientId = start.clientId;
-    await vscode.env.openExternal(vscode.Uri.parse(start.authUrl));
+    const opened = await vscode.env.openExternal(vscode.Uri.parse(start.authUrl));
+    if (!opened) {
+      await vscode.env.clipboard.writeText(start.authUrl);
+      const pick = await vscode.window.showWarningMessage(
+        "aibc: Browser did not open. Sign-in URL copied to clipboard — paste it in your browser.",
+        "Try again",
+      );
+      if (pick === "Try again") {
+        await vscode.env.openExternal(vscode.Uri.parse(start.authUrl));
+      }
+    }
 
     const deadline = Date.now() + 120_000;
     while (Date.now() < deadline) {

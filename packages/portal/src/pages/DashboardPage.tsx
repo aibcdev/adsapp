@@ -1,298 +1,206 @@
 import { useEffect, useState } from "react";
-import { api, getToken, setToken, signIn, startDeposit } from "../lib/api";
-import { DashboardShell, SetupPanel, StatGrid } from "../components/DashboardShell";
+import { Link, useSearchParams } from "react-router-dom";
+import { api, getToken, setToken } from "../lib/api";
+import { completeAuthFromState, googleRedirectUrl, startAuthSession } from "../lib/auth";
+import { DashboardLayout } from "../components/dashboard/DashboardLayout";
+import { StatCards } from "../components/dashboard/StatCards";
+import { EarningsChart } from "../components/dashboard/EarningsChart";
+import { PayoutsPanel } from "../components/dashboard/PayoutsPanel";
+import { ActivityLedger } from "../components/dashboard/ActivityLedger";
+import { AccountSection } from "../components/dashboard/AccountSection";
+import { devSignInUrl, GoogleSignInCard } from "../components/auth/GoogleSignInCard";
 
-type Earnings = { today: number; month: number; pending: number; payable: number };
-type Activity = { id: string; type: string; adId: string; amount: number; createdAt: string };
-type Campaign = {
-  id: string;
-  adLine: string;
-  destinationUrl: string;
-  status: string;
-  impressions: number;
-  spend: number;
+type Earnings = {
+  today: number;
+  month: number;
+  lifetime: number;
+  pending: number;
+  payable: number;
+  caps: {
+    hourlyEarned: number;
+    dailyEarned: number;
+    hourlyCap: number;
+    dailyCap: number;
+  };
 };
 
-export function DashboardPage() {
-  const [tab, setTab] = useState<"earn" | "advertise">("earn");
-  const [email, setEmail] = useState<string>();
-  const [earnings, setEarnings] = useState<Earnings>({ today: 0, month: 0, pending: 0, payable: 0 });
-  const [activity, setActivity] = useState<Activity[]>([]);
-  const [balance, setBalance] = useState(0);
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [rail, setRail] = useState("wise");
-  const [handle, setHandle] = useState("");
-  const [deposit, setDeposit] = useState("50");
-  const [form, setForm] = useState({
-    adLine: "",
-    destinationUrl: "https://",
-    brandName: "",
-    bidPer1k: "5",
-    blocks: "10",
-    showOnLeaderboard: true,
-  });
+type Activity = { id: string; type: string; adId: string; amount: number; createdAt: string };
 
-  const load = async () => {
-    if (!getToken()) return;
+export function DashboardPage() {
+  const [params, setParams] = useSearchParams();
+  const [email, setEmail] = useState<string>();
+  const [authBusy, setAuthBusy] = useState(false);
+  const [signInState, setSignInState] = useState("");
+  const [earnings, setEarnings] = useState<Earnings>({
+    today: 0,
+    month: 0,
+    lifetime: 0,
+    pending: 0,
+    payable: 0,
+    caps: { hourlyEarned: 0, dailyEarned: 0, hourlyCap: 20, dailyCap: 200 },
+  });
+  const [activity, setActivity] = useState<Activity[]>([]);
+  const [activityLoaded, setActivityLoaded] = useState(false);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [payoutRail, setPayoutRail] = useState("");
+  const [payoutHandle, setPayoutHandle] = useState("");
+  const [authConfig, setAuthConfig] = useState({ google: true, devBypass: false });
+
+  const loadEarnings = async () => {
     const e = await api<Earnings>("/v1/me/earnings");
-    setEarnings(e);
-    const a = await api<Activity[]>("/v1/me/activity");
-    setActivity(a);
-    const b = await api<{ balance: number }>("/v1/advertiser/balance");
-    setBalance(b.balance);
-    const c = await api<Campaign[]>("/v1/advertiser/campaigns");
-    setCampaigns(c);
+    setEarnings({
+      ...e,
+      caps: e.caps ?? { hourlyEarned: 0, dailyEarned: 0, hourlyCap: 20, dailyCap: 200 },
+    });
+  };
+
+  const loadPayoutMethod = async () => {
+    const m = await api<{ rail: string; handle: string }>("/v1/me/payout-method");
+    setPayoutRail(m.rail || "");
+    setPayoutHandle(m.handle || "");
+  };
+
+  const loadProfile = async () => {
+    const me = await api<{ email: string }>("/v1/me");
+    setEmail(me.email);
+  };
+
+  const loadAll = async () => {
+    if (!getToken()) return;
+    await Promise.all([loadEarnings(), loadPayoutMethod(), loadProfile()]);
+  };
+
+  const retrieveActivity = async () => {
+    setActivityLoading(true);
+    try {
+      const a = await api<Activity[]>("/v1/me/activity");
+      setActivity(a);
+      setActivityLoaded(true);
+    } finally {
+      setActivityLoading(false);
+    }
   };
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("deposit") === "success") {
-      void load();
-      window.history.replaceState({}, "", "/dashboard");
+    const authState = params.get("auth_state");
+    if (!authState) {
+      if (getToken()) void loadAll();
+      return;
     }
+    setAuthBusy(true);
+    void completeAuthFromState(authState)
+      .then(({ accessToken, email: e }) => {
+        setToken(accessToken);
+        setEmail(e);
+        params.delete("auth_state");
+        setParams(params, { replace: true });
+        return loadAll();
+      })
+      .catch(() => {})
+      .finally(() => setAuthBusy(false));
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [tab]);
+    void fetch(`${import.meta.env.VITE_AIBC_API || "https://api.aibcmedia.com"}/v1/auth/config`)
+      .then((r) => r.json())
+      .then((c) => setAuthConfig({ google: Boolean(c.google), devBypass: Boolean(c.devBypass) }))
+      .catch(() => {});
+  }, []);
 
-  const handleSignIn = async () => {
-    const e = await signIn();
-    setEmail(e);
-    await load();
+  useEffect(() => {
+    void startAuthSession().then(setSignInState).catch(() => {});
+  }, []);
+
+  const signInGoogle = async () => {
+    setAuthBusy(true);
+    try {
+      const state = signInState || (await startAuthSession());
+      setSignInState(state);
+      window.location.href = googleRedirectUrl(state);
+    } finally {
+      setAuthBusy(false);
+    }
   };
 
   const signOut = () => {
     setToken("");
     setEmail(undefined);
+    setActivity([]);
+    setActivityLoaded(false);
   };
 
-  return (
-    <DashboardShell email={email} tab={tab} onTab={setTab}>
-      {!getToken() ? (
-        <div className="rounded-xl border border-aibc-border bg-aibc-card p-8 text-center">
-          <p className="mb-4 text-neutral-400">Sign in to view earnings and campaigns.</p>
-          <button
-            type="button"
-            onClick={() => void handleSignIn()}
-            className="rounded-full bg-aibc-green px-6 py-2 font-semibold text-black"
-          >
-            Sign in
-          </button>
+  if (!getToken()) {
+    return (
+      <DashboardLayout email={undefined} onSignOut={signOut}>
+        <div className="mx-auto flex max-w-md justify-center py-12">
+          <GoogleSignInCard
+            compact
+            busy={authBusy}
+            googleEnabled={authConfig.google}
+            devBypass={authConfig.devBypass}
+            state={signInState}
+            onGoogleSignIn={() => void signInGoogle()}
+            onDevSignIn={() => {
+              if (!signInState) return;
+              window.location.href = devSignInUrl(signInState);
+            }}
+          />
         </div>
-      ) : (
-        <>
-          <div className="mb-4 text-right">
-            <button type="button" onClick={signOut} className="text-xs text-neutral-500">
-              Sign out
-            </button>
-          </div>
+      </DashboardLayout>
+    );
+  }
 
-          {tab === "earn" ? (
-            <>
-              <SetupPanel />
-              <StatGrid stats={earnings} />
-              <div className="mb-8 rounded-lg border border-amber-900/40 bg-amber-950/20 p-4 text-sm text-amber-200/80">
-                Payouts are manual. Minimum $5.00. PayPal, Wise, and UPI supported.
-              </div>
+  return (
+    <DashboardLayout email={email} onSignOut={signOut}>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-emerald-700">User earnings portal</p>
+          <h1 className="mt-1 font-brand-heading text-2xl text-zinc-950 md:text-3xl">Your balance & activity</h1>
+        </div>
+        <Link
+          to="/advertisers#launch"
+          className="text-sm font-medium text-emerald-700 underline decoration-emerald-300 underline-offset-4 hover:text-emerald-800"
+        >
+          Advertise on AIBC →
+        </Link>
+      </div>
 
-              <section className="mb-8 rounded-xl border border-aibc-border bg-aibc-card p-6">
-                <h2 className="mb-4 font-serif text-2xl">Cash out</h2>
-                <p className="mb-4 font-serif text-4xl text-aibc-gold">${earnings.payable.toFixed(2)}</p>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <label className="block text-xs text-neutral-500">
-                    Rail
-                    <select
-                      value={rail}
-                      onChange={(e) => setRail(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-aibc-border bg-black px-3 py-2"
-                    >
-                      <option value="wise">wise</option>
-                      <option value="paypal">paypal</option>
-                      <option value="upi">upi</option>
-                    </select>
-                  </label>
-                  <label className="block text-xs text-neutral-500">
-                    Account / handle
-                    <input
-                      value={handle}
-                      onChange={(e) => setHandle(e.target.value)}
-                      placeholder="email"
-                      className="mt-1 w-full rounded-lg border border-aibc-border bg-black px-3 py-2"
-                    />
-                  </label>
-                </div>
-                <div className="mt-4 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void api("/v1/me/payout-method", {
-                        method: "POST",
-                        body: JSON.stringify({ rail, handle }),
-                      })
-                    }
-                    className="rounded-full border border-neutral-600 px-4 py-2 text-sm"
-                  >
-                    Save method
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void api("/v1/me/payout-request", { method: "POST" }).then(load)}
-                    className="rounded-full bg-aibc-green px-4 py-2 text-sm font-semibold text-black"
-                  >
-                    Request payout
-                  </button>
-                </div>
-              </section>
+      <StatCards
+        today={earnings.today}
+        month={earnings.month}
+        lifetime={earnings.lifetime}
+        caps={earnings.caps}
+      />
 
-              <section className="rounded-xl border border-aibc-border bg-aibc-card p-6">
-                <h2 className="mb-4 font-serif text-2xl">Activity</h2>
-                {activity.length === 0 ? (
-                  <p className="text-sm text-neutral-500">
-                    No credited events yet. Keep coding with the extension installed.
-                  </p>
-                ) : (
-                  <ul className="space-y-2 font-mono text-xs">
-                    {activity.map((a) => (
-                      <li key={a.id} className="flex justify-between border-b border-aibc-border py-2">
-                        <span>{a.type} · {a.adId}</span>
-                        <span className="text-aibc-gold">+${a.amount.toFixed(4)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            </>
-          ) : (
-            <>
-              <div className="mb-8 grid gap-6 md:grid-cols-2">
-                <section className="rounded-xl border border-aibc-border bg-aibc-card p-6">
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">
-                    Prepaid balance
-                  </p>
-                  <p className="mt-2 font-serif text-4xl text-aibc-gold">${balance.toFixed(2)}</p>
-                  <div className="mt-4 flex gap-2">
-                    <input
-                      value={deposit}
-                      onChange={(e) => setDeposit(e.target.value)}
-                      className="w-24 rounded-lg border border-aibc-border bg-black px-3 py-2"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => void startDeposit(Number(deposit)).then(load)}
-                      className="rounded-full bg-aibc-green px-4 py-2 text-sm font-semibold text-black"
-                    >
-                      Add funds
-                    </button>
-                  </div>
-                </section>
+      <div className="mb-6 grid gap-6 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <EarningsChart activity={activity} />
+        </div>
+        <div className="lg:col-span-2">
+          <PayoutsPanel
+            payable={earnings.payable}
+            rail={payoutRail}
+            handle={payoutHandle}
+            onSaveMethod={(rail, handle) =>
+              api("/v1/me/payout-method", { method: "POST", body: JSON.stringify({ rail, handle }) }).then(
+                loadPayoutMethod,
+              )
+            }
+            onRequestPayout={() => api("/v1/me/payout-request", { method: "POST" }).then(() => loadEarnings())}
+          />
+        </div>
+      </div>
 
-                <section className="rounded-xl border border-aibc-border bg-aibc-card p-6">
-                  <h2 className="mb-4 font-serif text-2xl">Place a campaign</h2>
-                  <div className="space-y-3">
-                    <input
-                      placeholder="Ad line (3-60 chars)"
-                      value={form.adLine}
-                      onChange={(e) => setForm({ ...form, adLine: e.target.value })}
-                      className="w-full rounded-lg border border-aibc-border bg-black px-3 py-2 text-sm"
-                    />
-                    <input
-                      placeholder="Destination URL (https)"
-                      value={form.destinationUrl}
-                      onChange={(e) => setForm({ ...form, destinationUrl: e.target.value })}
-                      className="w-full rounded-lg border border-aibc-border bg-black px-3 py-2 text-sm"
-                    />
-                    <p className="text-xs text-neutral-500">
-                      Runs in Claude Code / Codex spinners and terminal status lines.
-                    </p>
-                    <div className="grid grid-cols-3 gap-2">
-                      <input
-                        placeholder="Brand (optional)"
-                        value={form.brandName}
-                        onChange={(e) => setForm({ ...form, brandName: e.target.value })}
-                        className="rounded-lg border border-aibc-border bg-black px-3 py-2 text-sm"
-                      />
-                      <input
-                        placeholder="Bid / 1k imps"
-                        value={form.bidPer1k}
-                        onChange={(e) => setForm({ ...form, bidPer1k: e.target.value })}
-                        className="rounded-lg border border-aibc-border bg-black px-3 py-2 text-sm"
-                      />
-                      <input
-                        placeholder="Blocks"
-                        value={form.blocks}
-                        onChange={(e) => setForm({ ...form, blocks: e.target.value })}
-                        className="rounded-lg border border-aibc-border bg-black px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <label className="flex items-center gap-2 text-xs text-neutral-400">
-                      <input
-                        type="checkbox"
-                        checked={form.showOnLeaderboard}
-                        onChange={(e) => setForm({ ...form, showOnLeaderboard: e.target.checked })}
-                      />
-                      Show on public leaderboard
-                    </label>
-                    <p className="text-xs text-neutral-500">
-                      Floor $2.00 · est. max spend $
-                      {((Number(form.bidPer1k) * Number(form.blocks) * 1000) / 1000).toFixed(2)}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void api("/v1/advertiser/campaigns", {
-                          method: "POST",
-                          body: JSON.stringify({
-                            adLine: form.adLine,
-                            destinationUrl: form.destinationUrl,
-                            brandName: form.brandName,
-                            bidPer1k: Number(form.bidPer1k),
-                            blocks: Number(form.blocks),
-                            showOnLeaderboard: form.showOnLeaderboard,
-                          }),
-                        }).then(load)
-                      }
-                      className="float-right rounded-full bg-aibc-green px-5 py-2 text-sm font-semibold text-black"
-                    >
-                      Go live
-                    </button>
-                  </div>
-                </section>
-              </div>
+      <div className="mb-6">
+        <ActivityLedger
+          rows={activity}
+          loaded={activityLoaded}
+          loading={activityLoading}
+          onRetrieve={() => void retrieveActivity()}
+        />
+      </div>
 
-              <section className="rounded-xl border border-aibc-border bg-aibc-card p-6">
-                <h2 className="mb-4 font-serif text-2xl">Campaigns</h2>
-                {campaigns.length === 0 ? (
-                  <p className="text-sm text-neutral-500">
-                    No campaigns yet. Place one above to enter the auction.
-                  </p>
-                ) : (
-                  <ul className="space-y-3">
-                    {campaigns.map((c) => (
-                      <li
-                        key={c.id}
-                        className="flex items-center justify-between rounded-lg border border-aibc-border px-4 py-3"
-                      >
-                        <div>
-                          <p className="font-medium">{c.adLine}</p>
-                          <p className="text-xs text-neutral-500">{c.destinationUrl}</p>
-                        </div>
-                        <div className="text-right text-xs text-neutral-400">
-                          <p>{c.impressions} imps</p>
-                          <p>${c.spend.toFixed(2)} spend</p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-              <p className="mt-6 text-xs text-neutral-600">
-                Validated = visible long enough to count. Filtered = blocked or invalid traffic.
-              </p>
-            </>
-          )}
-        </>
-      )}
-    </DashboardShell>
+      {email ? <AccountSection email={email} /> : null}
+    </DashboardLayout>
   );
 }

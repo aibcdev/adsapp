@@ -2,13 +2,19 @@ import type { PortfolioAd, PortfolioResponse } from "@aibc/shared";
 import { ApiClient } from "./ApiClient";
 import { AuthService } from "./AuthService";
 
+const SESSION_TTL_MS = 120_000;
+
 export class PortfolioService {
   private queue: PortfolioAd[] = [];
   private index = 0;
   private rotationMs = 120_000;
   private viewThresholdSeconds = 5;
+  private sessionToken?: string;
+  private sessionExpiresAt = 0;
   private timer: NodeJS.Timeout | undefined;
+  private staleTimer: NodeJS.Timeout | undefined;
   private onRotate?: (ad: PortfolioAd) => void;
+  private onSessionExpired?: () => void;
 
   constructor(
     private readonly api: ApiClient,
@@ -19,7 +25,20 @@ export class PortfolioService {
     this.onRotate = handler;
   }
 
+  setSessionExpiredHandler(handler: () => void): void {
+    this.onSessionExpired = handler;
+  }
+
+  getSessionToken(): string | undefined {
+    return this.isSessionFresh() ? this.sessionToken : undefined;
+  }
+
+  isSessionFresh(): boolean {
+    return Boolean(this.sessionToken && Date.now() < this.sessionExpiresAt - 5_000);
+  }
+
   getCurrentAd(): PortfolioAd | null {
+    if (!this.isSessionFresh()) return null;
     return this.queue[this.index] ?? null;
   }
 
@@ -50,12 +69,19 @@ export class PortfolioService {
     this.index = 0;
     this.rotationMs = resp.rotationIntervalMs;
     this.viewThresholdSeconds = resp.view_threshold_seconds;
+    this.sessionToken = resp.session_token;
+    this.sessionExpiresAt = resp.expires_at;
     this.scheduleRotation();
+    this.scheduleStaleCheck();
     if (this.queue[0]) this.onRotate?.(this.queue[0]);
     return resp;
   }
 
   rotateNext(): PortfolioAd | null {
+    if (!this.isSessionFresh()) {
+      void this.refreshIfStale();
+      return null;
+    }
     if (this.queue.length === 0) return null;
     this.index = (this.index + 1) % this.queue.length;
     const ad = this.queue[this.index];
@@ -63,12 +89,32 @@ export class PortfolioService {
     return ad;
   }
 
+  async refreshIfStale(): Promise<void> {
+    if (this.isSessionFresh()) return;
+    try {
+      await this.refresh();
+    } catch {
+      this.onSessionExpired?.();
+    }
+  }
+
   dispose(): void {
     if (this.timer) clearInterval(this.timer);
+    if (this.staleTimer) clearInterval(this.staleTimer);
   }
 
   private scheduleRotation(): void {
     if (this.timer) clearInterval(this.timer);
-    this.timer = setInterval(() => this.rotateNext(), this.rotationMs);
+    this.timer = setInterval(() => {
+      void this.refreshIfStale().then(() => this.rotateNext());
+    }, this.rotationMs);
+  }
+
+  private scheduleStaleCheck(): void {
+    if (this.staleTimer) clearInterval(this.staleTimer);
+    const ms = Math.min(SESSION_TTL_MS - 10_000, this.rotationMs);
+    this.staleTimer = setInterval(() => {
+      if (!this.isSessionFresh()) void this.refreshIfStale();
+    }, Math.max(ms, 30_000));
   }
 }

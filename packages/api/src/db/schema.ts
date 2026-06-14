@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { processMetricEvent } from "../billing/ledger.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DB_PATH = process.env.AIBC_DB_PATH || join(__dirname, "..", "aibc.db");
@@ -57,7 +58,12 @@ export function createDb(): DbType {
       status TEXT DEFAULT 'active',
       impressions INTEGER DEFAULT 0,
       spend REAL DEFAULT 0,
-      created_at INTEGER NOT NULL
+      created_at INTEGER NOT NULL,
+      buyer_email TEXT,
+      icon_url TEXT,
+      payment_status TEXT DEFAULT 'paid',
+      impressions_target INTEGER DEFAULT 0,
+      impressions_served INTEGER DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS impressions (
@@ -67,6 +73,26 @@ export function createDb(): DbType {
       event_type TEXT NOT NULL,
       amount REAL DEFAULT 0,
       demo INTEGER DEFAULT 0,
+      created_at INTEGER NOT NULL,
+      event_uuid TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS pending_credits (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      amount REAL NOT NULL,
+      settles_at INTEGER NOT NULL,
+      settled INTEGER DEFAULT 0,
+      impression_id TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS payouts (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      amount REAL NOT NULL,
+      rail TEXT,
+      handle TEXT,
+      status TEXT DEFAULT 'requested',
       created_at INTEGER NOT NULL
     );
 
@@ -98,8 +124,69 @@ export function createDb(): DbType {
     INSERT OR IGNORE INTO killswitch (id, paused) VALUES (1, 0);
   `);
 
+  migrateCampaignColumns(db);
   seedAds(db);
+  seedCampaigns(db);
   return db;
+}
+
+function migrateCampaignColumns(db: DbType) {
+  const cols = db.prepare("PRAGMA table_info(campaigns)").all() as { name: string }[];
+  const names = new Set(cols.map((c) => c.name));
+  const add = (sql: string) => {
+    try {
+      db.exec(sql);
+    } catch {
+      /* column exists */
+    }
+  };
+  if (!names.has("buyer_email")) add("ALTER TABLE campaigns ADD COLUMN buyer_email TEXT");
+  if (!names.has("icon_url")) add("ALTER TABLE campaigns ADD COLUMN icon_url TEXT");
+  if (!names.has("payment_status")) {
+    add("ALTER TABLE campaigns ADD COLUMN payment_status TEXT DEFAULT 'paid'");
+  }
+  if (!names.has("impressions_target")) {
+    add("ALTER TABLE campaigns ADD COLUMN impressions_target INTEGER DEFAULT 0");
+  }
+  if (!names.has("impressions_served")) {
+    add("ALTER TABLE campaigns ADD COLUMN impressions_served INTEGER DEFAULT 0");
+  }
+  try {
+    db.exec("ALTER TABLE impressions ADD COLUMN event_uuid TEXT");
+  } catch {
+    /* exists */
+  }
+  try {
+    db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_impressions_event_uuid ON impressions(event_uuid) WHERE event_uuid IS NOT NULL");
+  } catch {
+    /* exists */
+  }
+}
+
+function seedCampaigns(db: DbType) {
+  const count = db.prepare("SELECT COUNT(*) as c FROM campaigns").get() as { c: number };
+  if (count.c > 0) return;
+
+  const id = "seed-aibc-nasdaq";
+  db.prepare(`
+    INSERT INTO campaigns (
+      id, client_id, ad_line, destination_url, brand_name, bid_per_1k, blocks,
+      show_on_leaderboard, status, created_at, payment_status, impressions_target, impressions_served
+    ) VALUES (?, 'seed', ?, ?, ?, ?, ?, 1, 'active', ?, 'paid', ?, 0)
+  `).run(
+    id,
+    "NASDAQ for ads — yours here",
+    "https://aibcmedia.com/#advertise",
+    "aibc",
+    5,
+    200,
+    Date.now(),
+    200000,
+  );
+
+  db.prepare(
+    "INSERT OR REPLACE INTO ads (ad_id, text, click_url, brand, bid_per_1k, active) VALUES (?, ?, ?, ?, ?, 1)",
+  ).run("campaign-seed-aib", "NASDAQ for ads — yours here", "https://aibcmedia.com/#advertise", "aibc", 5);
 }
 
 function seedAds(db: DbType) {
@@ -154,30 +241,40 @@ export function resolveClient(db: DbType, authHeader?: string) {
 }
 
 export function getPortfolioAds(db: DbType) {
-  return db
-    .prepare("SELECT ad_id as adId, text, click_url as clickUrl, brand FROM ads WHERE active = 1")
-    .all() as { adId: string; text: string; clickUrl: string; brand?: string }[];
+  const seeded = db
+    .prepare(
+      "SELECT ad_id as adId, text, click_url as clickUrl, brand, bid_per_1k as bidPer1k FROM ads WHERE active = 1",
+    )
+    .all() as { adId: string; text: string; clickUrl: string; brand?: string; bidPer1k: number }[];
+
+  const campaigns = db
+    .prepare(`
+      SELECT 'campaign-' || substr(id, 1, 8) as adId, ad_line as text, destination_url as clickUrl,
+             brand_name as brand, bid_per_1k as bidPer1k
+      FROM campaigns
+      WHERE payment_status = 'paid' AND status = 'active'
+        AND impressions_served < impressions_target
+      ORDER BY bid_per_1k DESC
+    `)
+    .all() as { adId: string; text: string; clickUrl: string; brand?: string; bidPer1k: number }[];
+
+  const merged = [...campaigns, ...seeded];
+  merged.sort((a, b) => (b.bidPer1k || 0) - (a.bidPer1k || 0));
+  return merged.map(({ adId, text, clickUrl, brand }) => ({
+    adId,
+    text,
+    clickUrl,
+    brand,
+    campaignId: adId.startsWith("campaign-") ? adId.slice("campaign-".length) : adId,
+  }));
 }
 
 export function creditEarnings(
   db: DbType,
   clientId: string,
-  amount: number,
+  _amount: number,
   adId: string,
   eventType: string,
 ) {
-  const id = randomUUID();
-  db.prepare(
-    "INSERT INTO impressions (id, client_id, ad_id, event_type, amount, demo, created_at) VALUES (?, ?, ?, ?, ?, 0, ?)",
-  ).run(id, clientId, adId, eventType, amount, Date.now());
-
-  db.prepare(`
-    INSERT INTO earnings (client_id, today, month, lifetime, pending, payable)
-    VALUES (?, ?, ?, ?, ?, 0)
-    ON CONFLICT(client_id) DO UPDATE SET
-      today = today + excluded.today,
-      month = month + excluded.month,
-      lifetime = lifetime + excluded.lifetime,
-      pending = pending + excluded.pending
-  `).run(clientId, amount, amount, amount, amount);
+  processMetricEvent(db, { clientId, adId, eventType });
 }

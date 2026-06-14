@@ -25,7 +25,13 @@ let earningsService: EarningsService | undefined;
 let claudeAdapter: ClaudeCodeAdapter | undefined;
 let cliAdapter: ClaudeCliAdapter | undefined;
 let statusBar: StatusBarController | undefined;
+let killSwitch: KillSwitchService | undefined;
+let metricsService: MetricsService | undefined;
 let enabled = true;
+let relocateTimer: NodeJS.Timeout | undefined;
+let killPollTimer: NodeJS.Timeout | undefined;
+
+const ACTIVATION_KEY = "aibc.activationFailed";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   const auth = new AuthService(context);
@@ -35,9 +41,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   analyticsService = new AnalyticsService(auth, context);
   feedService = new FeedService(context);
   portfolioService = new PortfolioService(api, auth);
-  const metrics = new MetricsService(api, auth);
+  metricsService = new MetricsService(api, auth);
   earningsService = new EarningsService(api, auth);
-  const killSwitch = new KillSwitchService(api);
+  killSwitch = new KillSwitchService(api);
   const loopback = new LoopbackServer();
 
   await analyticsService.initialize();
@@ -48,28 +54,79 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   statusBar = new StatusBarController();
   context.subscriptions.push({ dispose: () => statusBar?.dispose() });
 
-  const ccTarget = locateClaudeCodeTarget();
-  claudeAdapter = new ClaudeCodeAdapter(ccTarget);
+  claudeAdapter = new ClaudeCodeAdapter(locateClaudeCodeTarget());
   cliAdapter = new ClaudeCliAdapter();
 
-  const pf = claudeAdapter.preflight();
-  if (!pf.compatible) statusBar.setKind("incompatible");
+  const refreshTarget = () => {
+    const next = locateClaudeCodeTarget();
+    claudeAdapter?.setTarget(next);
+    return next;
+  };
 
-  await loopback.start((adId) => {
-    void metrics.send("click", { adId, surface: "spinner" });
-  });
+  const pf = claudeAdapter.preflight();
+  if (!pf.compatible) {
+    statusBar.setKind("incompatible");
+    const failed = context.globalState.get<boolean>(ACTIVATION_KEY, false);
+    if (failed) {
+      void vscode.window
+        .showWarningMessage(
+          "aibc: Claude Code not found. Install Claude Code extension, then retry.",
+          "Retry",
+        )
+        .then((choice) => {
+          if (choice === "Retry") void vscode.commands.executeCommand("aibc.refresh");
+        });
+    }
+  }
+
+  await loopback.start(
+    (adId, dest) => {
+      void metricsService?.send("click", { adId, surface: "spinner", dest });
+    },
+    (adId) => {
+      void metricsService?.send("view_threshold_met", { adId, surface: "webview" });
+    },
+  );
+
+  const viewTimers = new Map<string, NodeJS.Timeout>();
+
+  const syncSession = () => {
+    const token = portfolioService?.getSessionToken();
+    metricsService?.setSessionToken(token);
+  };
 
   const applyCurrentAd = () => {
-    if (!enabled || killSwitch.isPaused()) return;
+    if (!enabled || killSwitch?.isPaused()) return;
+    syncSession();
     const ad = portfolioService?.getCurrentAd();
-    if (!ad) return;
+    if (!ad) {
+      void portfolioService?.refreshIfStale().then(() => {
+        syncSession();
+        const retry = portfolioService?.getCurrentAd();
+        if (retry) applyCurrentAd();
+      });
+      return;
+    }
     const clickUrl = loopback.getClickUrl(ad.adId, ad.clickUrl);
-    claudeAdapter?.updateAd(ad.text, clickUrl);
-    cliAdapter?.apply(ad.text, ad.clickUrl, ad.adId);
-    void metrics.send("impression_rendered", { adId: ad.adId, surface: "spinner" });
+    const viewUrl = loopback.getViewUrl();
+    const viewMs = (portfolioService?.getViewThresholdSeconds() ?? 5) * 1000;
+    claudeAdapter?.updateAd(ad.text, clickUrl, viewUrl, viewMs);
+    cliAdapter?.apply(ad.text, clickUrl, ad.adId);
+    void metricsService?.send("impression_rendered", { adId: ad.adId, surface: "spinner" });
+    const prev = viewTimers.get(ad.adId);
+    if (prev) clearTimeout(prev);
+    viewTimers.set(
+      ad.adId,
+      setTimeout(() => {
+        void metricsService?.send("view_threshold_met", { adId: ad.adId, surface: "spinner" });
+      }, viewMs),
+    );
   };
 
   portfolioService.setRotateHandler(() => applyCurrentAd());
+  portfolioService.setSessionExpiredHandler(() => {
+    void portfolioService?.refreshIfStale().then(() => applyCurrentAd());
+  });
 
   earningsService.setUpdateHandler((snapshot) => {
     statusBar?.setEarnings(snapshot);
@@ -83,14 +140,49 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     statusBar.setKind("sign_in");
   }
 
-  try {
-    await killSwitch.refresh();
-    if (killSwitch.isPaused()) statusBar.setKind("killed");
-    await portfolioService.refresh(pf.version);
-    applyCurrentAd();
-  } catch {
-    statusBar.setKind("offline");
-  }
+  const runActivation = async () => {
+    try {
+      await killSwitch!.refresh();
+      const wasPaused = killSwitch!.isPaused();
+      if (wasPaused) {
+        statusBar!.setKind("killed");
+      } else {
+        await portfolioService!.refresh(pf.version);
+        syncSession();
+        applyCurrentAd();
+        await context.globalState.update(ACTIVATION_KEY, false);
+        if (auth.isSignedIn()) statusBar!.setKind("earning");
+      }
+    } catch {
+      await context.globalState.update(ACTIVATION_KEY, true);
+      statusBar!.setKind("offline");
+    }
+  };
+
+  await runActivation();
+
+  killPollTimer = setInterval(async () => {
+    const wasPaused = killSwitch!.isPaused();
+    await killSwitch!.refresh();
+    const paused = killSwitch!.isPaused();
+    if (wasPaused && !paused) {
+      await portfolioService!.refresh();
+      syncSession();
+      applyCurrentAd();
+      if (auth.isSignedIn()) statusBar!.setKind("earning");
+    } else if (!wasPaused && paused) {
+      statusBar!.setKind("killed");
+    }
+  }, 30_000);
+
+  relocateTimer = setInterval(() => {
+    const prev = claudeAdapter?.getTarget();
+    const next = refreshTarget();
+    if (next && next !== prev) {
+      applyCurrentAd();
+      if (claudeAdapter?.preflight().compatible) statusBar!.setKind(auth.isSignedIn() ? "earning" : "sign_in");
+    }
+  }, 5 * 60_000);
 
   const provider = new AibcViewProvider(
     context.extensionUri,
@@ -112,8 +204,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         statusBar?.setKind("earning");
         earningsService?.startPolling();
         await portfolioService?.refresh();
+        syncSession();
         applyCurrentAd();
         vscode.window.showInformationMessage("aibc: Signed in. Earnings active.");
+      } else {
+        vscode.window.showWarningMessage(
+          "aibc: Sign-in timed out. Complete login in your browser, then try again.",
+        );
       }
     }),
     vscode.commands.registerCommand("aibc.signOut", async () => {
@@ -162,6 +259,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
           break;
         case "refresh":
           await portfolioService?.refresh();
+          syncSession();
           applyCurrentAd();
           break;
         case "dashboard":
@@ -170,8 +268,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       }
     }),
     vscode.commands.registerCommand("aibc.refresh", async () => {
+      refreshTarget();
       await feedService?.refresh();
       await portfolioService?.refresh();
+      syncSession();
       applyCurrentAd();
     }),
     vscode.commands.registerCommand("aibc.openSettings", () => {
@@ -180,10 +280,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     { dispose: () => loopback.dispose() },
     { dispose: () => portfolioService?.dispose() },
     { dispose: () => earningsService?.dispose() },
+    {
+      dispose: () => {
+        if (relocateTimer) clearInterval(relocateTimer);
+        if (killPollTimer) clearInterval(killPollTimer);
+      },
+    },
   );
 }
 
 export async function deactivate(): Promise<void> {
+  if (relocateTimer) clearInterval(relocateTimer);
+  if (killPollTimer) clearInterval(killPollTimer);
+  claudeAdapter?.restore();
+  cliAdapter?.restore();
   feedService?.dispose();
   await analyticsService?.shutdown();
 }
