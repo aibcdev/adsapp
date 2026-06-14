@@ -32,9 +32,9 @@ export function AdvertiserBidSection({
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState("");
-  const [adLine, setAdLine] = useState("");
+  const [adLine, setAdLine] = useState("WOODS — The #1 Student Companion");
   const [destUrl, setDestUrl] = useState("https://");
-  const [brand, setBrand] = useState("");
+  const [brand, setBrand] = useState("WOODS");
   const [iconUrl, setIconUrl] = useState<string | null>(null);
   const [iconName, setIconName] = useState("");
   const [bidPerBlock, setBidPerBlock] = useState("5.00");
@@ -89,7 +89,7 @@ export function AdvertiserBidSection({
 
   return (
     <section id="launch" className="scroll-mt-24 border-t border-zinc-200 bg-white py-16 md:py-20">
-      <div className="mx-auto max-w-6xl px-6 md:px-12">
+      <div className="mx-auto max-w-[1400px] px-6 md:px-10 lg:px-16">
         <p className="font-mono text-[10px] font-semibold uppercase tracking-widest text-emerald-700">Advertisers</p>
         <BrandHeading className="mt-3 font-brand-heading text-3xl text-zinc-950 md:text-4xl lg:text-5xl">
           Bid live for the most-watched <BrandAccent>spinner</BrandAccent> on Earth.
@@ -143,7 +143,7 @@ export function AdvertiserBidSection({
                   value={adLine}
                   onChange={(e) => setAdLine(e.target.value)}
                   className={inputClass}
-                  placeholder="Try Linear — issue tracking built for speed"
+                  placeholder="WOODS — The #1 Student Companion"
                 />
               </label>
 
@@ -155,7 +155,7 @@ export function AdvertiserBidSection({
                   value={destUrl}
                   onChange={(e) => setDestUrl(e.target.value)}
                   className={inputClass}
-                  placeholder="https://linear.app/"
+                  placeholder="https://"
                 />
               </label>
 
@@ -165,7 +165,7 @@ export function AdvertiserBidSection({
                   value={brand}
                   onChange={(e) => setBrand(e.target.value)}
                   className={inputClass}
-                  placeholder="Linear"
+                  placeholder="WOODS"
                 />
               </label>
 

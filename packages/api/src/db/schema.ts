@@ -164,6 +164,20 @@ function migrateCampaignColumns(db: DbType) {
 }
 
 function seedCampaigns(db: DbType) {
+  const woodsLine = "WOODS — The #1 Student Companion";
+  const woodsUrl = "https://aibcmedia.com/advertisers";
+  const woodsBrand = "WOODS";
+
+  db.prepare(`
+    UPDATE campaigns SET ad_line = ?, destination_url = ?, brand_name = ?
+    WHERE id = 'seed-aibc-nasdaq'
+  `).run(woodsLine, woodsUrl, woodsBrand);
+
+  db.prepare(`
+    UPDATE ads SET text = ?, click_url = ?, brand = ?
+    WHERE ad_id = 'campaign-seed-aib'
+  `).run(woodsLine, woodsUrl, woodsBrand);
+
   const count = db.prepare("SELECT COUNT(*) as c FROM campaigns").get() as { c: number };
   if (count.c > 0) return;
 
@@ -175,9 +189,9 @@ function seedCampaigns(db: DbType) {
     ) VALUES (?, 'seed', ?, ?, ?, ?, ?, 1, 'active', ?, 'paid', ?, 0)
   `).run(
     id,
-    "NASDAQ for ads — yours here",
-    "https://aibcmedia.com/#advertise",
-    "aibc",
+    woodsLine,
+    woodsUrl,
+    woodsBrand,
     5,
     200,
     Date.now(),
@@ -186,7 +200,7 @@ function seedCampaigns(db: DbType) {
 
   db.prepare(
     "INSERT OR REPLACE INTO ads (ad_id, text, click_url, brand, bid_per_1k, active) VALUES (?, ?, ?, ?, ?, 1)",
-  ).run("campaign-seed-aib", "NASDAQ for ads — yours here", "https://aibcmedia.com/#advertise", "aibc", 5);
+  ).run("campaign-seed-aib", woodsLine, woodsUrl, woodsBrand, 5);
 }
 
 function seedAds(db: DbType) {

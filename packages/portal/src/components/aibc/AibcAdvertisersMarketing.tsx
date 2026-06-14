@@ -126,8 +126,8 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
   const [selectedSegment, setSelectedSegment] = useState<string>("engineers");
   
   // Custom Campaign Simulator states
-  const [brandName, setBrandName] = useState("Neon");
-  const [sponsorText, setSponsorText] = useState("Serverless Postgres built for developers. Scale to zero instantly.");
+  const [brandName, setBrandName] = useState("WOODS");
+  const [sponsorText, setSponsorText] = useState("The #1 Student Companion");
   const [targetEditor, setTargetEditor] = useState<"vscode" | "cursor" | "windsurf">("cursor");
   const [campaignBudget, setCampaignBudget] = useState(1500); // USD / month
   const [selectedPlacement, setSelectedPlacement] = useState<"status-bar" | "toast">("status-bar");
@@ -136,10 +136,12 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [faqFilter, setFaqFilter] = useState<"all" | "approval" | "safety" | "technical">("all");
 
-  // Dynamic calculated estimations
-  const calculatedImpressions = Math.floor(campaignBudget * 42.5);
-  const calculatedClicks = Math.floor(campaignBudget * 1.62);
-  const calculatedCpm = 23.50;
+  // Estimates: $5 CPM = default $5/block bid; ~1.5% CTR on native sponsor line
+  const DEFAULT_CPM_USD = 5;
+  const ESTIMATED_CTR = 0.015;
+  const calculatedImpressions = Math.floor((campaignBudget / DEFAULT_CPM_USD) * 1000);
+  const calculatedClicks = Math.floor(calculatedImpressions * ESTIMATED_CTR);
+  const calculatedCpm = DEFAULT_CPM_USD;
 
   const activeSegment = AUDIENCE_SEGMENTS.find(s => s.id === selectedSegment) || AUDIENCE_SEGMENTS[0];
 
@@ -196,7 +198,7 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
       <div className="absolute top-[400px] right-[-200px] w-[500px] h-[400px] bg-emerald-500/5 blur-[150px] rounded-full pointer-events-none"></div>
 
       {/* HERO SECTION */}
-      <section className="relative pt-40 pb-20 px-6 md:px-12 max-w-7xl mx-auto z-10">
+      <section className="relative pt-40 pb-20 px-6 md:px-12 lg:px-20 max-w-[1400px] mx-auto z-10">
         <div className="text-center max-w-4xl mx-auto space-y-6">
           
           {/* Label Pills */}
@@ -248,8 +250,8 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
       {afterHero}
 
       {/* INTERACTIVE CAMPAIGN PREVIEW SIMULATOR */}
-      <section id="simulator" className="py-24 px-6 border-t border-zinc-200 bg-white relative z-10">
-        <div className="max-w-7xl mx-auto">
+      <section id="simulator" className="py-24 px-6 md:px-12 lg:px-20 border-t border-zinc-200 bg-zinc-50/50 relative z-10">
+        <div className="max-w-[1400px] mx-auto">
           
           <div className="text-center md:text-left md:flex justify-between items-end mb-16 gap-8">
             <div className="space-y-2">
@@ -262,14 +264,16 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
               </p>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 mt-6 md:mt-0 max-w-sm w-full text-left bg-white p-4 border border-zinc-200 rounded-2xl shadow-sm">
+            <div className="grid grid-cols-2 gap-4 mt-6 md:mt-0 max-w-sm w-full text-left bg-white p-5 border border-zinc-200 rounded-2xl shadow-sm">
               <div>
-                <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">Estimated Monthly Clicks</span>
-                <span className="text-xl font-bold font-sans text-emerald-450">~{calculatedClicks.toLocaleString()}</span>
+                <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">Estimated monthly clicks</span>
+                <span className="text-xl font-bold text-emerald-700">~{calculatedClicks.toLocaleString()}</span>
+                <span className="text-[9px] text-zinc-400 block mt-0.5">~{(ESTIMATED_CTR * 100).toFixed(1)}% CTR</span>
               </div>
               <div>
-                <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">Projected Impressions</span>
-                <span className="text-xl font-bold font-sans text-zinc-900">~{calculatedImpressions.toLocaleString()}</span>
+                <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">Projected impressions</span>
+                <span className="text-xl font-bold text-zinc-900">~{calculatedImpressions.toLocaleString()}</span>
+                <span className="text-[9px] text-zinc-400 block mt-0.5">at ${calculatedCpm} CPM</span>
               </div>
             </div>
           </div>
@@ -277,55 +281,54 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
             
             {/* SIMULATOR CONTROLS - Left Panel */}
-            <div className="lg:col-span-5 bg-zinc-900/40 border border-zinc-200 rounded-[2.5rem] p-8 space-y-6 flex flex-col justify-between backdrop-blur-xl">
+            <div className="lg:col-span-5 bg-white border border-zinc-200 rounded-3xl p-8 space-y-6 flex flex-col justify-between shadow-sm">
               <div className="space-y-6">
-                <div className="pb-4 border-b border-zinc-200 flex justify-between items-center">
+                <div className="pb-4 border-b border-zinc-100 flex justify-between items-center">
                   <span className="text-sm font-semibold uppercase tracking-wider text-zinc-900 flex items-center gap-2">
-                    <Laptop className="w-4 h-4 text-emerald-450" /> Campaign Attributes
+                    <Laptop className="w-4 h-4 text-emerald-600" /> Campaign attributes
                   </span>
-                  <span className="text-xs font-mono text-zinc-500">Config: 04.N</span>
                 </div>
 
                 {/* Brand Input */}
                 <div>
-                  <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-1.5">Brand / Product Name</label>
+                  <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-1.5">Brand / product name</label>
                   <input
                     type="text"
                     value={brandName}
                     onChange={(e) => setBrandName(e.target.value)}
-                    maxLength={20}
-                    className="w-full bg-zinc-100 border border-zinc-200 rounded-xl px-4 py-2.5 text-xs text-zinc-900 placeholder-zinc-600 focus:outline-none focus:border-emerald-500/40 font-mono transition-colors"
+                    maxLength={24}
+                    className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors"
                   />
                 </div>
 
                 {/* Creative Copy Text */}
                 <div>
                   <div className="flex justify-between items-center mb-1.5">
-                    <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Sponsor Text narrative</label>
-                    <span className="text-[9px] font-mono text-zinc-600">{sponsorText.length}/80 chars</span>
+                    <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Sponsor text</label>
+                    <span className="text-[9px] font-mono text-zinc-400">{sponsorText.length}/80 chars</span>
                   </div>
                   <input
                     type="text"
                     value={sponsorText}
                     onChange={(e) => setSponsorText(e.target.value.slice(0, 80))}
-                    placeholder="e.g. Serverless server capabilities scaled in seconds."
-                    className="w-full bg-zinc-100 border border-zinc-200 rounded-xl px-4 py-2.5 text-xs text-zinc-900 placeholder-zinc-600 focus:outline-none focus:border-emerald-500/40 transition-colors"
+                    placeholder="The #1 Student Companion"
+                    className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors"
                   />
-                  <span className="text-[9px] text-zinc-500 mt-1 block">To maintain IDE elegance, keeps text length below 80 characters.</span>
                 </div>
 
                 {/* Target Editor option */}
                 <div>
-                  <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-2">Primary Target IDE</label>
+                  <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-2">Primary target IDE</label>
                   <div className="grid grid-cols-3 gap-2">
                     {(["cursor", "vscode", "windsurf"] as const).map((editor) => (
                       <button
                         key={editor}
+                        type="button"
                         onClick={() => setTargetEditor(editor)}
-                        className={`py-2 px-3 rounded-lg text-xs font-semibold capitalize font-mono border transition-all ${
+                        className={`py-2 px-3 rounded-lg text-xs font-semibold capitalize border transition-all ${
                           targetEditor === editor 
-                            ? 'bg-white text-black border-white' 
-                            : 'bg-zinc-100 text-zinc-600 border-zinc-200 hover:bg-zinc-900'
+                            ? "bg-emerald-600 text-white border-emerald-600" 
+                            : "bg-white text-zinc-600 border-zinc-200 hover:border-emerald-300 hover:text-zinc-900"
                         }`}
                       >
                         {editor === "vscode" ? "VS Code" : editor}
@@ -336,37 +339,39 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
 
                 {/* Placement position mockup selector */}
                 <div>
-                  <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-2">Placement Format</label>
+                  <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-2">Placement format</label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
+                      type="button"
                       onClick={() => setSelectedPlacement("status-bar")}
                       className={`p-3 rounded-xl text-left border flex flex-col justify-between h-20 transition-all ${
                         selectedPlacement === "status-bar"
-                          ? "bg-emerald-555/5 border-emerald-500/30 text-zinc-900"
-                          : "bg-zinc-100 border-zinc-200 text-zinc-600 hover:bg-zinc-900"
+                          ? "bg-emerald-50 border-emerald-300 text-zinc-900"
+                          : "bg-white border-zinc-200 text-zinc-600 hover:border-emerald-200"
                       }`}
                     >
-                      <span className="text-xs font-semibold">Native Status Bar</span>
-                      <span className="text-[9px] text-zinc-500">Subtle background focus text</span>
+                      <span className="text-xs font-semibold">Native status bar</span>
+                      <span className="text-[9px] text-zinc-500">Subtle line in the editor footer</span>
                     </button>
                     <button
+                      type="button"
                       onClick={() => setSelectedPlacement("toast")}
                       className={`p-3 rounded-xl text-left border flex flex-col justify-between h-20 transition-all ${
                         selectedPlacement === "toast"
-                          ? "bg-emerald-555/5 border-emerald-500/30 text-zinc-900"
-                          : "bg-zinc-100 border-zinc-200 text-zinc-600 hover:bg-zinc-900"
+                          ? "bg-emerald-50 border-emerald-300 text-zinc-900"
+                          : "bg-white border-zinc-200 text-zinc-600 hover:border-emerald-200"
                       }`}
                     >
-                      <span className="text-xs font-semibold">Launch Companion</span>
-                      <span className="text-[9px] text-zinc-500">Interactive workspace action</span>
+                      <span className="text-xs font-semibold">Launch companion</span>
+                      <span className="text-[9px] text-zinc-500">Toast with action button</span>
                     </button>
                   </div>
                 </div>
 
                 {/* Budget Tracker Slider */}
                 <div className="space-y-2 pt-2">
-                  <div className="flex justify-between items-center text-xs font-mono">
-                    <span className="text-zinc-500 lowercase">Campaign Budget</span>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-zinc-500">Campaign budget</span>
                     <span className="text-zinc-900 font-semibold">${campaignBudget.toLocaleString()} / month</span>
                   </div>
                   <input
@@ -376,103 +381,81 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
                     step={100}
                     value={campaignBudget}
                     onChange={(e) => setCampaignBudget(Number(e.target.value))}
-                    className="w-full accent-emerald-550 bg-zinc-100 h-1.5 rounded-lg cursor-pointer"
+                    className="w-full accent-emerald-600 h-1.5 rounded-lg cursor-pointer"
                   />
-                  <div className="flex justify-between text-[9px] font-mono text-zinc-650">
+                  <div className="flex justify-between text-[9px] text-zinc-400">
                     <span>Min: $500</span>
                     <span>Max: $15,000</span>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-zinc-200 space-y-3">
-                <div className="flex justify-between items-center text-xs font-mono text-zinc-500">
-                  <span>Targeting Multiplier</span>
-                  <span className="text-emerald-450 font-bold">1.0x</span>
+              <div className="pt-6 border-t border-zinc-100 space-y-3">
+                <div className="flex justify-between items-center text-xs text-zinc-500">
+                  <span>Default CPM (at $5/block bid)</span>
+                  <span className="text-emerald-700 font-bold">${calculatedCpm.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between items-center text-xs font-mono text-zinc-500">
-                  <span>Effective CPM</span>
-                  <span className="text-zinc-900 font-medium">${calculatedCpm.toFixed(2)}</span>
+                <div className="flex justify-between items-center text-xs text-zinc-500">
+                  <span>Impressions per $1 spent</span>
+                  <span className="text-zinc-900 font-medium">{Math.floor(1000 / calculatedCpm).toLocaleString()}</span>
                 </div>
               </div>
             </div>
 
             {/* LIVE PREVIEW CANVAS - Right Panel */}
-            <div className="lg:col-span-7 flex flex-col justify-between rounded-[2.5rem] border border-zinc-905 bg-black/60 overflow-hidden relative min-h-[450px]">
+            <div className="lg:col-span-7 flex flex-col rounded-3xl border border-zinc-800 bg-zinc-950 overflow-hidden relative min-h-[450px] shadow-lg">
               
               {/* Fake Workspace Header Bar */}
-              <div className="px-5 py-3 bg-zinc-900/90 border-b border-zinc-950 flex items-center justify-between z-10">
+              <div className="px-5 py-3 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between z-10">
                 <div className="flex gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-zinc-800"></div>
-                  <div className="w-2.5 h-2.5 rounded-full bg-zinc-800"></div>
-                  <div className="w-2.5 h-2.5 rounded-full bg-zinc-800"></div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
                 </div>
                 
-                {/* Editor Title tag based on state */}
-                <div className="text-[11px] font-mono text-zinc-500 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                  {targetEditor === "cursor" ? "Cursor PRO — main.rs" : targetEditor === "vscode" ? "VS Code — app.tsx" : "Windsurf — api_server.py"}
+                <div className="text-[11px] font-mono text-zinc-400 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  {targetEditor === "cursor" ? "Cursor — main.ts" : targetEditor === "vscode" ? "VS Code — app.tsx" : "Windsurf — api_server.py"}
                 </div>
 
-                <div className="w-12"></div>
+                <div className="w-12" />
               </div>
 
               {/* Mock Workspace Content Section */}
-              <div className="flex-1 p-6 font-mono text-xs text-zinc-600 space-y-4 relative bg-zinc-100/20 select-none flex flex-col justify-between">
+              <div className="flex-1 p-6 font-mono text-xs relative bg-zinc-950 select-none">
                 
-                {/* Simulated code block */}
-                <div className="space-y-2 opacity-50">
-                  <div className="text-zinc-650 flex gap-4"><span className="w-4 text-right">01</span><span className="text-indigo-400">import</span> {"{"} createEngine {"}"} <span className="text-indigo-400">from</span> <span className="text-emerald-400">"aibc-studio-core"</span>;</div>
-                  <div className="text-zinc-650 flex gap-4"><span className="w-4 text-right">02</span><span className="text-zinc-550">// Initialize focus sponsorship network</span></div>
-                  <div className="text-zinc-650 flex gap-4"><span className="w-4 text-right">03</span><span className="text-zinc-405">const</span> engine = <span className="text-blue-400">await</span> createEngine({"{"}</div>
-                  <div className="text-zinc-650 flex gap-4"><span className="w-4 text-right">04</span>  sponsorRateMultiplier: <span className="text-orange-400">1.25</span>,</div>
-                  <div className="text-zinc-650 flex gap-4"><span className="w-4 text-right">05</span>  preferredVerticals: [<span className="text-emerald-400">"developer-infrastructure"</span>]</div>
-                  <div className="text-zinc-650 flex gap-4"><span className="w-4 text-right">06</span>{"}"});</div>
-                  <div className="text-zinc-650 flex gap-4"><span className="w-4 text-right">07</span><span className="text-indigo-400">export</span> <span className="text-zinc-405">const</span> runSession = () =&gt; engine.verifyState();</div>
+                <div className="space-y-1.5 opacity-80">
+                  <div className="flex gap-4 text-zinc-600"><span className="w-6 text-right text-zinc-700">1</span><span><span className="text-purple-400">import</span> {"{ createClient }"} <span className="text-purple-400">from</span> <span className="text-emerald-400">&apos;@woods/api&apos;</span>;</span></div>
+                  <div className="flex gap-4 text-zinc-600"><span className="w-6 text-right text-zinc-700">2</span><span className="text-zinc-500">// student companion — focus mode</span></div>
+                  <div className="flex gap-4 text-zinc-600"><span className="w-6 text-right text-zinc-700">3</span><span><span className="text-blue-400">const</span> client = createClient();</span></div>
+                  <div className="flex gap-4 text-zinc-600"><span className="w-6 text-right text-zinc-700">4</span><span><span className="text-blue-400">await</span> client.session.start();</span></div>
                 </div>
 
-                {/* TOAST NOTIFICATION PREVIEW PANEL (if that format selected) */}
-                {selectedPlacement === "toast" && (
-                  <div className="absolute right-6 bottom-6 max-w-sm w-full bg-zinc-900 border border-zinc-200 rounded-2xl p-4 shadow-2xl animate-fade-in z-20 space-y-2">
+                {selectedPlacement === "toast" ? (
+                  <div className="absolute right-6 bottom-20 max-w-sm w-full bg-zinc-900 border border-zinc-700 rounded-2xl p-4 shadow-2xl z-20 space-y-2">
                     <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-1.5">
-                        <Zap className="w-3.5 h-3.5 text-emerald-400" />
-                        <span className="text-[10px] font-bold text-zinc-900 uppercase tracking-wider">{brandName}</span>
-                      </div>
-                      <span className="text-[8px] bg-emerald-500/10 text-emerald-400 font-bold px-2 py-0.5 rounded uppercase font-mono tracking-widest leading-none">Sponsored</span>
+                      <span className="text-xs font-bold text-white">{brandName}</span>
+                      <span className="text-[8px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded uppercase">Sponsored</span>
                     </div>
-                    <p className="text-xs text-zinc-700 font-light leading-relaxed">
-                      {sponsorText || "Your sponsorship story displayed elegantly inside native notification segments."}
+                    <p className="text-xs text-zinc-300 leading-relaxed">
+                      {sponsorText || "Your message here."}
                     </p>
-                    <div className="flex gap-2 pt-1 justify-end">
-                      <button className="bg-white text-black font-semibold text-[10px] px-3 py-1 rounded" disabled>Try Live</button>
-                    </div>
+                    <button type="button" className="bg-white text-zinc-900 font-semibold text-[10px] px-3 py-1 rounded" disabled>Try it</button>
                   </div>
-                )}
-
-                {/* Background visual graphics */}
-                <div className="text-center py-6 opacity-30 select-none">
-                  <div className="inline-block border border-dashed border-zinc-200 p-4 rounded-xl">
-                    <div className="text-[11px] text-zinc-500">Live Workspace Simulator Output</div>
-                    <div className="text-zinc-600 text-[10px] mt-1">Sponsorship message rendered nondisruptively below</div>
-                  </div>
-                </div>
+                ) : null}
               </div>
 
-              {/* STATUS BAR NATIVE PLACEMENT PANEL (if status-bar format selected) */}
-              <div className="bg-zinc-900 border-t border-zinc-950 px-5 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 z-10">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-[9px] bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 px-1.5 py-0.5 rounded font-mono font-bold uppercase tracking-wider leading-none">Sponsor</span>
-                  <div className="text-xs text-zinc-700 font-medium">
+              {/* STATUS BAR NATIVE PLACEMENT */}
+              <div className="bg-zinc-900 border-t border-zinc-800 px-5 py-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 z-10">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="shrink-0 text-[9px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-mono font-bold uppercase">Sponsor</span>
+                  <div className="text-xs text-zinc-300 truncate">
                     <span className="text-emerald-400 font-semibold">{brandName}</span>
-                    <span className="text-zinc-500 px-1.5">|</span>
-                    <span className="text-zinc-600 leading-tight font-light">{sponsorText || "Your custom narrative details populate here dynamically."}</span>
+                    <span className="text-zinc-600 px-1.5">|</span>
+                    <span className="text-zinc-400">{sponsorText || "Your message here."}</span>
                   </div>
                 </div>
-                
-                <span className="text-[10px] font-mono text-zinc-500 self-end sm:self-auto uppercase tracking-widest">
-                  LN 12, COL 4
-                </span>
+                <span className="text-[10px] font-mono text-zinc-500 shrink-0">LN 12, COL 4</span>
               </div>
             </div>
           </div>
@@ -575,7 +558,7 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
                     <span className="text-lg">{segment.icon}</span>
                     <span className="text-xs font-semibold tracking-tight">{segment.name}</span>
                   </div>
-                  <span className="text-[10px] font-mono text-zinc-550">{segment.concentration}</span>
+                  <span className="text-[10px] font-mono text-zinc-500">{segment.concentration}</span>
                 </button>
               ))}
             </div>
@@ -589,7 +572,7 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
                   <span className="text-md font-bold text-zinc-900 font-mono flex items-center gap-2">
                     {activeSegment.icon} {activeSegment.name}
                   </span>
-                  <span className="text-xs font-semibold bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-mono">{activeSegment.concentration}</span>
+                  <span className="text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full font-mono">{activeSegment.concentration}</span>
                 </div>
 
                 <p className="text-sm text-zinc-600 leading-relaxed font-medium">
