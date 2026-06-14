@@ -1,14 +1,20 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api, getToken, setToken } from "../lib/api";
-import { completeAuthFromState, googleRedirectUrl, startAuthSession } from "../lib/auth";
+import {
+  completeAuthFromState,
+  completeEmailSignIn,
+  devSignInUrl,
+  ensureAuthSession,
+  googleRedirectUrl,
+} from "../lib/auth";
 import { DashboardLayout } from "../components/dashboard/DashboardLayout";
 import { StatCards } from "../components/dashboard/StatCards";
 import { EarningsChart } from "../components/dashboard/EarningsChart";
 import { PayoutsPanel } from "../components/dashboard/PayoutsPanel";
 import { ActivityLedger } from "../components/dashboard/ActivityLedger";
 import { AccountSection } from "../components/dashboard/AccountSection";
-import { devSignInUrl, GoogleSignInCard } from "../components/auth/GoogleSignInCard";
+import { LoginAuthCard } from "../components/auth/LoginAuthCard";
 
 type Earnings = {
   today: number;
@@ -27,9 +33,11 @@ type Earnings = {
 type Activity = { id: string; type: string; adId: string; amount: number; createdAt: string };
 
 export function DashboardPage() {
+  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [email, setEmail] = useState<string>();
   const [authBusy, setAuthBusy] = useState(false);
+  const [authError, setAuthError] = useState("");
   const [signInState, setSignInState] = useState("");
   const [earnings, setEarnings] = useState<Earnings>({
     today: 0,
@@ -44,7 +52,7 @@ export function DashboardPage() {
   const [activityLoading, setActivityLoading] = useState(false);
   const [payoutRail, setPayoutRail] = useState("");
   const [payoutHandle, setPayoutHandle] = useState("");
-  const [authConfig, setAuthConfig] = useState({ google: true, devBypass: false });
+  const [authConfig, setAuthConfig] = useState({ devBypass: false });
 
   const loadEarnings = async () => {
     const e = await api<Earnings>("/v1/me/earnings");
@@ -96,27 +104,47 @@ export function DashboardPage() {
         setParams(params, { replace: true });
         return loadAll();
       })
-      .catch(() => {})
+      .catch(() => setAuthError("Sign-in failed. Try again from the login page."))
       .finally(() => setAuthBusy(false));
   }, []);
 
   useEffect(() => {
     void fetch(`${import.meta.env.VITE_AIBC_API || "https://api.aibcmedia.com"}/v1/auth/config`)
       .then((r) => r.json())
-      .then((c) => setAuthConfig({ google: Boolean(c.google), devBypass: Boolean(c.devBypass) }))
+      .then((c) => setAuthConfig({ devBypass: Boolean(c.devBypass) }))
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    void startAuthSession().then(setSignInState).catch(() => {});
+    void ensureAuthSession(signInState).then(setSignInState).catch(() => {});
   }, []);
 
   const signInGoogle = async () => {
     setAuthBusy(true);
+    setAuthError("");
     try {
-      const state = signInState || (await startAuthSession());
+      const state = await ensureAuthSession(signInState);
       setSignInState(state);
       window.location.href = googleRedirectUrl(state);
+    } catch (e) {
+      setAuthError(e instanceof Error ? e.message : "Could not start Google sign-in");
+      setAuthBusy(false);
+    }
+  };
+
+  const signInEmail = async (addr: string) => {
+    setAuthBusy(true);
+    setAuthError("");
+    try {
+      const state = await ensureAuthSession(signInState);
+      setSignInState(state);
+      const result = await completeEmailSignIn(state, addr);
+      setToken(result.accessToken);
+      navigate("/dashboard", { replace: true });
+      await loadAll();
+    } catch (e) {
+      setAuthError(e instanceof Error ? e.message : "Email sign-in failed");
+      throw e;
     } finally {
       setAuthBusy(false);
     }
@@ -132,16 +160,17 @@ export function DashboardPage() {
   if (!getToken()) {
     return (
       <DashboardLayout email={undefined} onSignOut={signOut}>
-        <div className="mx-auto flex max-w-md justify-center py-12">
-          <GoogleSignInCard
-            compact
+        <div className="mx-auto flex max-w-md justify-center py-8">
+          <LoginAuthCard
             busy={authBusy}
+            error={authError}
             devBypass={authConfig.devBypass}
-            state={signInState}
-            onGoogleSignIn={() => void signInGoogle()}
+            onGoogleSignIn={signInGoogle}
+            onEmailSignIn={signInEmail}
             onDevSignIn={() => {
-              if (!signInState) return;
-              window.location.href = devSignInUrl(signInState);
+              void ensureAuthSession(signInState).then((s) => {
+                window.location.href = devSignInUrl(s);
+              });
             }}
           />
         </div>

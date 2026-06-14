@@ -89,6 +89,10 @@ h1{color:#059669;font-size:1.5rem}</style></head>
 <body><div class="box"><h1>Signed in</h1><p>${email || ""}</p><p>Return to AIBC Media and close this tab.</p></div></body></html>`;
   }
   return `<!DOCTYPE html>
-<html lang="en"><body style="font-family:system-ui;background:#f4f4f5;color:#18181b;padding:2rem">
-<h1>Sign-in failed</h1><p>Close this tab and try again.</p></body></html>`;
+<html lang="en"><head><meta charset="utf-8"><title>Sign-in failed</title>
+<meta http-equiv="refresh" content="0;url=${config.portalUrl}/login?error=google_failed">
+</head><body style="font-family:system-ui;background:#f4f4f5;color:#18181b;padding:2rem">
+<h1>Sign-in failed</h1><p>Redirecting…</p>
+<script>location.replace(${JSON.stringify(`${config.portalUrl}/login?error=google_failed`)})</script>
+</body></html>`;
 }

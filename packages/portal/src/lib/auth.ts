@@ -12,6 +12,13 @@ export function getStoredAuthState(): string {
   return sessionStorage.getItem("aibc_auth_state") || "";
 }
 
+export async function ensureAuthSession(existing = ""): Promise<string> {
+  if (existing) return existing;
+  const stored = getStoredAuthState();
+  if (stored) return stored;
+  return startAuthSession();
+}
+
 export function googleRedirectUrl(state: string): string {
   return `${API}/v1/auth/google/redirect?state=${encodeURIComponent(state)}`;
 }
@@ -32,4 +39,19 @@ export async function completeAuthFromState(state: string, maxAttempts = 40): Pr
     await new Promise((r) => setTimeout(r, 750));
   }
   throw new Error("Sign-in timed out. Try again.");
+}
+
+export async function completeEmailSignIn(state: string, email: string): Promise<{ accessToken: string; email: string }> {
+  const res = await fetch(`${API}/v1/auth/email/complete`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ state, email: email.trim().toLowerCase() }),
+  });
+  const body = (await res.json()) as { ok?: boolean; error?: string; email?: string };
+  if (!res.ok) throw new Error(body.error || "Email sign-in failed");
+  return completeAuthFromState(state);
+}
+
+export function devSignInUrl(state: string): string {
+  return `${API}/v1/auth/dev-complete?state=${encodeURIComponent(state)}`;
 }

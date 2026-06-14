@@ -27,7 +27,7 @@ export const config = {
 };
 
 export function emailAuthEnabled(): boolean {
-  return config.devBypass || !config.googleClientId;
+  return true;
 }
 
 export function googleAuthUrl(state: string): string {

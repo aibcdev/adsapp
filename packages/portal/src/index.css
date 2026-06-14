@@ -187,7 +187,10 @@ body {
 }
 
 .login-shell {
-  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 40%, #eff6ff 100%);
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 20%, rgba(167, 243, 208, 0.35), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 85% 75%, rgba(191, 219, 254, 0.3), transparent 50%),
+    linear-gradient(135deg, #f0fdf4 0%, #ffffff 45%, #f8fafc 100%);
 }
 
 .dashboard-shell {
