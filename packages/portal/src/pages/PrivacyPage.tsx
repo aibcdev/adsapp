@@ -142,7 +142,8 @@ export function PrivacyPage() {
       <section id="contact">
         <h2>Contact</h2>
         <p>
-          Privacy questions: <a href="mailto:watchaibc@gmail.com">watchaibc@gmail.com</a>
+          Privacy questions: <a href="mailto:watchaibc@gmail.com">watchaibc@gmail.com</a> — or use our{" "}
+          <a href="/contact">contact form</a>.
         </p>
         <p>
           Website: <a href="https://aibcmedia.com">https://aibcmedia.com</a>

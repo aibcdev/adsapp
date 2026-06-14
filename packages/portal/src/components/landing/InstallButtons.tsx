@@ -1,22 +1,27 @@
 import { BrandAccent } from "../brand/BrandAccent";
 import { INSTALL, openInstall, type InstallKey } from "../../lib/installLinks";
+import { PLATFORM_LOGOS } from "../../lib/platformLogos";
 
 const PRIMARY: InstallKey[] = ["vscode", "cursor", "windsurf"];
 
-function IconMark({ label }: { label: string }) {
+function PlatformIcon({ installKey, label }: { installKey: InstallKey; label: string }) {
+  const logo = PLATFORM_LOGOS[installKey];
+
   return (
-    <span className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-100 font-mono text-[10px] font-bold text-emerald-700">
-      {label.slice(0, 2).toUpperCase()}
-    </span>
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="flex h-10 w-10 items-center justify-center">
+        {logo ? (
+          <img src={logo} alt="" aria-hidden className="max-h-full max-w-full object-contain" />
+        ) : (
+          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-100 font-mono text-[10px] font-bold text-emerald-700">
+            {label.slice(0, 2).toUpperCase()}
+          </span>
+        )}
+      </div>
+      <span className="text-xs font-semibold text-zinc-900">{label}</span>
+    </div>
   );
 }
-
-const LABELS: Record<InstallKey, string> = {
-  vscode: "VS",
-  openvsx: "OV",
-  cursor: "CU",
-  windsurf: "WS",
-};
 
 export function InstallButtons({ compact }: { compact?: boolean }) {
   if (compact) {
@@ -29,9 +34,9 @@ export function InstallButtons({ compact }: { compact?: boolean }) {
             data-install-button
             onClick={() => openInstall(key)}
             title={`Install in ${INSTALL[key].label}`}
-            className="flex h-12 w-12 items-center justify-center rounded-xl border border-zinc-200 bg-white transition hover:border-emerald-400 hover:bg-emerald-50"
+            className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-xl border border-zinc-200 bg-white p-2 transition hover:border-emerald-400 hover:bg-emerald-50"
           >
-            <IconMark label={LABELS[key]} />
+            <PlatformIcon installKey={key} label={INSTALL[key].label} />
           </button>
         ))}
       </div>
@@ -39,28 +44,26 @@ export function InstallButtons({ compact }: { compact?: boolean }) {
   }
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        {PRIMARY.map((key) => (
-          <button
-            key={key}
-            type="button"
-            data-install-button
-            onClick={() => openInstall(key)}
-            className="group flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-5 py-3 transition hover:border-emerald-500 hover:bg-emerald-50"
-          >
-            <IconMark label={LABELS[key]} />
-            <span className="text-sm font-bold text-zinc-900">Install in {INSTALL[key].label}</span>
-          </button>
-        ))}
-      </div>
+    <div className="flex flex-wrap items-stretch justify-center gap-3">
+      {PRIMARY.map((key) => (
+        <button
+          key={key}
+          type="button"
+          data-install-button
+          onClick={() => openInstall(key)}
+          title={`Install in ${INSTALL[key].label}`}
+          className="group flex min-w-[6.5rem] flex-col items-center rounded-2xl border border-zinc-200 bg-white px-4 py-3 transition hover:border-emerald-500 hover:bg-emerald-50"
+        >
+          <PlatformIcon installKey={key} label={INSTALL[key].label} />
+        </button>
+      ))}
     </div>
   );
 }
 
 export function HeroInstallCta({ monthlyUsd }: { monthlyUsd: number }) {
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-6">
+    <div className="mx-auto w-full max-w-2xl space-y-4">
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 px-4 py-5 text-center">
           <p className="font-brand-heading text-4xl text-zinc-950 md:text-5xl">${monthlyUsd.toFixed(0)}</p>

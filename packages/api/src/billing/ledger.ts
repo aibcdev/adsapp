@@ -12,6 +12,7 @@ import {
   recordSessionImpression,
   validatePortfolioSession,
 } from "./portfolioSession.js";
+import { foundingBonusMultiplier, maybeQualifyReferral } from "../clients/profile.js";
 
 const BILLABLE_EVENTS = new Set([
   "view_threshold_met",
@@ -168,8 +169,10 @@ export function processMetricEvent(
 
   incrementCampaignDelivery(db, opts.adId, advertiserCost);
 
-  const amount =
+  const baseAmount =
     event === "click" ? developerClickPay(bid) : developerImpressionPay(bid);
+  const multiplier = foundingBonusMultiplier(db, opts.clientId);
+  const amount = Math.round(baseAmount * multiplier * 1e6) / 1e6;
 
   if (!capCheck(db, opts.clientId, amount)) {
     return { ok: true };
@@ -197,6 +200,7 @@ export function processMetricEvent(
   ).run(randomUUID(), opts.clientId, amount, settlesAt, id);
 
   settlePendingCredits(db, opts.clientId);
+  maybeQualifyReferral(db, opts.clientId);
 
   return { ok: true, credited: amount };
 }

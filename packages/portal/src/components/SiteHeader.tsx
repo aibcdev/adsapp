@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Terminal, Target } from "lucide-react";
+import { Menu, X, Terminal, Target, Radio } from "lucide-react";
 import { AibcLogo } from "./brand/AibcLogo";
 import { getAudienceCta } from "./AudienceSwitcher";
 
@@ -10,6 +10,7 @@ export function SiteHeader() {
   const cta = getAudienceCta(location.pathname);
   const isDevelopers = location.pathname === "/" || location.pathname.startsWith("/waitlist");
   const isAdvertisers = location.pathname.startsWith("/advertisers");
+  const isPublishers = location.pathname.startsWith("/publishers");
 
   const closeMobile = () => setMobileOpen(false);
 
@@ -24,7 +25,7 @@ export function SiteHeader() {
           <Link
             to="/"
             onClick={closeMobile}
-            className={`flex items-center gap-1.5 rounded-full px-4 py-2 font-mono leading-none transition-all duration-300 ${
+            className={`flex items-center gap-1.5 rounded-full px-3 py-2 font-mono leading-none transition-all duration-300 lg:px-4 ${
               isDevelopers ? "bg-white font-semibold text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
@@ -34,20 +35,27 @@ export function SiteHeader() {
           <Link
             to="/advertisers"
             onClick={closeMobile}
-            className={`flex items-center gap-1.5 rounded-full px-4 py-2 font-mono leading-none transition-all duration-300 ${
+            className={`flex items-center gap-1.5 rounded-full px-3 py-2 font-mono leading-none transition-all duration-300 lg:px-4 ${
               isAdvertisers ? "bg-white font-semibold text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
             <Target className="h-3.5 w-3.5" />
             <span>For Advertisers</span>
           </Link>
+          <Link
+            to="/publishers"
+            onClick={closeMobile}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-2 font-mono leading-none transition-all duration-300 lg:px-4 ${
+              isPublishers ? "bg-white font-semibold text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-900"
+            }`}
+          >
+            <Radio className="h-3.5 w-3.5" />
+            <span>For Publishers</span>
+          </Link>
         </div>
       </div>
 
       <div className="hidden items-center gap-6 md:flex">
-        <Link to="/publishers" className="text-xs font-mono uppercase tracking-wide text-zinc-500 transition hover:text-zinc-900">
-          Publishers
-        </Link>
         <Link to="/dashboard" className="text-sm font-medium text-zinc-600 transition hover:text-zinc-900">
           Dashboard
         </Link>
@@ -84,8 +92,12 @@ export function SiteHeader() {
           >
             For Advertisers
           </Link>
-          <Link to="/publishers" className="text-base text-zinc-600" onClick={closeMobile}>
-            Publishers
+          <Link
+            to="/publishers"
+            onClick={closeMobile}
+            className={`rounded-full px-4 py-2 font-mono text-sm ${isPublishers ? "bg-emerald-50 text-zinc-900 font-semibold" : "text-zinc-500"}`}
+          >
+            For Publishers
           </Link>
           <Link to="/dashboard" className="text-base text-zinc-700" onClick={closeMobile}>
             Dashboard

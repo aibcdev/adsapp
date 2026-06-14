@@ -1,9 +1,10 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import {
   Zap, Check, ArrowRight, BadgeAlert, HelpCircle, Laptop, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { BrandAccent } from "../brand/BrandAccent";
+import { DeveloperIdeDemo } from "./DeveloperIdeDemo";
 import type { ReactNode } from "react";
 
 interface AudienceSegment {
@@ -128,9 +129,7 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
   // Custom Campaign Simulator states
   const [brandName, setBrandName] = useState("WOODS");
   const [sponsorText, setSponsorText] = useState("The #1 Student Companion");
-  const [targetEditor, setTargetEditor] = useState<"vscode" | "cursor" | "windsurf">("cursor");
   const [campaignBudget, setCampaignBudget] = useState(1500); // USD / month
-  const [selectedPlacement, setSelectedPlacement] = useState<"status-bar" | "toast">("status-bar");
 
   // Dynamic FAQ state
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
@@ -260,7 +259,7 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
                 Build your ad live
               </h2>
               <p className="text-zinc-600 text-base font-medium max-w-xl">
-                Type your brand name and message. Pick an editor. See exactly what developers will see — and your estimated reach.
+                Type your brand name and message. Hit simulate — see exactly what developers see in their editor.
               </p>
             </div>
             
@@ -316,58 +315,6 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
                   />
                 </div>
 
-                {/* Target Editor option */}
-                <div>
-                  <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-2">Primary target IDE</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(["cursor", "vscode", "windsurf"] as const).map((editor) => (
-                      <button
-                        key={editor}
-                        type="button"
-                        onClick={() => setTargetEditor(editor)}
-                        className={`py-2 px-3 rounded-lg text-xs font-semibold capitalize border transition-all ${
-                          targetEditor === editor 
-                            ? "bg-emerald-600 text-white border-emerald-600" 
-                            : "bg-white text-zinc-600 border-zinc-200 hover:border-emerald-300 hover:text-zinc-900"
-                        }`}
-                      >
-                        {editor === "vscode" ? "VS Code" : editor}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Placement position mockup selector */}
-                <div>
-                  <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-2">Placement format</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPlacement("status-bar")}
-                      className={`p-3 rounded-xl text-left border flex flex-col justify-between h-20 transition-all ${
-                        selectedPlacement === "status-bar"
-                          ? "bg-emerald-50 border-emerald-300 text-zinc-900"
-                          : "bg-white border-zinc-200 text-zinc-600 hover:border-emerald-200"
-                      }`}
-                    >
-                      <span className="text-xs font-semibold">Native status bar</span>
-                      <span className="text-[9px] text-zinc-500">Subtle line in the editor footer</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPlacement("toast")}
-                      className={`p-3 rounded-xl text-left border flex flex-col justify-between h-20 transition-all ${
-                        selectedPlacement === "toast"
-                          ? "bg-emerald-50 border-emerald-300 text-zinc-900"
-                          : "bg-white border-zinc-200 text-zinc-600 hover:border-emerald-200"
-                      }`}
-                    >
-                      <span className="text-xs font-semibold">Launch companion</span>
-                      <span className="text-[9px] text-zinc-500">Toast with action button</span>
-                    </button>
-                  </div>
-                </div>
-
                 {/* Budget Tracker Slider */}
                 <div className="space-y-2 pt-2">
                   <div className="flex justify-between items-center text-xs">
@@ -402,61 +349,9 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
               </div>
             </div>
 
-            {/* LIVE PREVIEW CANVAS - Right Panel */}
-            <div className="lg:col-span-7 flex flex-col rounded-3xl border border-zinc-800 bg-zinc-950 overflow-hidden relative min-h-[450px] shadow-lg">
-              
-              {/* Fake Workspace Header Bar */}
-              <div className="px-5 py-3 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between z-10">
-                <div className="flex gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
-                </div>
-                
-                <div className="text-[11px] font-mono text-zinc-400 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  {targetEditor === "cursor" ? "Cursor — main.ts" : targetEditor === "vscode" ? "VS Code — app.tsx" : "Windsurf — api_server.py"}
-                </div>
-
-                <div className="w-12" />
-              </div>
-
-              {/* Mock Workspace Content Section */}
-              <div className="flex-1 p-6 font-mono text-xs relative bg-zinc-950 select-none">
-                
-                <div className="space-y-1.5 opacity-80">
-                  <div className="flex gap-4 text-zinc-600"><span className="w-6 text-right text-zinc-700">1</span><span><span className="text-purple-400">import</span> {"{ createClient }"} <span className="text-purple-400">from</span> <span className="text-emerald-400">&apos;@woods/api&apos;</span>;</span></div>
-                  <div className="flex gap-4 text-zinc-600"><span className="w-6 text-right text-zinc-700">2</span><span className="text-zinc-500">// student companion — focus mode</span></div>
-                  <div className="flex gap-4 text-zinc-600"><span className="w-6 text-right text-zinc-700">3</span><span><span className="text-blue-400">const</span> client = createClient();</span></div>
-                  <div className="flex gap-4 text-zinc-600"><span className="w-6 text-right text-zinc-700">4</span><span><span className="text-blue-400">await</span> client.session.start();</span></div>
-                </div>
-
-                {selectedPlacement === "toast" ? (
-                  <div className="absolute right-6 bottom-20 max-w-sm w-full bg-zinc-900 border border-zinc-700 rounded-2xl p-4 shadow-2xl z-20 space-y-2">
-                    <div className="flex justify-between items-start">
-                      <span className="text-xs font-bold text-white">{brandName}</span>
-                      <span className="text-[8px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded uppercase">Sponsored</span>
-                    </div>
-                    <p className="text-xs text-zinc-300 leading-relaxed">
-                      {sponsorText || "Your message here."}
-                    </p>
-                    <button type="button" className="bg-white text-zinc-900 font-semibold text-[10px] px-3 py-1 rounded" disabled>Try it</button>
-                  </div>
-                ) : null}
-              </div>
-
-              {/* STATUS BAR NATIVE PLACEMENT */}
-              <div className="bg-zinc-900 border-t border-zinc-800 px-5 py-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 z-10">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="shrink-0 text-[9px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-mono font-bold uppercase">Sponsor</span>
-                  <div className="text-xs text-zinc-300 truncate">
-                    <span className="text-emerald-400 font-semibold">{brandName}</span>
-                    <span className="text-zinc-600 px-1.5">|</span>
-                    <span className="text-zinc-400">{sponsorText || "Your message here."}</span>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-zinc-500 shrink-0">LN 12, COL 4</span>
-              </div>
+            {/* LIVE IDE PREVIEW — same shell as developers page */}
+            <div className="lg:col-span-7">
+              <DeveloperIdeDemo variant="advertiser-preview" brandName={brandName} sponsorText={sponsorText} />
             </div>
           </div>
         </div>

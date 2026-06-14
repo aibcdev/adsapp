@@ -103,6 +103,12 @@ export function SiteFooter() {
           <Link to="/terms" className="transition-colors hover:text-zinc-900">
             Terms
           </Link>
+          <Link to="/contact" className="transition-colors hover:text-zinc-900">
+            Contact
+          </Link>
+          <Link to="/referral" className="transition-colors hover:text-zinc-900">
+            Refer a developer — earn $10
+          </Link>
           <Link to="/dashboard" className="transition-colors hover:text-zinc-900">
             Dashboard
           </Link>

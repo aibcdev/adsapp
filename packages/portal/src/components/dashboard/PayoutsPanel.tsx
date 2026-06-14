@@ -2,16 +2,27 @@ import { useState } from "react";
 
 const MIN_PAYOUT = 10;
 
+type PayoutLimits = {
+  requestsToday: number;
+  requestsThisWeek: number;
+  usdToday: number;
+  maxRequestsPerDay: number;
+  maxRequestsPerWeek: number;
+  maxUsdPerDay: number;
+};
+
 export function PayoutsPanel({
   payable,
   rail,
   handle,
+  payoutLimits,
   onSaveMethod,
   onRequestPayout,
 }: {
   payable: number;
   rail: string;
   handle: string;
+  payoutLimits?: PayoutLimits;
   onSaveMethod: (rail: string, handle: string) => Promise<void>;
   onRequestPayout: () => Promise<void>;
 }) {
@@ -120,6 +131,13 @@ export function PayoutsPanel({
       <p className="mt-4 text-xs leading-relaxed text-zinc-500">
         Every payout is manually reviewed for fraud. Click-farm and bot earnings will not be paid.
       </p>
+      {payoutLimits ? (
+        <p className="mt-2 text-xs text-zinc-500">
+          Withdrawal limits: {payoutLimits.requestsToday}/{payoutLimits.maxRequestsPerDay} today ·{" "}
+          {payoutLimits.requestsThisWeek}/{payoutLimits.maxRequestsPerWeek} this week · $
+          {payoutLimits.usdToday.toFixed(2)}/${payoutLimits.maxUsdPerDay} withdrawn today.
+        </p>
+      ) : null}
 
       {msg ? <p className="mt-3 text-sm text-emerald-700">{msg}</p> : null}
       {err ? <p className="mt-3 text-sm text-red-600">{err}</p> : null}

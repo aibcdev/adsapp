@@ -8,26 +8,42 @@ const out = join(__dirname, "..", "packages", "extension", "media", "icon.png");
 
 const width = 128;
 const height = 128;
+const cx = 64;
+const cy = 64;
+const ringRadius = 44;
+const ringStroke = 10;
+const dotRadius = 16;
+
 const rgba = Buffer.alloc(width * height * 4);
 
 for (let y = 0; y < height; y++) {
   for (let x = 0; x < width; x++) {
     const i = (y * width + x) * 4;
-    const cx = x - width / 2;
-    const cy = y - height / 2;
-    const dist = Math.sqrt(cx * cx + cy * cy);
-    const inCircle = dist < 46;
-    rgba[i] = inCircle ? 255 : 5;
-    rgba[i + 1] = inCircle ? 94 : 5;
-    rgba[i + 2] = inCircle ? 30 : 5;
+    const dx = x + 0.5 - cx;
+    const dy = y + 0.5 - cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    let r = 255;
+    let g = 255;
+    let b = 255;
+
+    if (dist <= dotRadius) {
+      r = g = b = 0;
+    } else if (Math.abs(dist - ringRadius) <= ringStroke / 2) {
+      r = g = b = 0;
+    }
+
+    rgba[i] = r;
+    rgba[i + 1] = g;
+    rgba[i + 2] = b;
     rgba[i + 3] = 255;
   }
 }
 
 function crc32(buf) {
   let c = ~0;
-  for (let i = 0; i < buf.length; i++) {
-    c ^= buf[i];
+  for (let n = 0; n < buf.length; n++) {
+    c ^= buf[n];
     for (let k = 0; k < 8; k++) {
       c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
     }
@@ -68,4 +84,4 @@ const png = Buffer.concat([
 ]);
 
 writeFileSync(out, png);
-console.log(`[aibc] wrote ${out}`);
+console.log(`[aibc] wrote ${out} (128x128 ring + dot logo)`);

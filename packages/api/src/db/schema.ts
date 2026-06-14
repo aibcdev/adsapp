@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { processMetricEvent } from "../billing/ledger.js";
+import { ensureClientProfile } from "../clients/profile.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DB_PATH = process.env.AIBC_DB_PATH || join(__dirname, "..", "aibc.db");
@@ -125,9 +126,46 @@ export function createDb(): DbType {
   `);
 
   migrateCampaignColumns(db);
+  migrateClientColumns(db);
+  migratePayoutColumns(db);
   seedAds(db);
   seedCampaigns(db);
   return db;
+}
+
+function migrateClientColumns(db: DbType) {
+  const cols = db.prepare("PRAGMA table_info(clients)").all() as { name: string }[];
+  const names = new Set(cols.map((c) => c.name));
+  const add = (sql: string) => {
+    try {
+      db.exec(sql);
+    } catch {
+      /* column exists */
+    }
+  };
+  if (!names.has("founding_member")) add("ALTER TABLE clients ADD COLUMN founding_member INTEGER DEFAULT 0");
+  if (!names.has("founding_enrolled_at")) add("ALTER TABLE clients ADD COLUMN founding_enrolled_at INTEGER");
+  if (!names.has("referral_code")) add("ALTER TABLE clients ADD COLUMN referral_code TEXT");
+  if (!names.has("referred_by_client_id")) add("ALTER TABLE clients ADD COLUMN referred_by_client_id TEXT");
+  if (!names.has("referral_qualified_at")) add("ALTER TABLE clients ADD COLUMN referral_qualified_at INTEGER");
+  if (!names.has("referral_bonus_paid")) add("ALTER TABLE clients ADD COLUMN referral_bonus_paid INTEGER DEFAULT 0");
+  try {
+    db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_clients_referral_code ON clients(referral_code) WHERE referral_code IS NOT NULL");
+  } catch {
+    /* exists */
+  }
+}
+
+function migratePayoutColumns(db: DbType) {
+  const cols = db.prepare("PRAGMA table_info(payouts)").all() as { name: string }[];
+  const names = new Set(cols.map((c) => c.name));
+  if (!names.has("referral_bonus")) {
+    try {
+      db.exec("ALTER TABLE payouts ADD COLUMN referral_bonus REAL DEFAULT 0");
+    } catch {
+      /* exists */
+    }
+  }
 }
 
 function migrateCampaignColumns(db: DbType) {
@@ -226,7 +264,7 @@ export function getFeedJson() {
   return JSON.parse(readFileSync(feedPath, "utf8"));
 }
 
-export function mintToken(db: DbType, clientId: string, email?: string) {
+export function mintToken(db: DbType, clientId: string, email?: string, referredByCode?: string) {
   const token = randomUUID();
   const expires = Date.now() + 30 * 24 * 60 * 60 * 1000;
   db.prepare(
@@ -238,6 +276,7 @@ export function mintToken(db: DbType, clientId: string, email?: string) {
   db.prepare(
     "INSERT OR IGNORE INTO advertiser_balance (client_id) VALUES (?)",
   ).run(clientId);
+  ensureClientProfile(db, clientId, referredByCode);
   return token;
 }
 

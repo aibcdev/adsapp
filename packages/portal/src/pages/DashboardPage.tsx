@@ -14,6 +14,7 @@ import { EarningsChart } from "../components/dashboard/EarningsChart";
 import { PayoutsPanel } from "../components/dashboard/PayoutsPanel";
 import { ActivityLedger } from "../components/dashboard/ActivityLedger";
 import { AccountSection } from "../components/dashboard/AccountSection";
+import { ReferralSection } from "../components/dashboard/ReferralSection";
 import { LoginAuthCard } from "../components/auth/LoginAuthCard";
 
 type Earnings = {
@@ -28,6 +29,25 @@ type Earnings = {
     hourlyCap: number;
     dailyCap: number;
   };
+  payoutLimits?: {
+    requestsToday: number;
+    requestsThisWeek: number;
+    usdToday: number;
+    maxRequestsPerDay: number;
+    maxRequestsPerWeek: number;
+    maxUsdPerDay: number;
+  };
+};
+
+type ReferralStats = {
+  referralCode: string;
+  referralLink: string;
+  referralsTotal: number;
+  referralsQualified: number;
+  referralBonusPaid: boolean;
+  referralBonusPending: boolean;
+  referralBonusUsd: number;
+  qualifyUsd: number;
 };
 
 type Activity = { id: string; type: string; adId: string; amount: number; createdAt: string };
@@ -52,6 +72,8 @@ export function DashboardPage() {
   const [activityLoading, setActivityLoading] = useState(false);
   const [payoutRail, setPayoutRail] = useState("");
   const [payoutHandle, setPayoutHandle] = useState("");
+  const [foundingMember, setFoundingMember] = useState(false);
+  const [referral, setReferral] = useState<ReferralStats | null>(null);
   const [authConfig, setAuthConfig] = useState({ devBypass: false });
 
   const loadEarnings = async () => {
@@ -69,8 +91,10 @@ export function DashboardPage() {
   };
 
   const loadProfile = async () => {
-    const me = await api<{ email: string }>("/v1/me");
+    const me = await api<{ email: string; foundingMember?: boolean; referral?: ReferralStats }>("/v1/me");
     setEmail(me.email);
+    setFoundingMember(Boolean(me.foundingMember));
+    setReferral(me.referral ?? null);
   };
 
   const loadAll = async () => {
@@ -209,6 +233,7 @@ export function DashboardPage() {
             payable={earnings.payable}
             rail={payoutRail}
             handle={payoutHandle}
+            payoutLimits={earnings.payoutLimits}
             onSaveMethod={(rail, handle) =>
               api("/v1/me/payout-method", { method: "POST", body: JSON.stringify({ rail, handle }) }).then(
                 loadPayoutMethod,
@@ -228,7 +253,10 @@ export function DashboardPage() {
         />
       </div>
 
-      {email ? <AccountSection email={email} /> : null}
+      <div className="mb-6 grid gap-6 lg:grid-cols-2">
+        <ReferralSection stats={referral} />
+        {email ? <AccountSection email={email} foundingMember={foundingMember} /> : null}
+      </div>
     </DashboardLayout>
   );
 }

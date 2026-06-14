@@ -21,6 +21,13 @@ import {
   purgeExpiredSessions,
 } from "./billing/portfolioSession.js";
 import { MIN_PAYOUT_USD } from "./billing/economics.js";
+import { checkPayoutLimits, payoutUsage } from "./billing/payoutLimits.js";
+import {
+  computeReferralBonus,
+  ensureClientProfile,
+  getReferralStats,
+  markReferralBonusPaid,
+} from "./clients/profile.js";
 import {
   createDepositCheckout,
   ensureStripeTables,
@@ -192,6 +199,7 @@ app.post("/v1/auth/email/complete", async (c) => {
   if (row.completed === 1) return c.json({ error: "Session already used" }, 400);
 
   db.prepare("UPDATE clients SET email = ? WHERE id = ?").run(email, row.client_id);
+  ensureClientProfile(db, row.client_id);
   const token = mintToken(db, row.client_id, email);
   db.prepare(
     "UPDATE auth_states SET completed = 1, token = ?, email = ? WHERE state = ?",
@@ -200,12 +208,16 @@ app.post("/v1/auth/email/complete", async (c) => {
   return c.json({ ok: true, email });
 });
 
-app.post("/v1/auth/extension/start", (c) => {
+app.post("/v1/auth/extension/start", async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as { referralCode?: string };
+  const referredByCode = body.referralCode?.trim();
+
   const state = randomUUID();
   const clientId = randomUUID();
   db.prepare(
     "INSERT INTO clients (id, created_at) VALUES (?, ?)",
   ).run(clientId, Date.now());
+  ensureClientProfile(db, clientId, referredByCode);
   db.prepare(
     "INSERT INTO auth_states (state, client_id, created_at) VALUES (?, ?, ?)",
   ).run(state, clientId, Date.now());
@@ -330,7 +342,31 @@ app.get("/v1/earnings", (c) => {
 app.get("/v1/me", (c) => {
   const client = resolveClient(db, c.req.header("authorization"));
   if (!client) return c.json({ error: "unauthorized" }, 401);
-  return c.json({ email: client.email, clientId: client.clientId });
+  ensureClientProfile(db, client.clientId);
+  const referral = getReferralStats(db, client.clientId, config.portalUrl);
+  return c.json({
+    email: client.email,
+    clientId: client.clientId,
+    foundingMember: referral.foundingMember,
+    referral,
+  });
+});
+
+app.get("/v1/me/referral", (c) => {
+  const client = resolveClient(db, c.req.header("authorization"));
+  if (!client) return c.json({ error: "unauthorized" }, 401);
+  ensureClientProfile(db, client.clientId);
+  return c.json(getReferralStats(db, client.clientId, config.portalUrl));
+});
+
+app.post("/v1/me/referral/apply", async (c) => {
+  const client = resolveClient(db, c.req.header("authorization"));
+  if (!client) return c.json({ error: "unauthorized" }, 401);
+  const body = (await c.req.json().catch(() => ({}))) as { referralCode?: string };
+  const code = body.referralCode?.trim();
+  if (!code) return c.json({ error: "referralCode required" }, 400);
+  ensureClientProfile(db, client.clientId, code);
+  return c.json(getReferralStats(db, client.clientId, config.portalUrl));
 });
 
 app.get("/v1/me/earnings", (c) => {
@@ -343,6 +379,7 @@ app.get("/v1/me/earnings", (c) => {
     )
     .get(client.clientId);
   const caps = earningsCaps(db, client.clientId);
+  const payoutLimits = payoutUsage(db, client.clientId);
   return c.json({
     ...(row ?? { today: 0, month: 0, lifetime: 0, pending: 0, payable: 0 }),
     caps: {
@@ -353,6 +390,7 @@ app.get("/v1/me/earnings", (c) => {
       hourlyCap: caps.hourlyCap,
       dailyCap: caps.dailyCap,
     },
+    payoutLimits,
   });
 });
 
@@ -424,14 +462,41 @@ app.post("/v1/me/payout-request", (c) => {
     return c.json({ error: "Save a payout method first" }, 400);
   }
 
+  const referralBonus = computeReferralBonus(db, client.clientId);
+  const totalAmount = payable + referralBonus;
+
+  const limitCheck = checkPayoutLimits(db, client.clientId, totalAmount);
+  if (!limitCheck.ok) {
+    return c.json({ error: limitCheck.error }, 400);
+  }
+
   const payoutId = randomUUID();
   db.prepare(
-    "INSERT INTO payouts (id, client_id, amount, rail, handle, status, created_at) VALUES (?, ?, ?, ?, ?, 'requested', ?)",
-  ).run(payoutId, client.clientId, payable, method.rail, method.handle, Date.now());
+    `INSERT INTO payouts (id, client_id, amount, referral_bonus, rail, handle, status, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, 'requested', ?)`,
+  ).run(
+    payoutId,
+    client.clientId,
+    totalAmount,
+    referralBonus,
+    method.rail,
+    method.handle,
+    Date.now(),
+  );
 
   db.prepare("UPDATE earnings SET payable = 0 WHERE client_id = ?").run(client.clientId);
+  if (referralBonus > 0) {
+    markReferralBonusPaid(db, client.clientId);
+  }
 
-  return c.json({ ok: true, amount: payable, payoutId, status: "requested" });
+  return c.json({
+    ok: true,
+    amount: totalAmount,
+    baseAmount: payable,
+    referralBonus,
+    payoutId,
+    status: "requested",
+  });
 });
 
 app.get("/v1/advertiser/balance", (c) => {

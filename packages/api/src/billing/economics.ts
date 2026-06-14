@@ -10,6 +10,15 @@ export const MIN_PAYOUT_USD = 10;
 export const HOURLY_CAP_USD = 20;
 export const DAILY_CAP_USD = 200;
 
+export const FOUNDING_MEMBER_CAP = 15_000;
+export const FOUNDING_BONUS_MULTIPLIER = 1.05;
+export const REFERRAL_QUALIFY_USD = 10;
+export const REFERRAL_BONUS_USD = 10;
+
+export const MAX_PAYOUT_REQUESTS_PER_DAY = Number(process.env.AIBC_MAX_PAYOUTS_PER_DAY || 1);
+export const MAX_PAYOUT_REQUESTS_PER_WEEK = Number(process.env.AIBC_MAX_PAYOUTS_PER_WEEK || 3);
+export const MAX_PAYOUT_USD_PER_DAY = Number(process.env.AIBC_MAX_PAYOUT_USD_PER_DAY || 500);
+
 /** Advertiser cost per single impression (bid is per 1k). */
 export function advertiserCostPerImpression(bidPer1k: number): number {
   return bidPer1k / 1000;
@@ -31,4 +40,19 @@ export function bidPerBlock(bidPer1k: number): number {
 
 export function campaignBudgetUsd(bidPer1k: number, blocks: number): number {
   return bidPerBlock(bidPer1k) * blocks;
+}
+
+export function payoutLimitsConfig() {
+  return {
+    maxRequestsPerDay: MAX_PAYOUT_REQUESTS_PER_DAY,
+    maxRequestsPerWeek: MAX_PAYOUT_REQUESTS_PER_WEEK,
+    maxUsdPerDay: MAX_PAYOUT_USD_PER_DAY,
+    minPayoutUsd: MIN_PAYOUT_USD,
+    hourlyCapUsd: HOURLY_CAP_USD,
+    dailyCapUsd: DAILY_CAP_USD,
+    foundingMemberCap: FOUNDING_MEMBER_CAP,
+    foundingBonusMultiplier: FOUNDING_BONUS_MULTIPLIER,
+    referralQualifyUsd: REFERRAL_QUALIFY_USD,
+    referralBonusUsd: REFERRAL_BONUS_USD,
+  };
 }

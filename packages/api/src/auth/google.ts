@@ -1,6 +1,7 @@
 import type { Database as DbType } from "better-sqlite3";
 import { config } from "../config.js";
 import { mintToken } from "../db/schema.js";
+import { ensureClientProfile } from "../clients/profile.js";
 
 interface GoogleTokenResponse {
   access_token?: string;
@@ -55,6 +56,7 @@ export async function completeGoogleAuth(
   if (!email) return { ok: false, error: "No email from Google" };
 
   db.prepare("UPDATE clients SET email = ? WHERE id = ?").run(email, row.client_id);
+  ensureClientProfile(db, row.client_id);
 
   const token = mintToken(db, row.client_id, email);
   db.prepare(

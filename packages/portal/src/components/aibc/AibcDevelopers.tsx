@@ -1,63 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Terminal, Code, Wallet, ChevronDown, Monitor, Award, Layers } from "lucide-react";
+import { Terminal, Code, Wallet, ChevronDown, Award } from "lucide-react";
 import { BrandAccent } from "../brand/BrandAccent";
 import { HeroInstallCta } from "../landing/InstallButtons";
 import { TrustedByMarquee } from "./TrustedByMarquee";
+import { DeveloperIdeDemo } from "./DeveloperIdeDemo";
 
 export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
   const [activeFAQ, setActiveFAQ] = useState<number | null>(null);
-  
-  // Interactive IDE state
-  const [walletAccrued, setWalletAccrued] = useState(1.42);
-  const [sponsorIndex, setSponsorIndex] = useState(0);
-  const [isTyping, setIsTyping] = useState(false);
-  const [typedLines, setTypedLines] = useState<string[]>([
-    'import { useAibc } from "@aibc/extension";',
-    'const dev = await getCurrentCoder();',
-    '// AIBC active. Sponsoring your session...'
-  ]);
-
-  const sponsorsList = [
-    { name: "Supabase", text: "⚡ Sponsor: Supabase — The open source Firebase alternative. Build in weekend.", link: "supabase.com" },
-    { name: "Neon", text: "⚡ Sponsor: Neon Serverless Postgres — scale to zero, instant branches.", link: "neon.tech" },
-    { name: "Clerk", text: "⚡ Sponsor: Clerk — Modern user authentication & management in minutes.", link: "clerk.com" },
-    { name: "Sentry", text: "⚡ Sponsor: Sentry — Track errors and performance issues in real time.", link: "sentry.io" }
-  ];
-
-  // Auto cycle sponsors
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSponsorIndex((prev) => (prev + 1) % sponsorsList.length);
-    }, 7000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Simulator typing handler
-  const handleSimulateCode = () => {
-    if (isTyping) return;
-    setIsTyping(true);
-    
-    const codingStatements = [
-      '// Deploying to prod...',
-      'const revenue = dev.computeEarnings();',
-      'console.log(`Earned today: $${revenue}`);',
-      '// Thank you to our developers!'
-    ];
-
-    let currentStatementIndex = 0;
-
-    const interval = setInterval(() => {
-      if (currentStatementIndex < codingStatements.length) {
-        setTypedLines(prev => [...prev, codingStatements[currentStatementIndex]]);
-        setWalletAccrued(prev => parseFloat((prev + 0.15).toFixed(2)));
-        currentStatementIndex++;
-      } else {
-        clearInterval(interval);
-        setIsTyping(false);
-      }
-    }, 1200);
-  };
 
   const faqs = [
     {
@@ -94,12 +44,12 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
   return (
     <div className="text-zinc-900 bg-white font-sans">
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex flex-col justify-center items-center px-6 pt-32 pb-20 text-center overflow-hidden">
+      <section className="relative flex flex-col items-center overflow-hidden px-6 pt-28 pb-10 text-center md:pt-32 md:pb-12">
         {/* Ambient Gradient Background */}
         <div className="absolute top-[-10%] left-[50%] -translate-x-1/2 w-[800px] h-[450px] bg-emerald-500/10 blur-[150px] rounded-full pointer-events-none"></div>
         <div className="absolute top-[30%] left-[10%] w-[300px] h-[300px] bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none"></div>
 
-        <div className="max-w-4xl mx-auto z-10 space-y-8">
+        <div className="mx-auto max-w-4xl z-10 space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-500/30 bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-wide">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             Opening cohort · Install now
@@ -134,108 +84,27 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
       <TrustedByMarquee />
 
       {/* Live IDE Interactive Simulation Demo */}
-      <section className="py-20 px-6 border-t border-zinc-200 bg-white">
+      <section className="border-t border-zinc-200 bg-white px-6 py-8 md:py-10">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-6 md:mb-8">
             <span className="text-xs font-bold uppercase text-emerald-700 tracking-widest">Live demo</span>
             <h2 className="font-brand-heading text-4xl md:text-6xl text-zinc-950 mt-3">
               See it in your <BrandAccent>editor</BrandAccent>
             </h2>
             <p className="text-base text-zinc-600 mt-3 max-w-lg mx-auto font-medium">
-              Click simulate. Watch the sponsor line appear and your earnings tick up — exactly how it works in VS Code, Cursor, or Windsurf.
+              Click Simulate. Watch you code, the AI think, then a sponsor line replace the spinner — exactly how
+              AIBC works in VS Code, Cursor, or Windsurf.
             </p>
           </div>
 
-          {/* IDE Container */}
-          <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl">
-            {/* Window bar */}
-            <div className="px-4 py-3 bg-zinc-900/80 border-b border-zinc-900/80 flex items-center justify-between">
-              <div className="flex gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/30"></div>
-                <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/30"></div>
-                <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/30"></div>
-              </div>
-              <div className="text-xs font-mono text-zinc-500 flex items-center gap-1.5">
-                <Terminal className="w-3.5 h-3.5" />
-                aibc-demo-workspace.tsx
-              </div>
-              <div className="text-xs font-mono text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-0.5 rounded-full">
-                ACTIVE SESSION
-              </div>
-            </div>
-
-            {/* Main IDE area */}
-            <div className="grid grid-cols-1 md:grid-cols-4 min-h-[300px]">
-              {/* Explorer panel */}
-              <div className="hidden md:block col-span-1 border-r border-zinc-800 bg-zinc-900/50 p-4 font-mono text-xs text-zinc-500 space-y-3">
-                <div className="font-semibold text-zinc-600 uppercase tracking-wider text-[10px]">Workspace</div>
-                <div className="space-y-2 mt-2">
-                  <div className="text-emerald-400 flex items-center gap-1 cursor-pointer">
-                    <Code className="w-3.5 h-3.5" /> aibc-demo.tsx
-                  </div>
-                  <div className="flex items-center gap-1 cursor-pointer hover:text-zinc-600">
-                    <Monitor className="w-3.5 h-3.5" /> main.css
-                  </div>
-                  <div className="flex items-center gap-1 cursor-pointer hover:text-zinc-600">
-                    <Layers className="w-3.5 h-3.5" /> config.json
-                  </div>
-                </div>
-              </div>
-
-              {/* Code output */}
-              <div className="relative col-span-1 max-h-[350px] overflow-y-auto bg-black/60 p-6 font-mono text-xs text-zinc-300 md:col-span-3 md:text-sm">
-                {typedLines.map((line, idx) => (
-                  <div key={idx} className="flex gap-4">
-                    <span className="text-zinc-600 select-none text-right w-6">{idx + 1}</span>
-                    <pre className="whitespace-pre-wrap text-zinc-300">{line}</pre>
-                  </div>
-                ))}
-                
-                {isTyping && (
-                  <div className="flex gap-4 items-center">
-                    <span className="text-zinc-600 select-none text-right w-6">{typedLines.length + 1}</span>
-                    <div className="w-2 h-4 bg-emerald-400 animate-pulse"></div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Static Sponsor Bar - Displays AIBC Media Message */}
-            <div className="bg-zinc-900 border-t border-zinc-805/80 px-4 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <div className="flex items-center gap-2.5">
-                <span className="text-xs bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 px-2 py-0.5 rounded font-mono font-medium lowercase">
-                  Sponsor
-                </span>
-                <span className="text-xs text-zinc-305 font-medium tracking-tight animate-fade-in">
-                  {sponsorsList[sponsorIndex].text}
-                </span>
-              </div>
-              <div className="flex items-center gap-4 text-xs font-mono text-zinc-600 self-stretch sm:self-auto justify-between sm:justify-end border-t sm:border-t-0 border-zinc-200 pt-2 sm:pt-0">
-                <div className="flex items-center gap-1.5 bg-zinc-100/70 border border-zinc-200 px-3 py-1.5 rounded-lg">
-                  <Wallet className="w-3.5 h-3.5 text-emerald-450" />
-                  <span>Accrued:</span>
-                  <span className="text-emerald-400 font-bold font-sans">${walletAccrued.toFixed(2)}</span>
-                </div>
-                
-                <button
-                  onClick={handleSimulateCode}
-                  disabled={isTyping}
-                  className={`px-4 py-1.5 rounded-lg font-semibold text-black transition-all ${
-                    isTyping ? 'bg-zinc-700 text-zinc-600 cursor-not-allowed' : 'bg-white hover:bg-emerald-400 hover:text-zinc-950'
-                  }`}
-                >
-                  {isTyping ? 'Coding...' : 'Simulate Code'}
-                </button>
-              </div>
-            </div>
-          </div>
+          <DeveloperIdeDemo />
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="py-32 px-6 md:px-12 border-t border-zinc-200">
+      <section className="border-t border-zinc-200 px-6 py-14 md:px-12 md:py-16">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-20">
+          <div className="text-center mb-10 md:mb-12">
             <span className="text-xs font-bold uppercase text-emerald-700 tracking-widest mb-3 block">3 steps</span>
             <h2 className="font-brand-heading text-4xl md:text-6xl text-zinc-950">
               How it <BrandAccent>works</BrandAccent>
@@ -277,7 +146,7 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
       </section>
 
       {/* Why AIBC Media Exists */}
-      <section className="py-32 px-6 md:px-12 border-t border-zinc-200 bg-white relative overflow-hidden">
+      <section className="relative overflow-hidden border-t border-zinc-200 bg-white px-6 py-14 md:px-12 md:py-16">
         <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-emerald-500/5 blur-[130px] rounded-full pointer-events-none"></div>
 
         <div className="max-w-4xl mx-auto text-center relative z-10 space-y-8">
@@ -302,7 +171,7 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
       </section>
 
       {/* Founding Members perks */}
-      <section className="py-32 px-6 md:px-12 border-t border-zinc-200 bg-white">
+      <section className="border-t border-zinc-200 bg-white px-6 py-14 md:px-12 md:py-16">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-5 space-y-6">
@@ -336,9 +205,9 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
       </section>
 
       {/* Built For Builders */}
-      <section className="py-32 px-6 md:px-12 border-t border-zinc-200">
+      <section className="border-t border-zinc-200 px-6 py-14 md:px-12 md:py-16">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-8 md:mb-10">
             <span className="text-xs font-bold uppercase text-emerald-700 tracking-widest mb-3 block">Who it is for</span>
             <h2 className="font-brand-heading text-4xl md:text-6xl text-zinc-950">
               Built for people who <BrandAccent>code</BrandAccent>
@@ -357,9 +226,9 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-32 px-6 md:px-12 border-t border-zinc-200 bg-white">
+      <section className="border-t border-zinc-200 bg-white px-6 py-14 md:px-12 md:py-16">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-8 md:mb-10">
             <span className="text-xs font-bold uppercase text-emerald-700 tracking-widest mb-3 block">FAQ</span>
             <h2 className="font-brand-heading text-4xl md:text-6xl text-zinc-950">
               Questions <BrandAccent>answered</BrandAccent>
@@ -391,7 +260,7 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
       </section>
 
       {/* Final CTA */}
-      <section className="py-32 px-6 text-center bg-white border-t border-zinc-200 relative overflow-hidden">
+      <section className="relative overflow-hidden border-t border-zinc-200 bg-white px-6 py-14 text-center md:py-16">
         <div className="absolute bottom-[-10%] left-[50%] -translate-x-1/2 w-[600px] h-[300px] bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none"></div>
         
         <div className="max-w-3xl mx-auto z-10 relative space-y-6">

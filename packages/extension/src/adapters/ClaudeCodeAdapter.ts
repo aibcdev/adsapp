@@ -72,10 +72,20 @@ export class ClaudeCodeAdapter {
 
   preflight(): AdapterPreflight {
     if (!this.target || !fs.existsSync(this.target)) {
-      return { compatible: false, reason: "Claude Code not found" };
+      return {
+        compatible: false,
+        reason: "Claude Code extension not installed — install it from the marketplace, then reload.",
+      };
     }
     const m = /anthropic\.claude-code-(\d+\.\d+\.\d+)/.exec(this.target);
-    return { compatible: true, version: m?.[1] || "unknown" };
+    const version = m?.[1];
+    if (!version) {
+      return {
+        compatible: false,
+        reason: "Claude Code found but version unknown — update Claude Code and reload.",
+      };
+    }
+    return { compatible: true, version };
   }
 
   apply(adText: string, clickUrl: string, viewUrl: string, viewThresholdMs: number): boolean {
@@ -98,11 +108,29 @@ export class ClaudeCodeAdapter {
   }
 
   restore(): boolean {
-    if (!this.target || !this.backupPath || !fs.existsSync(this.backupPath)) {
-      return false;
+    let restored = false;
+    try {
+      if (this.target && fs.existsSync(this.target)) {
+        if (this.backupPath && fs.existsSync(this.backupPath)) {
+          atomicWriteFile(this.target, fs.readFileSync(this.backupPath, "utf8"));
+          restored = true;
+        } else {
+          const content = fs.readFileSync(this.target, "utf8");
+          const stripped = stripInjection(content);
+          if (stripped !== content) {
+            atomicWriteFile(this.target, stripped);
+            restored = true;
+          }
+        }
+        if (this.backupPath && fs.existsSync(this.backupPath)) {
+          fs.unlinkSync(this.backupPath);
+          this.backupPath = null;
+        }
+      }
+    } catch {
+      /* best effort */
     }
-    atomicWriteFile(this.target, fs.readFileSync(this.backupPath, "utf8"));
-    return true;
+    return restored;
   }
 
   updateAd(

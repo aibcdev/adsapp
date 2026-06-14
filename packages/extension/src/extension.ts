@@ -3,7 +3,7 @@ import {
   ClaudeCodeAdapter,
   locateClaudeCodeTarget,
 } from "./adapters/ClaudeCodeAdapter";
-import { ClaudeCliAdapter } from "./adapters/ClaudeCliAdapter";
+import { ClaudeCliAdapter, cleanupAibcArtifacts } from "./adapters/ClaudeCliAdapter";
 import { AuthService } from "./services/AuthService";
 import { AnalyticsService } from "./services/AnalyticsService";
 import { FeatureFlagService } from "./services/FeatureFlagService";
@@ -66,13 +66,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const pf = claudeAdapter.preflight();
   if (!pf.compatible) {
     statusBar.setKind("incompatible");
+    const reason = pf.reason || "Claude Code not compatible";
     const failed = context.globalState.get<boolean>(ACTIVATION_KEY, false);
     if (failed) {
       void vscode.window
-        .showWarningMessage(
-          "aibc: Claude Code not found. Install Claude Code extension, then retry.",
-          "Retry",
-        )
+        .showWarningMessage(`aibc: ${reason}`, "Retry")
         .then((choice) => {
           if (choice === "Retry") void vscode.commands.executeCommand("aibc.refresh");
         });
@@ -222,6 +220,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand("aibc.restore", () => {
       claudeAdapter?.restore();
       cliAdapter?.restore();
+      cleanupAibcArtifacts();
       vscode.window.showInformationMessage("aibc: Claude Code restored.");
     }),
     vscode.commands.registerCommand("aibc.menu", async () => {
@@ -294,6 +293,7 @@ export async function deactivate(): Promise<void> {
   if (killPollTimer) clearInterval(killPollTimer);
   claudeAdapter?.restore();
   cliAdapter?.restore();
+  cleanupAibcArtifacts();
   feedService?.dispose();
   await analyticsService?.shutdown();
 }

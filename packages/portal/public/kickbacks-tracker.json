@@ -1,0 +1,13 @@
+[
+  { "id": 97, "title": "Uninstall leaves patches", "status": "Fixed in flux", "owner": "Product", "eta": "2026-06-14", "fluxFix": "Hardened deactivate/restore + cleanup ~/.aibc" },
+  { "id": 99, "title": "Incompatible status (unknown)", "status": "Fixed in flux", "owner": "Product", "eta": "2026-06-14", "fluxFix": "Clear preflight messages in extension" },
+  { "id": 100, "title": "Incompatible on missing Claude", "status": "Fixed in flux", "owner": "Product", "eta": "2026-06-14", "fluxFix": "Install guidance in status bar + preflight" },
+  { "id": 87, "title": "Open VSX publish", "status": "In progress", "owner": "Ops", "eta": "2026-06-21", "fluxFix": "See MARKETPLACE.md — namespace + publish:openvsx" },
+  { "id": 104, "title": "Security / revenue audit", "status": "In progress", "owner": "Ops", "eta": "2026-06-21", "fluxFix": "Lane B audit + admin fraud review" },
+  { "id": 102, "title": "India / Stripe blocked", "status": "Phase 2", "owner": "Ops", "eta": "TBD", "fluxFix": "Manual UPI rail documented; Stripe Connect later" },
+  { "id": 103, "title": "India payout rail", "status": "Phase 2", "owner": "Ops", "eta": "TBD", "fluxFix": "UPI in payout method; manual review" },
+  { "id": 101, "title": "Terminal-only CLI agent", "status": "Partial", "owner": "Product", "eta": "2026-06-21", "fluxFix": "packages/cli exists — parity audit pending" },
+  { "id": 94, "title": "IPv6 loopback", "status": "Backlog", "owner": "Product", "eta": "TBD", "fluxFix": "Port if same paths in flux adapters" },
+  { "id": 93, "title": "JSONC strip bug", "status": "Fixed in flux", "owner": "Product", "eta": "2026-06-14", "fluxFix": "Safe parseSettingsJson in ClaudeCliAdapter" },
+  { "id": 95, "title": "OpenCode support", "status": "Backlog", "owner": "Product", "eta": "TBD", "fluxFix": "Roadmap only" }
+]

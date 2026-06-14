@@ -33,6 +33,23 @@ export function parseSettingsJson(raw: string): Record<string, unknown> {
   }
 }
 
+export function cleanupAibcArtifacts(): void {
+  for (const file of [AD_CACHE_FILE, STATUSLINE_FILE, SETTINGS_BACKUP]) {
+    try {
+      if (fs.existsSync(file)) fs.unlinkSync(file);
+    } catch {
+      /* skip */
+    }
+  }
+  try {
+    if (fs.existsSync(AIBC_DIR) && fs.readdirSync(AIBC_DIR).length === 0) {
+      fs.rmdirSync(AIBC_DIR);
+    }
+  } catch {
+    /* skip */
+  }
+}
+
 export class ClaudeCliAdapter {
   private installed = false;
 
@@ -53,15 +70,28 @@ export class ClaudeCliAdapter {
   }
 
   restore(): boolean {
+    let restored = false;
     try {
       if (fs.existsSync(SETTINGS_BACKUP)) {
         atomicWriteFile(CLAUDE_SETTINGS, fs.readFileSync(SETTINGS_BACKUP, "utf8"));
         fs.unlinkSync(SETTINGS_BACKUP);
+        restored = true;
+      } else if (fs.existsSync(CLAUDE_SETTINGS)) {
+        const raw = fs.readFileSync(CLAUDE_SETTINGS, "utf8");
+        const settings = parseSettingsJson(raw);
+        const existing = settings.statusLine as { command?: string } | undefined;
+        const cmd = existing?.command || "";
+        if (cmd.includes(AIBC_STATUS_CMD) || cmd.includes(".aibc/statusline.cjs")) {
+          delete settings.statusLine;
+          atomicWriteFile(CLAUDE_SETTINGS, JSON.stringify(settings, null, 2));
+          restored = true;
+        }
       }
-      return true;
+      cleanupAibcArtifacts();
     } catch {
-      return false;
+      /* best effort */
     }
+    return restored;
   }
 
   isInstalled(): boolean {

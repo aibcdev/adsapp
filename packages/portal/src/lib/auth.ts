@@ -1,22 +1,34 @@
 const API = import.meta.env.VITE_AIBC_API || "https://api.aibcmedia.com";
 
-export async function startAuthSession(): Promise<string> {
-  const res = await fetch(`${API}/v1/auth/extension/start`, { method: "POST" });
+export function getStoredAuthState(): string {
+  return sessionStorage.getItem("aibc_auth_state") || "";
+}
+
+export async function startAuthSession(referralCode?: string): Promise<string> {
+  const res = await fetch(`${API}/v1/auth/extension/start`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(referralCode ? { referralCode } : {}),
+  });
   const body = (await res.json()) as { state?: string; error?: string };
   if (!res.ok || !body.state) throw new Error(body.error || "Could not start sign-in");
   sessionStorage.setItem("aibc_auth_state", body.state);
   return body.state;
 }
 
-export function getStoredAuthState(): string {
-  return sessionStorage.getItem("aibc_auth_state") || "";
+export function storeReferralCode(code: string) {
+  sessionStorage.setItem("aibc_referral_code", code.trim().toUpperCase());
+}
+
+export function getStoredReferralCode(): string {
+  return sessionStorage.getItem("aibc_referral_code") || "";
 }
 
 export async function ensureAuthSession(existing = ""): Promise<string> {
   if (existing) return existing;
   const stored = getStoredAuthState();
   if (stored) return stored;
-  return startAuthSession();
+  return startAuthSession(getStoredReferralCode() || undefined);
 }
 
 export function googleRedirectUrl(state: string): string {

@@ -9,6 +9,7 @@ import {
   ensureAuthSession,
   getStoredAuthState,
   googleRedirectUrl,
+  storeReferralCode,
 } from "../lib/auth";
 import { getToken, setToken } from "../lib/api";
 
@@ -18,11 +19,16 @@ export function LoginPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const stateParam = params.get("state") || "";
+  const refParam = params.get("ref") || "";
   const source = params.get("source") || "portal";
   const [state, setState] = useState(stateParam || getStoredAuthState());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(params.get("error") === "google_failed" ? "Google sign-in failed. Try again." : "");
   const [authConfig, setAuthConfig] = useState({ devBypass: false });
+
+  useEffect(() => {
+    if (refParam) storeReferralCode(refParam);
+  }, [refParam]);
 
   useEffect(() => {
     if (getToken()) {

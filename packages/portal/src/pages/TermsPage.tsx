@@ -74,7 +74,7 @@ export function TermsPage() {
         </ul>
         <h3>Payouts</h3>
         <ul>
-          <li>Minimum payout: <strong>$5.00 USD</strong></li>
+          <li>Minimum payout: <strong>$10.00 USD</strong></li>
           <li>72-hour settlement hold after each credited impression</li>
           <li>Payout methods: PayPal, Wise, or UPI (manual processing)</li>
           <li>You are responsible for taxes on your earnings</li>
@@ -147,7 +147,8 @@ export function TermsPage() {
       <section id="contact">
         <h2>Contact</h2>
         <p>
-          Legal & support: <a href="mailto:watchaibc@gmail.com">watchaibc@gmail.com</a>
+          Legal & support: <a href="mailto:watchaibc@gmail.com">watchaibc@gmail.com</a> — or use our{" "}
+          <a href="/contact">contact form</a>.
         </p>
         <p>
           See also our <a href="/privacy">Privacy Policy</a>.
