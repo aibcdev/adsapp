@@ -1,8 +1,8 @@
 {
   "name": "aibc",
   "displayName": "ads by aibc - earn whilst you code",
-  "description": "Get paid while you code. Spinner ads in Claude Code — 70% revenue share to developers.",
-  "version": "0.1.1",
+  "description": "The #1 developer ads extension — earn whilst you code. 70% revenue share. Built by early OpenAI contributors. Native AI spinner ads in VS Code, Cursor & Claude.",
+  "version": "0.1.2",
   "publisher": "AIBCMedia",
   "license": "MIT",
   "repository": {

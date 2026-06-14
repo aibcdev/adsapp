@@ -1,55 +1,23 @@
-# aibc
+## ads by aibc — earn whilst you code 💸
 
-Get paid while you code. Sponsored developer tools in your IDE — **70% revenue share** to you.
+**The #1 way for developers to earn from ads while they code.** 🏆
 
-## Install
+Built by devs — including **early OpenAI contributors (pre-2020)** — who got tired of waiting on AI with zero upside.
 
-Search **aibc** in VS Code Extensions, or:
+### Why AIBC is #1 🚀
 
-```bash
-code --install-extension AIBCMedia.aibc
-```
+✅ **70% to you** — you keep 70¢ of every $1 advertisers pay  
+✅ **Native spinner ads** — one sponsor line during AI wait. No pop-ups  
+✅ **Privacy-first** 🔒 — we never read your code, prompts, or clipboard  
+✅ **VS Code, Cursor, Windsurf & Claude Code**  
+✅ **$10 min payouts** via Stripe · live dashboard at aibcmedia.com
 
-Works in VS Code, Cursor, Windsurf, and VSCodium (OpenVSX).
+Other tools bolt ads on the side. **AIBC lives inside your workflow** — that's why developers pick us first.
 
-## Quick start
+### Quick start ⚡
 
-1. Install the extension
-2. Click **aibc** in the activity bar
-3. Run **aibc: Sign in** from the command palette
-4. Keep coding — ads rotate during AI wait states
+1. Install · 2. Open **AIBC Ads** · 3. Run **aibc: Sign in** · 4. Keep coding
 
-Dashboard: [aibc.dev/dashboard](https://aibcmedia.com/dashboard)
+Install: `ext install AIBCMedia.aibc`
 
-## Features
-
-- **Earn** — spinner ads in Claude Code + status bar balance
-- **Discover** — tools, MCP servers, and dev resources in the sidebar
-- **Privacy-safe** — no source code or clipboard collection
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `aibc: Sign in` | Connect your account |
-| `aibc: Sign out` | Disconnect |
-| `aibc: Menu` | Quick actions |
-| `aibc: Refresh Content` | Pull latest ads and feed |
-| `aibc: Restore Claude Code` | Undo Claude Code hooks |
-
-## Settings
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `aibc.apiBase` | `https://api.aibcmedia.com` | API URL |
-| `aibc.portalBase` | `https://aibcmedia.com` | Dashboard URL |
-| `aibc.analyticsEnabled` | `true` | Product analytics |
-
-## Privacy
-
-See [aibc.dev/privacy](https://aibcmedia.com/privacy). We never read your source code.
-
-## Support
-
-- Issues: [GitHub](https://github.com/aibcdev/aibcextensions/issues)
-- Contact: [aibcmedia.com/contact](https://aibcmedia.com/contact)
+🌐 https://aibcmedia.com · 📊 /dashboard · 🔐 /privacy · 💬 /contact

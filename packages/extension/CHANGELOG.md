@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2 — 2026-06-12
+
+- Marketplace listing copy — #1 ads positioning, 70% share, OpenAI contributor story
+
 ## 0.1.1 — 2026-06-12
 
 - Updated display name to **ads by aibc - earn whilst you code**
