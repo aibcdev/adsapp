@@ -51,8 +51,8 @@ export function authStartUrl(state: string, source = "extension"): string {
   if (config.devBypass) {
     return `${config.publicUrl}/v1/auth/dev-complete?state=${encodeURIComponent(state)}`;
   }
-  const params = new URLSearchParams({ state, source });
-  return `${config.portalUrl}/login?${params}`;
+  const params = new URLSearchParams({ state });
+  return `${config.portalUrl}/extension/connect?${params}`;
 }
 
 export function stripeEnabled(): boolean {

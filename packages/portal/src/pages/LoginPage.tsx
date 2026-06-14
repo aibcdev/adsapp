@@ -9,6 +9,7 @@ import {
   ensureAuthSession,
   getStoredAuthState,
   googleRedirectUrl,
+  linkExtensionSession,
   storeReferralCode,
 } from "../lib/auth";
 import { getToken, setToken } from "../lib/api";
@@ -31,10 +32,26 @@ export function LoginPage() {
   }, [refParam]);
 
   useEffect(() => {
-    if (getToken()) {
+    if (getToken() && source !== "extension") {
       navigate("/dashboard?tab=developer", { replace: true });
     }
-  }, [navigate]);
+  }, [navigate, source]);
+
+  useEffect(() => {
+    if (source !== "extension" || !stateParam || !getToken()) return;
+    setBusy(true);
+    void linkExtensionSession(stateParam)
+      .then((result) => {
+        navigate(
+          `/login?poll=done&source=extension&email=${encodeURIComponent(result.email)}`,
+          { replace: true },
+        );
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Could not link editor sign-in");
+      })
+      .finally(() => setBusy(false));
+  }, [source, stateParam, navigate]);
 
   useEffect(() => {
     void fetch(`${API}/v1/auth/config`)

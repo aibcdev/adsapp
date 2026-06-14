@@ -6,6 +6,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { PrivacyPage } from "./pages/PrivacyPage";
 import { TermsPage } from "./pages/TermsPage";
 import { LoginPage } from "./pages/LoginPage";
+import { ExtensionConnectPage } from "./pages/ExtensionConnectPage";
 import { AdvertisersPage } from "./pages/AdvertisersPage";
 import { AdvertiserApplyPage } from "./pages/AdvertiserApplyPage";
 import { PublishersPage } from "./pages/PublishersPage";
@@ -35,6 +36,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Route path="/publishers" element={<PublishersPage />} />
         <Route path="/waitlist/success" element={<Navigate to="/#install" replace />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/extension/connect" element={<ExtensionConnectPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/developers/how-it-works" element={<HowItWorksPage />} />
         <Route path="/developers/payouts" element={<PayoutsPage />} />

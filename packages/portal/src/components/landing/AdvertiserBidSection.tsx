@@ -92,20 +92,22 @@ export function AdvertiserBidSection({
       <div className="mx-auto max-w-[1400px] px-6 md:px-10 lg:px-16">
         <p className="font-mono text-[10px] font-semibold uppercase tracking-widest text-emerald-700">Advertisers</p>
         <BrandHeading className="mt-3 font-brand-heading text-3xl text-zinc-950 md:text-4xl lg:text-5xl">
-          Bid live for the most-watched <BrandAccent>spinner</BrandAccent> on Earth.
+          Reach builders in the one screen they never close — the <BrandAccent>editor</BrandAccent>.
         </BrandHeading>
         <p className="mt-4 max-w-3xl text-base font-medium leading-relaxed text-zinc-600 md:text-lg">
-          Each block buys 1,000 five-second impressions in the AI coding spinner. Clicks are billed at 50× the
-          impression rate. Highest bid serves first — bid from $1. Outbid the top to take #1, or queue behind it.{" "}
-          <strong className="text-zinc-900">70% of every dollar</strong> goes to the developer whose machine showed the ad.
+          Pre-pay in blocks of 1,000 native views. Your sponsor line appears in the status bar while AI tools run in
+          VS Code, Cursor, and Claude — not in a tab they can ignore. Block price decides delivery order; more blocks
+          means more reach. Clicks are tracked and billed on their own.{" "}
+          <strong className="text-zinc-900">Developers keep seven-tenths of your spend</strong> — the rest runs the
+          network.
         </p>
 
         <div className="mt-10 grid gap-10 lg:grid-cols-12">
           <div className="space-y-6 lg:col-span-5">
             <div className="aibc-card p-4">
               <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm font-semibold text-zinc-900">Bid queue</p>
-                <span className="font-mono text-[10px] uppercase text-zinc-400">{rows.length} live · updated now</span>
+                <p className="text-sm font-semibold text-zinc-900">Live delivery order</p>
+                <span className="font-mono text-[10px] uppercase text-zinc-400">{rows.length} active · refreshed now</span>
               </div>
               <CompactQueue rows={rows} />
             </div>
@@ -206,7 +208,7 @@ export function AdvertiserBidSection({
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className={labelClass}>
-                  Bid per block (min $1.00 — sets queue priority)
+                  Price per block (from $1 — sets delivery order)
                   <input
                     required
                     type="number"
@@ -218,7 +220,7 @@ export function AdvertiserBidSection({
                   />
                 </label>
                 <label className={labelClass}>
-                  Number of blocks (1,000 views each)
+                  Blocks to buy (1k views per block)
                   <input
                     required
                     type="number"
@@ -232,8 +234,8 @@ export function AdvertiserBidSection({
 
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5">
                 <p className="text-sm leading-relaxed text-zinc-700">
-                  Each block buys <strong>1,000 views</strong> of your ad. More blocks = more views. A higher bid moves
-                  you up the queue so your views deliver sooner — it does not add views.
+                  One block = <strong>1,000 guaranteed placements</strong> in the editor footer. Add blocks to scale
+                  reach. Raising your block price moves you up the line — it does not add extra views on its own.
                 </p>
                 <div className="mt-4 flex flex-wrap items-end justify-between gap-4 border-b border-emerald-200/80 pb-4">
                   <p className="font-mono text-xs uppercase tracking-wider text-zinc-500">
@@ -256,13 +258,13 @@ export function AdvertiserBidSection({
                 </div>
                 {topBid > 0 ? (
                   <p className="mt-4 rounded-xl bg-white/80 px-4 py-3 text-xs leading-relaxed text-zinc-600">
-                    Top bid is {money(topBid)} per block — bid above it to take #1, or any amount from $1.00 to join the
-                    queue. Your bid sets where you rank, not how many views you get.
-                    {toGo > 0 ? ` Suggest bidding at least ${money(topBid + 0.01)} to lead.` : null}
+                    Current leader pays {money(topBid)} per block. Beat that to go first, or enter from $1.00 and wait
+                    your turn. Price controls rank — blocks control volume.
+                    {toGo > 0 ? ` To lead now, try ${money(topBid + 0.01)} or higher.` : null}
                   </p>
                 ) : (
                   <p className="mt-4 rounded-xl bg-white/80 px-4 py-3 text-xs text-zinc-600">
-                    No queued bids — first bid takes #1 instantly.
+                    Board is empty — your campaign can lead as soon as checkout completes.
                   </p>
                 )}
               </div>

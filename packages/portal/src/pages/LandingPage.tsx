@@ -4,6 +4,7 @@ import { SiteHeader } from "../components/SiteHeader";
 import { SiteFooter } from "../components/SiteFooter";
 import { AibcDevelopers } from "../components/aibc/AibcDevelopers";
 import { publicApi } from "../lib/api";
+import { normalizeMonthlyEarnings } from "../lib/developerEstimates";
 
 export function LandingPage() {
   const [params] = useSearchParams();
@@ -12,7 +13,7 @@ export function LandingPage() {
 
   useEffect(() => {
     void publicApi<{ monthlyUsd: number }>("/v1/stats/earnings-estimate").then((s) => {
-      setMonthlyUsd(s.monthlyUsd || 40);
+      setMonthlyUsd(normalizeMonthlyEarnings(s.monthlyUsd));
     });
   }, []);
 

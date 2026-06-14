@@ -4,7 +4,6 @@ export const PLATFORM_LOGOS: Partial<Record<InstallKey, string>> = {
   vscode: "/logos/vscode.svg",
   cursor: "/logos/cursor.svg",
   windsurf: "/logos/windsurf.svg",
-  openvsx: "/logos/openvsx.svg",
 };
 
 export const PLATFORM_LOGO_BY_ID: Record<string, string> = {

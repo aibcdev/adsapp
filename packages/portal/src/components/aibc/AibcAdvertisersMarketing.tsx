@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { BrandAccent } from "../brand/BrandAccent";
 import { DeveloperIdeDemo } from "./DeveloperIdeDemo";
+import { estimateCampaignReach } from "../../lib/advertiserEstimates";
 import type { ReactNode } from "react";
 
 interface AudienceSegment {
@@ -107,7 +108,7 @@ const FAQ_ITEMS: FAQItem[] = [
     id: 5,
     category: "technical",
     question: "What does the ad look like?",
-    answer: "One short line of text in the AI spinner (up to 80 characters), or a small toast with a button. All links must use HTTPS."
+    answer: "One short line in the editor status bar while AI runs (up to 80 characters), or a small toast with a button. All links must use HTTPS."
   },
   {
     id: 6,
@@ -135,12 +136,8 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [faqFilter, setFaqFilter] = useState<"all" | "approval" | "safety" | "technical">("all");
 
-  // Estimates: $5 CPM = default $5/block bid; ~1.5% CTR on native sponsor line
-  const DEFAULT_CPM_USD = 5;
-  const ESTIMATED_CTR = 0.015;
-  const calculatedImpressions = Math.floor((campaignBudget / DEFAULT_CPM_USD) * 1000);
-  const calculatedClicks = Math.floor(calculatedImpressions * ESTIMATED_CTR);
-  const calculatedCpm = DEFAULT_CPM_USD;
+  const { impressions: calculatedImpressions, clicks: calculatedClicks, cpm: calculatedCpm, ctr: ESTIMATED_CTR, impressionsPerDollar } =
+    estimateCampaignReach(campaignBudget);
 
   const activeSegment = AUDIENCE_SEGMENTS.find(s => s.id === selectedSegment) || AUDIENCE_SEGMENTS[0];
 
@@ -267,12 +264,12 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
               <div>
                 <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">Estimated monthly clicks</span>
                 <span className="text-xl font-bold text-emerald-700">~{calculatedClicks.toLocaleString()}</span>
-                <span className="text-[9px] text-zinc-400 block mt-0.5">~{(ESTIMATED_CTR * 100).toFixed(1)}% CTR</span>
+                <span className="text-[9px] text-zinc-400 block mt-0.5">~{(ESTIMATED_CTR * 100).toFixed(1)}% native CTR</span>
               </div>
               <div>
                 <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">Projected impressions</span>
                 <span className="text-xl font-bold text-zinc-900">~{calculatedImpressions.toLocaleString()}</span>
-                <span className="text-[9px] text-zinc-400 block mt-0.5">at ${calculatedCpm} CPM</span>
+                <span className="text-[9px] text-zinc-400 block mt-0.5">from ${calculatedCpm.toFixed(2)} native CPM</span>
               </div>
             </div>
           </div>
@@ -339,13 +336,16 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
 
               <div className="pt-6 border-t border-zinc-100 space-y-3">
                 <div className="flex justify-between items-center text-xs text-zinc-500">
-                  <span>Default CPM (at $5/block bid)</span>
+                  <span>Effective native CPM</span>
                   <span className="text-emerald-700 font-bold">${calculatedCpm.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs text-zinc-500">
                   <span>Impressions per $1 spent</span>
-                  <span className="text-zinc-900 font-medium">{Math.floor(1000 / calculatedCpm).toLocaleString()}</span>
+                  <span className="text-zinc-900 font-medium">{impressionsPerDollar.toLocaleString()}</span>
                 </div>
+                <p className="text-[10px] leading-relaxed text-zinc-400">
+                  Native in-editor placement — higher reach than typical display ads at the same budget.
+                </p>
               </div>
             </div>
 
@@ -538,7 +538,7 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
               {[
                 { title: "First campaign free", desc: "Test reach and clicks with zero risk before you scale spend." },
                 { title: "Lower CPM rates", desc: "Founding partners lock in discounted pricing forever." },
-                { title: "Priority placement", desc: "Your ad gets prime position in the editor spinner." },
+                { title: "Priority placement", desc: "Your ad gets prime position in the editor status bar." },
                 { title: "Developer feedback", desc: "Hear what coders think about your product — directly." },
                 { title: "Founding partner badge", desc: "Show you were an early believer on your dashboard." }
               ].map((benefit, i) => (

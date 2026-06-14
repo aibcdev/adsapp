@@ -267,6 +267,28 @@ app.get("/v1/auth/dev-complete", (c) => {
   return c.redirect(redirect);
 });
 
+app.post("/v1/auth/extension/link", async (c) => {
+  const client = resolveClient(db, c.req.header("authorization"));
+  if (!client) return c.json({ error: "unauthorized" }, 401);
+
+  const body = (await c.req.json().catch(() => ({}))) as { state?: string };
+  const state = body.state?.trim();
+  if (!state) return c.json({ error: "missing state" }, 400);
+
+  const row = db
+    .prepare("SELECT client_id, completed FROM auth_states WHERE state = ?")
+    .get(state) as { client_id: string; completed: number } | undefined;
+  if (!row) return c.json({ error: "invalid state" }, 404);
+
+  if (row.completed !== 1) {
+    db.prepare(
+      "UPDATE auth_states SET completed = 1, token = ?, email = ?, client_id = ? WHERE state = ?",
+    ).run(client.token, client.email, client.clientId, state);
+  }
+
+  return c.json({ ok: true, email: client.email });
+});
+
 app.get("/v1/auth/extension/poll", (c) => {
   const state = c.req.query("state");
   if (!state) return c.json({ status: "pending" });

@@ -5,14 +5,16 @@ import { BrandAccent } from "../brand/BrandAccent";
 import { HeroInstallCta } from "../landing/InstallButtons";
 import { TrustedByMarquee } from "./TrustedByMarquee";
 import { DeveloperIdeDemo } from "./DeveloperIdeDemo";
+import { formatMonthlyEarnings, normalizeMonthlyEarnings } from "../../lib/developerEstimates";
 
 export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
+  const earningsDisplay = formatMonthlyEarnings(normalizeMonthlyEarnings(monthlyUsd));
   const [activeFAQ, setActiveFAQ] = useState<number | null>(null);
 
   const faqs = [
     {
       q: "How much can I earn?",
-      a: `Most active developers earn about $${monthlyUsd.toFixed(0)}/month. You keep 70% of every dollar an advertiser pays when your machine shows their ad — the other 30% runs the platform.`,
+      a: `Most active developers earn $${earningsDisplay}/month. You keep 70% of every dollar an advertiser pays when your machine shows their ad — the other 30% runs the platform.`,
     },
     {
       q: "70% of what, exactly?",

@@ -1,9 +1,9 @@
 import type { IntegrationConfig } from "../components/marketing/IntegrationPage";
 
 const EARNINGS = [
-  { label: "Casual", amount: "$15–25/mo", detail: "~2–3 hrs/day" },
-  { label: "Regular", amount: "$40–60/mo", detail: "~4–6 hrs/day" },
-  { label: "Power user", amount: "$80–120/mo", detail: "8+ hrs/day" },
+  { label: "Casual", amount: "$25–40/mo", detail: "~2–3 hrs/day" },
+  { label: "Regular", amount: "$40–75/mo", detail: "~4–6 hrs/day" },
+  { label: "Power user", amount: "$90–150/mo", detail: "8+ hrs/day" },
 ];
 
 export const INTEGRATIONS: Record<string, IntegrationConfig> = {
@@ -30,7 +30,7 @@ export const INTEGRATIONS: Record<string, IntegrationConfig> = {
     faqs: [
       { q: "Does AIBC read my Claude conversations?", a: "No. We only show ads during wait states. Your code and prompts stay private." },
       { q: "Does it work with Claude Pro?", a: "Yes. Install the extension in your editor — Pro subscription unchanged." },
-      { q: "How much can I earn?", a: "Most active developers earn $40–60/month. You keep 70% of advertiser spend." },
+      { q: "How much can I earn?", a: "Most active developers earn $40+/month — power users often hit $90–150. You keep 70% of advertiser spend." },
     ],
   },
   cursor: {

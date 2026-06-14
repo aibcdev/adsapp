@@ -1,3 +1,5 @@
+import { getToken } from "./api";
+
 const API = import.meta.env.VITE_AIBC_API || "https://api.aibcmedia.com";
 
 export function getStoredAuthState(): string {
@@ -33,6 +35,26 @@ export async function ensureAuthSession(existing = ""): Promise<string> {
 
 export function googleRedirectUrl(state: string): string {
   return `${API}/v1/auth/google/redirect?state=${encodeURIComponent(state)}`;
+}
+
+export async function linkExtensionSession(
+  state: string,
+  accessToken?: string,
+): Promise<{ email: string }> {
+  const bearer = accessToken || getToken();
+  if (!bearer) throw new Error("Not signed in");
+
+  const res = await fetch(`${API}/v1/auth/extension/link`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${bearer}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ state }),
+  });
+  const body = (await res.json().catch(() => ({}))) as { error?: string; email?: string };
+  if (!res.ok) throw new Error(body.error || "Could not link editor sign-in");
+  return { email: body.email || "" };
 }
 
 export async function pollAuthState(state: string): Promise<{ accessToken: string; email: string } | null> {

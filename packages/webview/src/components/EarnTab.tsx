@@ -28,7 +28,11 @@ export function EarnTab({ earnings, signedIn }: EarnTabProps) {
         >
           Sign in to earn
         </button>
-      ) : null}
+      ) : (
+        <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-200">
+          Signed in — earnings are active in this editor.
+        </p>
+      )}
 
       <button
         type="button"

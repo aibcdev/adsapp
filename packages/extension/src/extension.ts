@@ -33,8 +33,22 @@ let killPollTimer: NodeJS.Timeout | undefined;
 
 const ACTIVATION_KEY = "aibc.activationFailed";
 
+function syncAuthUi(
+  auth: AuthService,
+  earningsService: EarningsService,
+  statusBar: StatusBarController,
+): void {
+  const signedIn = auth.isSignedIn();
+  statusBar.setKind(signedIn ? "earning" : "sign_in");
+  AibcViewProvider.broadcastEarnings(earningsService.getSnapshot(), signedIn);
+  if (signedIn) {
+    void earningsService.poll();
+  }
+}
+
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   const auth = new AuthService(context);
+  await auth.whenReady();
   const api = auth.getApiClient();
   const featureFlags = new FeatureFlagService();
   const monetization = new MonetizationService();
@@ -132,11 +146,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   });
 
   if (auth.isSignedIn()) {
-    statusBar.setKind("earning");
     earningsService.startPolling();
-  } else {
-    statusBar.setKind("sign_in");
   }
+  syncAuthUi(auth, earningsService, statusBar);
 
   const runActivation = async () => {
     try {
@@ -199,16 +211,22 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand("aibc.signIn", async () => {
       const ok = await auth.signIn();
       if (ok) {
-        statusBar?.setKind("earning");
         earningsService?.startPolling();
+        syncAuthUi(auth, earningsService!, statusBar!);
         await portfolioService?.refresh();
         syncSession();
         applyCurrentAd();
-        vscode.window.showInformationMessage("aibc: Signed in. Earnings active.");
-      } else {
-        vscode.window.showWarningMessage(
-          "aibc: Sign-in timed out. Complete login in your browser, then try again.",
+        vscode.window.showInformationMessage(
+          `aibc: Signed in${auth.getEmail() ? ` as ${auth.getEmail()}` : ""}. Earnings active.`,
         );
+      } else {
+        const retry = await vscode.window.showWarningMessage(
+          "aibc: Still waiting for browser sign-in. Finish Google login in your browser, then click Try again.",
+          "Try again",
+        );
+        if (retry === "Try again") {
+          await vscode.commands.executeCommand("aibc.signIn");
+        }
       }
     }),
     vscode.commands.registerCommand("aibc.signOut", async () => {

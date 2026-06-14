@@ -1,8 +1,14 @@
 # Changelog
 
-## 0.1.2 — 2026-06-12
+## 0.1.4 — 2026-06-12
 
-- Marketplace listing copy — #1 ads positioning, 70% share, OpenAI contributor story
+- Fix editor sign-in when already logged in on aibcmedia.com (auto-link flow)
+- Refresh sidebar and status bar immediately after sign-in
+- Resume pending sign-in sessions on retry
+
+## 0.1.3 — 2026-06-12
+
+- Sign-in UI sync fixes and longer browser poll window
 
 ## 0.1.1 — 2026-06-12
 

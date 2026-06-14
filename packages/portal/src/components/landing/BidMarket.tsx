@@ -70,7 +70,7 @@ export function BuyForm({
         <form onSubmit={(e) => void submit(e)} className="space-y-4">
           <h3 className="font-brand-heading text-xl text-zinc-950">Place your bid</h3>
           <p className="text-xs text-zinc-500">
-            Same flow as Kickbacks — email + Stripe checkout. No account needed to go live.{" "}
+            Email + Stripe checkout. No account needed to go live.{" "}
             <a href="/login" className="text-emerald-700 underline">
               Sign in later
             </a>{" "}
@@ -117,7 +117,7 @@ export function BuyForm({
             {blocksN} block{blocksN === 1 ? "" : "s"} at {money(bidPerBlock)} = {totalImps.toLocaleString()} views · Total {money(total)}
           </p>
           {topBid > 0 && (
-            <p className="font-mono text-xs text-emerald-400">Top bid is {money(topBid)}/1k — bid above to take #1.</p>
+            <p className="font-mono text-xs text-emerald-400">Leader pays {money(topBid)}/1k — pay more to go first.</p>
           )}
           {err && <p className="text-sm text-red-400">{err}</p>}
 
@@ -136,7 +136,7 @@ export function BuyForm({
 
 export function CompactQueue({ rows }: { rows: LeaderboardRow[] }) {
   if (rows.length === 0) {
-    return <p className="font-mono text-sm text-zinc-500">No queued bids — first bid takes #1 instantly.</p>;
+    return <p className="font-mono text-sm text-zinc-500">No active campaigns — checkout now to lead the board.</p>;
   }
 
   return (
@@ -191,7 +191,7 @@ export function MarketTable({ rows, liveCount }: { rows: LeaderboardRow[]; liveC
             {rows.length === 0 ? (
               <tr>
                 <td colSpan={4} className="px-4 py-6 text-center text-zinc-400">
-                  No bids yet — be the first to claim the spinner.
+                  No campaigns yet — yours can go first.
                 </td>
               </tr>
             ) : (

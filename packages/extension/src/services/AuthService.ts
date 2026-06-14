@@ -11,18 +11,26 @@ const INSTALLED_KEY = "aibc.installed";
 const TOKEN_KEY = "aibc.accessToken";
 const EMAIL_KEY = "aibc.email";
 const CLIENT_ID_KEY = "aibc.clientId";
+const PENDING_AUTH_STATE_KEY = "aibc.pendingAuthState";
 const AUTH_DIR = path.join(os.homedir(), ".aibc");
 const AUTH_FILE = path.join(AUTH_DIR, "auth.json");
+const SIGN_IN_POLL_MS = 1500;
+const SIGN_IN_TIMEOUT_MS = 180_000;
 
 export class AuthService {
   private accessToken?: string;
   private email?: string;
   private clientId?: string;
   private api: ApiClient;
+  private readonly readyPromise: Promise<void>;
 
   constructor(private readonly context: vscode.ExtensionContext) {
     this.api = new ApiClient(() => this.accessToken);
-    void this.loadVault();
+    this.readyPromise = this.loadVault();
+  }
+
+  whenReady(): Promise<void> {
+    return this.readyPromise;
   }
 
   getApiClient(): ApiClient {
@@ -72,6 +80,13 @@ export class AuthService {
   }
 
   async signIn(): Promise<boolean> {
+    await this.whenReady();
+
+    const pending = this.context.globalState.get<string>(PENDING_AUTH_STATE_KEY);
+    if (pending && (await this.pollUntilComplete(pending))) {
+      return true;
+    }
+
     const start = await this.api.json<{
       state: string;
       authUrl: string;
@@ -79,7 +94,12 @@ export class AuthService {
     }>("/v1/auth/extension/start", { method: "POST" });
 
     this.clientId = start.clientId;
+    await this.context.globalState.update(PENDING_AUTH_STATE_KEY, start.state);
+
     const opened = await vscode.env.openExternal(vscode.Uri.parse(start.authUrl));
+    void vscode.window.showInformationMessage(
+      "aibc: Finish in your browser. Already signed in on aibcmedia.com? Keep the tab open — Cursor will connect automatically.",
+    );
     if (!opened) {
       await vscode.env.clipboard.writeText(start.authUrl);
       const pick = await vscode.window.showWarningMessage(
@@ -91,28 +111,55 @@ export class AuthService {
       }
     }
 
-    const deadline = Date.now() + 120_000;
-    while (Date.now() < deadline) {
-      await sleep(1500);
-      const poll = await this.api.json<{
-        status: string;
-        accessToken?: string;
-        email?: string;
-        clientId?: string;
-      }>(`/v1/auth/extension/poll?state=${encodeURIComponent(start.state)}`);
+    const ok = await this.pollUntilComplete(start.state, start.clientId);
+    if (ok) {
+      await this.context.globalState.update(PENDING_AUTH_STATE_KEY, undefined);
+    }
+    return ok;
+  }
 
-      if (poll.status === "complete" && poll.accessToken) {
-        this.accessToken = poll.accessToken;
-        this.email = poll.email;
-        this.clientId = poll.clientId || start.clientId;
-        await this.persist();
-        await this.context.globalState.update(TOKEN_KEY, this.accessToken);
-        await this.context.globalState.update(EMAIL_KEY, this.email);
-        await this.context.globalState.update(CLIENT_ID_KEY, this.clientId);
-        return true;
+  private async pollUntilComplete(state: string, fallbackClientId?: string): Promise<boolean> {
+    const deadline = Date.now() + SIGN_IN_TIMEOUT_MS;
+    while (Date.now() < deadline) {
+      try {
+        const poll = await this.api.json<{
+          status: string;
+          accessToken?: string;
+          email?: string;
+          clientId?: string;
+        }>(`/v1/auth/extension/poll?state=${encodeURIComponent(state)}`);
+
+        if (poll.status === "complete" && poll.accessToken) {
+          await this.applySession(
+            poll.accessToken,
+            poll.email,
+            poll.clientId || fallbackClientId,
+          );
+          return true;
+        }
+      } catch {
+        /* keep polling */
       }
+      await sleep(SIGN_IN_POLL_MS);
     }
     return false;
+  }
+
+  private async applySession(
+    accessToken: string,
+    email?: string,
+    clientId?: string,
+  ): Promise<void> {
+    this.accessToken = accessToken;
+    this.email = email;
+    if (clientId) this.clientId = clientId;
+    await this.persist();
+    await this.context.globalState.update(TOKEN_KEY, this.accessToken);
+    await this.context.globalState.update(EMAIL_KEY, this.email);
+    if (this.clientId) {
+      await this.context.globalState.update(CLIENT_ID_KEY, this.clientId);
+    }
+    await this.context.globalState.update(PENDING_AUTH_STATE_KEY, undefined);
   }
 
   async signOut(): Promise<void> {

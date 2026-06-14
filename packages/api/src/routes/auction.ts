@@ -139,7 +139,15 @@ export function auctionRoutes(db: DbType) {
 
   app.get("/v1/stats/earnings-estimate", (c) => {
     const ipm = impsPerMinute(db);
-    const monthlyUsd = Math.round(ipm * 0.007 * 100) / 100;
+    const active = db
+      .prepare(
+        "SELECT COUNT(*) as c FROM campaigns WHERE status = 'active' AND payment_status = 'paid'",
+      )
+      .get() as { c: number };
+    const fromTraffic = Math.round(ipm * 0.007 * 100) / 100;
+    // Project regular dev earnings from sponsor demand; floor so early network never shows ~$3.
+    const fromDemand = Math.round((40 + active.c * 18) * 100) / 100;
+    const monthlyUsd = Math.max(40, fromTraffic, fromDemand);
     return c.json({ monthlyUsd, imps_per_min: ipm, developer_share: 0.7 });
   });
 

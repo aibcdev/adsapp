@@ -10,6 +10,8 @@ export function setToken(t: string) {
 }
 
 export function getToken() {
+  const stored = localStorage.getItem("aibc_token");
+  if (stored) token = stored;
   return token;
 }
 

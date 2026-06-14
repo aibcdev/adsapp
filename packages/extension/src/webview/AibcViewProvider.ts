@@ -95,6 +95,10 @@ export class AibcViewProvider implements vscode.WebviewViewProvider {
           break;
         case "sign_in":
           await vscode.commands.executeCommand("aibc.signIn");
+          messenger.postEarnings(
+            this.earnings.getSnapshot(),
+            this.auth.isSignedIn(),
+          );
           break;
         case "open_dashboard":
           await vscode.env.openExternal(vscode.Uri.parse(getDashboardUrl()));
