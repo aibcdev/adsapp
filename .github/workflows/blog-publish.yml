@@ -1,0 +1,45 @@
+name: Blog publish
+
+on:
+  schedule:
+    - cron: "0 8,18 * * *"
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Generate blog post
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: gemini-2.0-flash
+        run: node scripts/generate-blog-post.mjs
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "### Blog publish run" >> $GITHUB_STEP_SUMMARY
+          ls -la packages/portal/content/blog/*.md 2>/dev/null | tail -5 >> $GITHUB_STEP_SUMMARY || true
+
+      - name: Commit and push
+        run: |
+          git config user.name "aibc-blog-bot"
+          git config user.email "blog@aibcmedia.com"
+          git add packages/portal/content/blog/*.md packages/portal/content/blog/.topic-used.json
+          if git diff --staged --quiet; then
+            echo "No new post"
+            exit 0
+          fi
+          git commit -m "blog: auto-publish $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push

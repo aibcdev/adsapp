@@ -6,6 +6,7 @@ import { FaqSection } from "../components/marketing/FaqSection";
 import { DeveloperIdeDemo } from "../components/aibc/DeveloperIdeDemo";
 import { Terminal, Code, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
+import { marketingCopy } from "../lib/marketingCopy";
 
 export function HowItWorksPage() {
   return (
@@ -14,7 +15,7 @@ export function HowItWorksPage() {
       <MarketingPageHero
         eyebrow="For developers"
         title="Turn waiting into earning"
-        description="Every time AI processes your request, you have idle time. AIBC fills that gap with relevant ads and shares 70% of revenue with you."
+        description={`Every time AI processes your request, you have idle time. AIBC fills that gap with relevant ads and shares 70% of revenue with you. ${marketingCopy.yieldTarget}`}
         primaryCta="Install free"
         primaryHref="/#install"
       />
@@ -25,7 +26,7 @@ export function HowItWorksPage() {
         steps={[
           { num: "1", title: "AI processing", body: "Claude, Copilot, or Cursor processes your request.", icon: <Terminal className="h-5 w-5" /> },
           { num: "2", title: "Ad displayed", body: "A relevant dev-tool sponsor line appears in your spinner.", icon: <Code className="h-5 w-5" /> },
-          { num: "3", title: "You earn", body: "70% of advertiser spend goes to your account.", icon: <Wallet className="h-5 w-5" /> },
+          { num: "3", title: "You earn", body: "70% of advertiser spend goes to your account — scaling with inventory through Q2.", icon: <Wallet className="h-5 w-5" /> },
         ]}
       />
 
@@ -63,7 +64,7 @@ export function HowItWorksPage() {
         items={[
           { q: "Will this slow down my IDE?", a: "No. Ads load asynchronously during wait states only." },
           { q: "What kind of ads will I see?", a: "Developer tools, infra, and SaaS products — never random consumer ads." },
-          { q: "How do I get paid?", a: "Request a payout from your dashboard once you hit $10." },
+          { q: "How do I get paid?", a: "Connect Stripe for auto cash-out, or use Wise / PayPal / UPI from $10. Early cohort members get priority as spend ramps." },
           { q: "Which editors work?", a: "VS Code, Cursor, Windsurf, and other marketplace-compatible editors." },
         ]}
       />

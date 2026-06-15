@@ -14,6 +14,7 @@ import {
   refreshMarketplaceSnapshots,
 } from "../marketplace/stats.js";
 import { isSeedCampaignClient } from "../billing/seedInventory.js";
+import { computeYieldMetrics } from "../stats/yield.js";
 
 const REAL_CAMPAIGN_SQL = "payment_status = 'paid' AND client_id != 'seed'";
 
@@ -153,6 +154,7 @@ export function adminRoutes(db: DbType) {
     const ipm = impsPerMinute(db);
     const topBid = leaderboard[0]?.bid_usd ?? 0;
     const campaigns = allPaidCampaigns(db);
+    const yieldMetrics = computeYieldMetrics(db);
 
     return c.json({
       kpis: {
@@ -167,6 +169,9 @@ export function adminRoutes(db: DbType) {
         impressionsToday: impressionsToday.c,
         pendingPayoutTotal: pending.total,
         pendingPayoutCount: pending.count,
+        usdPerAgentHour: yieldMetrics.usdPerAgentHour,
+        activeAgentsLastHour: yieldMetrics.activeAgentsLastHour,
+        targetUsdPerAgentHour: yieldMetrics.targetUsdPerAgentHour,
       },
       bidMarket: {
         top_bid: topBid,
@@ -177,6 +182,7 @@ export function adminRoutes(db: DbType) {
       pricePoints: priceHistoryPoints(db, 30, { excludeSeed: true }),
       campaigns,
       downloads,
+      yield: yieldMetrics,
     });
   });
 

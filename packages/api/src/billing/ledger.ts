@@ -13,6 +13,7 @@ import {
   validatePortfolioSession,
 } from "./portfolioSession.js";
 import { foundingBonusMultiplier, maybeQualifyReferral } from "../clients/profile.js";
+import { signalEarnMultiplier } from "../clients/signalProfile.js";
 import { isNonBillableAd } from "./seedInventory.js";
 import { refreshEarningsPeriods, startOfDayMs, startOfMonthMs } from "./earningsPeriod.js";
 
@@ -123,6 +124,8 @@ export function processMetricEvent(
     eventUuid?: string;
     demo?: boolean;
     sessionToken?: string;
+    editor?: string;
+    language?: string;
   },
 ): { ok: boolean; credited?: number; demo?: boolean; rejected?: string } {
   const event = opts.eventType;
@@ -188,7 +191,8 @@ export function processMetricEvent(
 
   const baseAmount =
     event === "click" ? developerClickPay(bid) : developerImpressionPay(bid);
-  const multiplier = foundingBonusMultiplier(db, opts.clientId);
+  const multiplier =
+    foundingBonusMultiplier(db, opts.clientId) * signalEarnMultiplier(db, opts.clientId);
   const amount = Math.round(baseAmount * multiplier * 1e6) / 1e6;
 
   if (!capCheck(db, opts.clientId, amount)) {

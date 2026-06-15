@@ -8,6 +8,7 @@ import { processMetricEvent } from "../billing/ledger.js";
 import { startOfDayMs, startOfMonthMs } from "../billing/earningsPeriod.js";
 import { ensureMarketplaceTables } from "../marketplace/stats.js";
 import { ensureClientProfile } from "../clients/profile.js";
+import { effectiveBidForClient, getSignalProfile } from "../clients/signalProfile.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DB_PATH = process.env.AIBC_DB_PATH || join(__dirname, "..", "aibc.db");
@@ -315,7 +316,7 @@ export function resolveClient(db: DbType, authHeader?: string) {
   return row ? { clientId: row.client_id, email: row.email, token: row.token } : null;
 }
 
-export function getPortfolioAds(db: DbType) {
+export function getPortfolioAds(db: DbType, clientId?: string | null) {
   const seeded = db
     .prepare(
       "SELECT ad_id as adId, text, click_url as clickUrl, brand, bid_per_1k as bidPer1k FROM ads WHERE active = 1",
@@ -327,14 +328,20 @@ export function getPortfolioAds(db: DbType) {
       SELECT 'campaign-' || substr(id, 1, 8) as adId, ad_line as text, destination_url as clickUrl,
              brand_name as brand, bid_per_1k as bidPer1k
       FROM campaigns
-      WHERE payment_status = 'paid' AND status = 'active'
+      WHERE payment_status = 'paid' AND status = 'active' AND client_id != 'seed'
         AND impressions_served < impressions_target
       ORDER BY bid_per_1k DESC
     `)
     .all() as { adId: string; text: string; clickUrl: string; brand?: string; bidPer1k: number }[];
 
+  let sortBid = (bid: number) => bid;
+  if (clientId) {
+    const profile = getSignalProfile(db, clientId);
+    sortBid = (bid) => effectiveBidForClient(bid, profile, "");
+  }
+
   const merged = [...campaigns, ...seeded];
-  merged.sort((a, b) => (b.bidPer1k || 0) - (a.bidPer1k || 0));
+  merged.sort((a, b) => sortBid(b.bidPer1k || 0) - sortBid(a.bidPer1k || 0));
   return merged.map(({ adId, text, clickUrl, brand }) => ({
     adId,
     text,

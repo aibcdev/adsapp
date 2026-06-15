@@ -6,6 +6,8 @@ import { HeroInstallCta } from "../landing/InstallButtons";
 import { TrustedByMarquee } from "./TrustedByMarquee";
 import { DeveloperIdeDemo } from "./DeveloperIdeDemo";
 import { formatMonthlyEarnings, normalizeMonthlyEarnings } from "../../lib/developerEstimates";
+import { marketingCopy } from "../../lib/marketingCopy";
+import { AibcVsOthersComparison } from "./AibcVsOthersComparison";
 
 export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
   const earningsDisplay = formatMonthlyEarnings(normalizeMonthlyEarnings(monthlyUsd));
@@ -22,7 +24,7 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
     },
     {
       q: "Why are payouts high right now?",
-      a: "We are onboarding premium dev-tool brands (think Supabase, Neon, Clerk-level advertisers) before the full public launch. Early installs join the opening cohort and get first access when campaigns go live.",
+      a: "We are onboarding premium dev-tool brands before the full public launch. Early installs join the opening cohort. We expect the deepest IDE spinner inventory and developer base in this category by the end of Q2 — founding members earn first as campaigns go live.",
     },
     {
       q: "Do I have to change how I work?",
@@ -54,7 +56,7 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
         <div className="mx-auto max-w-4xl z-10 space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-500/30 bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-wide">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Opening cohort · Install now
+            Opening cohort · Scaling through Q2
           </div>
 
           <h1 className="font-brand-heading text-5xl md:text-7xl lg:text-[5.5rem] text-zinc-950 max-w-4xl mx-auto leading-[1.05]">
@@ -66,12 +68,16 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
             <strong className="text-zinc-950">70% of every ad dollar</strong> — from top dev-tool brands onboarding now.
           </p>
 
+          <p className="text-base text-zinc-500 max-w-2xl mx-auto leading-relaxed">
+            {marketingCopy.q2Developers} {marketingCopy.yieldTarget} {marketingCopy.scaleAmbition}
+          </p>
+
           <div className="pt-2">
             <HeroInstallCta monthlyUsd={monthlyUsd} />
           </div>
 
           <p className="text-base text-zinc-600 font-medium max-w-xl mx-auto">
-            Be in the <strong className="text-zinc-950">first 15,000 installs</strong>. Premium advertisers are signing up now — early cohort members earn first when campaigns switch on.
+            Be in the <strong className="text-zinc-950">first 15,000 installs</strong>. {marketingCopy.earlyCohort}
           </p>
 
           <p className="text-sm text-zinc-500">
@@ -84,6 +90,8 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
       </section>
 
       <TrustedByMarquee />
+
+      <AibcVsOthersComparison />
 
       {/* Live IDE Interactive Simulation Demo */}
       <section className="border-t border-zinc-200 bg-white px-6 py-8 md:py-10">
@@ -182,7 +190,7 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
                 Founding member <BrandAccent>perks</BrandAccent>
               </h2>
               <p className="text-base text-zinc-600 font-medium leading-relaxed max-w-md">
-                Install now to join the opening cohort. Top advertisers are onboarding — early members get priority when campaigns go live and a permanent +5% bonus.
+                Install now to join the opening cohort. {marketingCopy.founderAdvertisers} Early members get priority when campaigns go live and a permanent +5% bonus.
               </p>
             </div>
             
@@ -271,7 +279,8 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
             <BrandAccent>15,000.</BrandAccent>
           </h2>
           <p className="text-zinc-600 text-lg font-medium max-w-lg mx-auto">
-            Click install above. Sign in after to track earnings. Opening cohort gets first access when premium brand campaigns go live.
+            Click install above. Sign in after to track earnings. {marketingCopy.earlyCohort}{" "}
+            {marketingCopy.q2Inventory}
           </p>
 
           <div className="pt-6">

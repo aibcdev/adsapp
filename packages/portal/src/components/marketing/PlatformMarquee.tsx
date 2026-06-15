@@ -1,5 +1,7 @@
 import { PLATFORM_INSTALL_KEY, installStoreUrl } from "../../lib/installLinks";
 
+import { marketingCopy } from "../../lib/marketingCopy";
+
 const PLATFORMS = [
   {
     id: 1,
@@ -54,7 +56,8 @@ export function PlatformMarquee() {
           </h2>
           <div className="lg:pl-12">
             <p className="text-lg font-light leading-relaxed text-zinc-400 md:text-xl">
-              VS Code, Cursor, Windsurf, Open VSX, and more. One extension. One line in the spinner. You keep 70%.
+              VS Code, Cursor, Windsurf, Open VSX, and more. One extension. One line in the spinner. You keep 70%.{" "}
+              {marketingCopy.q2Inventory}
             </p>
             <div className="mt-6 flex flex-wrap gap-4 font-mono text-sm text-zinc-500">
               <span>// No popups</span>

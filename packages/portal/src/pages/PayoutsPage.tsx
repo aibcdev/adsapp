@@ -5,6 +5,7 @@ import { MarketingPageHero } from "../components/marketing/MarketingPageHero";
 import { StepsSection } from "../components/marketing/StepsSection";
 import { FaqSection } from "../components/marketing/FaqSection";
 import { Wallet, Building2 } from "lucide-react";
+import { marketingCopy } from "../lib/marketingCopy";
 
 export function PayoutsPage() {
   return (
@@ -13,7 +14,7 @@ export function PayoutsPage() {
       <MarketingPageHero
         eyebrow="Developers · Payouts"
         title="Your money, your way"
-        description="Withdraw earnings via Stripe. No fees on our side. Track balance in real time."
+        description={`Withdraw via Stripe Connect (auto) or manual rails. No fees on our side. ${marketingCopy.q2Developers}`}
         primaryCta="Open dashboard"
         primaryHref="/dashboard?tab=developer"
         stats={[

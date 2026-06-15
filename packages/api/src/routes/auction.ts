@@ -125,7 +125,7 @@ export function auctionRoutes(db: DbType) {
 
   app.get("/v1/auction/leaderboard", (c) => {
     const limit = Math.min(50, Math.max(1, Number(c.req.query("limit") || 15)));
-    const top = leaderboardRows(db, limit);
+    const top = leaderboardRows(db, limit, { excludeSeed: true });
     const serving = top.filter((r) => r.status === "serving").length;
     const queued = top.filter((r) => r.status === "queued").length;
     const ipm = impsPerMinute(db);
@@ -141,7 +141,7 @@ export function auctionRoutes(db: DbType) {
 
   app.get("/v1/auction/price-history", (c) => {
     const days = Math.min(30, Math.max(1, Number(c.req.query("days") || 30)));
-    return c.json({ points: priceHistoryPoints(db, days) });
+    return c.json({ points: priceHistoryPoints(db, days, { excludeSeed: true }) });
   });
 
   app.get("/v1/stats/earnings-estimate", (c) => {
@@ -163,23 +163,27 @@ export function auctionRoutes(db: DbType) {
       id: "2026-06-aibc-launch",
       tag: "PSA · Service bulletin",
       ts: "Jun 2026 · aibc launch",
-      headline: "aibc is live — install the extension and start earning.",
+      headline: "aibc is live — join the opening cohort before Q2 scale.",
       items: [
         {
           ts: "Now",
-          text: "VS Code, Cursor, Windsurf, and VSCodium supported via Marketplace + Open VSX.",
+          text: "Live today: VS Code, Cursor, Windsurf, Open VSX, Stripe checkout, and 70% developer share.",
+        },
+        {
+          ts: "Q2",
+          text: "We expect to run the largest captive developer ad inventory in IDE spinners by the end of Q2 2026.",
+        },
+        {
+          ts: "Q2",
+          text: "We're building toward the largest opt-in developer install base in this category by the end of Q2.",
         },
         {
           ts: "Now",
-          text: "Advertisers can bid live on the homepage — Stripe checkout, no account required.",
+          text: "Developers earn 70% of ad revenue — higher than typical alternatives. Opt-in Earn more mode adds ~15% when enabled.",
         },
         {
           ts: "Now",
-          text: "Developers earn 70% of ad revenue — higher than kickbacks.",
-        },
-        {
-          ts: "Now",
-          text: "Payouts: 72h settlement hold, then cash out via PayPal, Wise, or UPI.",
+          text: "Payouts: Stripe Connect auto cash-out, or Wise / PayPal / UPI.",
         },
       ],
     });

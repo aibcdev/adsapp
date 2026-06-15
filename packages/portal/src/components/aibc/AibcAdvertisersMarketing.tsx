@@ -6,6 +6,7 @@ import {
 import { BrandAccent } from "../brand/BrandAccent";
 import { DeveloperIdeDemo } from "./DeveloperIdeDemo";
 import { estimateCampaignReach } from "../../lib/advertiserEstimates";
+import { marketingCopy } from "../../lib/marketingCopy";
 import type { ReactNode } from "react";
 
 interface AudienceSegment {
@@ -102,7 +103,7 @@ const FAQ_ITEMS: FAQItem[] = [
     id: 4,
     category: "safety",
     question: "Can I target specific developer types?",
-    answer: "Yes. Filter by language, editor, or project type. We never read or store private source code."
+    answer: "Developers can opt in to share coarse tags (editor, language, stack) for better ad match — never source code. Opt-in tags are live on the developer dashboard today; advertiser-side filters expand as inventory scales through Q2."
   },
   {
     id: 5,
@@ -200,7 +201,7 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
           {/* Label Pills */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-500/30 bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-wide">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            Pay per view · Go live in minutes
+            Founding advertisers · Inventory scaling Q2
           </div>
 
           <h1 className="mx-auto max-w-4xl font-brand-heading text-5xl md:text-7xl lg:text-[5.5rem] text-zinc-950 leading-[1.05]">
@@ -208,7 +209,11 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
           </h1>
 
           <p className="mx-auto max-w-2xl text-xl md:text-2xl font-medium leading-snug text-zinc-600">
-            One sponsor line in VS Code, Cursor, and Windsurf — while they code. We are onboarding top dev-tool brands now; founding advertisers get first placement when the opening cohort goes live.
+            One sponsor line in VS Code, Cursor, and Windsurf — while they code. We are onboarding top dev-tool brands now; founding advertisers get first placement as the opening cohort scales.
+          </p>
+
+          <p className="mx-auto max-w-2xl text-base leading-relaxed text-zinc-500">
+            {marketingCopy.q2Inventory} {marketingCopy.honestLaunch}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
@@ -402,9 +407,9 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
               <h3 className="text-lg font-bold text-emerald-800 border-b border-emerald-200 pb-3">AIBC Media</h3>
               <ul className="space-y-4">
                 {[
-                  { title: "Right place, right time", desc: "Your ad shows while developers code — 6–8 hours of focused attention daily." },
-                  { title: "Smart targeting", desc: "Filter by language, editor, and project type. No private code is ever collected." },
-                  { title: "Developers get paid too", desc: "70% goes to the coder. That keeps ads trusted — and clicked." }
+                  { title: "Right place, right time", desc: "Your ad shows while developers code — 6–8 hours of focused attention daily, scaling with install growth through Q2." },
+                  { title: "Smart targeting", desc: "Developers opt in to coarse editor and language tags today. No private code — advertiser filters deepen as inventory grows." },
+                  { title: "Developers get paid too", desc: "70% goes to the coder. We expect that split to drive the highest trust — and click-through — in this format." }
                 ].map((item, idx) => (
                   <li key={idx} className="flex gap-3.5 items-start">
                     <Check className="text-emerald-600 w-4 h-4 mt-0.5 shrink-0" />
@@ -430,8 +435,8 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
             <h2 className="font-brand-heading text-4xl md:text-6xl text-zinc-950">
               Who you will reach
             </h2>
-            <p className="text-base text-zinc-600 max-w-md mx-auto font-medium">
-              Engineers, founders, and indie builders — spending hours in their editor every day.
+            <p className="text-base text-zinc-600 max-w-lg mx-auto font-medium">
+              Engineers, founders, and indie builders — spending hours in their editor every day. {marketingCopy.cohortMixNote}
             </p>
           </div>
 
@@ -496,7 +501,7 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
 
               <div className="pt-8 mt-6 border-t border-zinc-100 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <p className="text-sm text-zinc-600 font-medium max-w-sm">
-                  Want to target this group? Launch a campaign and pick your audience filters.
+                  Want to reach this group? Launch a founding campaign — audience filters expand through Q2 as opt-in signal scales.
                 </p>
                 <a href="#launch" className="text-sm text-emerald-600 hover:text-emerald-700 font-bold flex items-center gap-1.5 transition-colors">
                   Launch campaign <ArrowRight className="w-3.5 h-3.5" />

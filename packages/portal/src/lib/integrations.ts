@@ -1,4 +1,5 @@
 import type { IntegrationConfig } from "../components/marketing/IntegrationPage";
+import { marketingCopy } from "./marketingCopy";
 
 const EARNINGS = [
   { label: "Casual", amount: "$25–40/mo", detail: "~2–3 hrs/day" },
@@ -11,7 +12,7 @@ export const INTEGRATIONS: Record<string, IntegrationConfig> = {
     slug: "claude",
     toolName: "Claude",
     headline: "Get Paid Using Claude",
-    description: "Earn while Claude Code or Claude CLI processes your requests. One sponsor line in the spinner — 70% to you.",
+    description: `Earn while Claude Code or Claude CLI processes your requests. One sponsor line in the spinner — 70% to you. ${marketingCopy.q2Inventory}`,
     logoSrc: "/logos/claude-code.svg",
     whyTitle: "Why Claude + AIBC works",
     whyPoints: [
@@ -37,7 +38,7 @@ export const INTEGRATIONS: Record<string, IntegrationConfig> = {
     slug: "cursor",
     toolName: "Cursor",
     headline: "Get Paid Using Cursor",
-    description: "Monetize idle time in Cursor. Install from the marketplace and earn while the AI agent thinks.",
+    description: `Monetize idle time in Cursor. Install from the marketplace and earn while the AI agent thinks. ${marketingCopy.q2Developers}`,
     logoSrc: "/logos/cursor.svg",
     whyTitle: "Built for Cursor users",
     whyPoints: [

@@ -34,6 +34,11 @@ type Earnings = {
     maxRequestsPerWeek: number;
     maxUsdPerDay: number;
   };
+  yield?: {
+    usdPerAgentHour: number;
+    earningsLastHour: number;
+    targetUsdPerAgentHour: number;
+  };
 };
 
 type ReferralStats = {
@@ -284,7 +289,23 @@ export function DashboardPage() {
               loadPayoutMethod,
             )
           }
-          onRequestPayout={() => api("/v1/me/payout-request", { method: "POST" }).then(() => loadEarnings())}
+          onRequestPayout={async () => {
+            const res = await api("/v1/me/payout-request", { method: "POST" });
+            const body = (await res.json()) as { autoPaid?: boolean; error?: string };
+            if (!res.ok) throw new Error(body.error || "Payout failed");
+            await loadEarnings();
+            return { autoPaid: body.autoPaid };
+          }}
+          onConnectStripe={async () => {
+            const res = await api("/v1/me/stripe-connect/onboard", { method: "POST" });
+            const body = (await res.json()) as { url?: string; error?: string };
+            if (!res.ok || !body.url) throw new Error(body.error || "Could not start Stripe setup");
+            return body.url;
+          }}
+          onLoadConnectStatus={async () => {
+            const res = await api("/v1/me/stripe-connect/status");
+            return res.json();
+          }}
           onRetrieveActivity={() => void retrieveActivity()}
         />
       ) : null}

@@ -210,3 +210,36 @@ body {
   background: linear-gradient(160deg, #f0fdf4 0%, #ffffff 45%, #f8fafc 100%);
   min-height: 100vh;
 }
+
+.blog-article h2 {
+  @apply mt-10 font-brand-heading text-2xl text-zinc-900;
+}
+
+.blog-article h3 {
+  @apply mt-8 font-brand-heading text-xl text-zinc-900;
+}
+
+.blog-article p {
+  @apply mt-4;
+}
+
+.blog-article ul,
+.blog-article ol {
+  @apply mt-4 list-inside list-decimal space-y-2 pl-2;
+}
+
+.blog-article ul {
+  @apply list-disc;
+}
+
+.blog-article a {
+  @apply font-medium text-emerald-700 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-800;
+}
+
+.blog-article strong {
+  @apply font-semibold text-zinc-900;
+}
+
+.blog-article code {
+  @apply rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-sm text-zinc-800;
+}

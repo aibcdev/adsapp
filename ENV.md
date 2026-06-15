@@ -185,3 +185,21 @@ STRIPE_WEBHOOK_SECRET=
 # Netlify (dashboard only)
 VITE_AIBC_API=https://api.aibcmedia.com
 ```
+
+---
+
+## GitHub — blog auto-publish (Gemini Flash)
+
+**Repo → Settings → Secrets → Actions**
+
+| Secret | Where to get it |
+|--------|----------------|
+| `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com/apikey) or Google Cloud → API key with Generative Language API enabled |
+
+Optional repo variable: `GEMINI_MODEL` (default `gemini-2.0-flash`).
+
+Runs twice daily via `.github/workflows/blog-publish.yml`. Local test:
+
+```bash
+GEMINI_API_KEY=your_key node scripts/generate-blog-post.mjs
+```

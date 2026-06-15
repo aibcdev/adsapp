@@ -20,6 +20,9 @@ type Overview = {
     impressionsToday: number;
     pendingPayoutTotal: number;
     pendingPayoutCount: number;
+    usdPerAgentHour?: number;
+    activeAgentsLastHour?: number;
+    targetUsdPerAgentHour?: number;
   };
   bidMarket: {
     top_bid: number;
@@ -129,6 +132,11 @@ function OverviewInner() {
           label="Pending payouts"
           value={`$${k.pendingPayoutTotal.toFixed(2)}`}
           sub={`${k.pendingPayoutCount} requests`}
+        />
+        <KpiCard
+          label="$/agent/hr"
+          value={`$${(k.usdPerAgentHour ?? 0).toFixed(2)}`}
+          sub={`Target $${(k.targetUsdPerAgentHour ?? 1).toFixed(2)} · ${k.activeAgentsLastHour ?? 0} active`}
         />
       </div>
 

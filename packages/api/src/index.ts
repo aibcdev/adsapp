@@ -39,13 +39,30 @@ import {
   ensureStripeTables,
   handleStripeWebhook,
 } from "./stripe.js";
+import {
+  createConnectOnboarding,
+  ensureStripeConnectColumns,
+  getConnectStatus,
+  transferPayoutToConnect,
+} from "./billing/stripeConnect.js";
+import {
+  ensureSignalColumns,
+  getSignalProfile,
+  updateObservedSignal,
+  updateSignalProfile,
+} from "./clients/signalProfile.js";
+import { computeClientYieldMetrics, computeYieldMetrics } from "./stats/yield.js";
 import { auctionRoutes, BLOCK_IMPRESSIONS } from "./routes/auction.js";
 import { billingRoutes } from "./routes/billing.js";
 import { adminRoutes } from "./routes/admin.js";
+import { advertiserApplyRoutes, ensureAdvertiserApplicationsTable } from "./routes/advertiserApply.js";
 
 const db = createDb();
 ensurePortfolioSessionTables(db);
 ensureStripeTables(db);
+ensureStripeConnectColumns(db);
+ensureSignalColumns(db);
+ensureAdvertiserApplicationsTable(db);
 ensureHandoffTable(db);
 const app = new Hono();
 
@@ -84,7 +101,7 @@ function portfolioPayload(clientId: string | null, deviceId?: string) {
   purgeExpiredSessions(db);
   const session = mintPortfolioSession(db, { clientId, deviceId });
   return {
-    ads: getPortfolioAds(db),
+    ads: getPortfolioAds(db, clientId),
     rotationIntervalMs: ROTATION_MS,
     view_threshold_seconds: VIEW_THRESHOLD,
     session_token: session.sessionToken,
@@ -141,6 +158,12 @@ app.post("/v1/metrics", async (c) => {
   const adId = String(body.adId || body.ad_id || "unknown");
   const eventUuid = body.nonce ? String(body.nonce) : body.event_uuid ? String(body.event_uuid) : undefined;
   const sessionToken = body.session_token ? String(body.session_token) : undefined;
+  const editor = body.editor ? String(body.editor) : undefined;
+  const language = body.language ? String(body.language) : body.lang ? String(body.lang) : undefined;
+
+  if (editor || language) {
+    updateObservedSignal(db, client.clientId, { editor, language });
+  }
 
   const result = processMetricEvent(db, {
     clientId: client.clientId,
@@ -149,6 +172,8 @@ app.post("/v1/metrics", async (c) => {
     eventUuid,
     demo: false,
     sessionToken,
+    editor,
+    language,
   });
 
   if (result.rejected) {
@@ -370,6 +395,7 @@ app.get("/v1/earnings", (c) => {
     | undefined;
 
   const caps = earningsCaps(db, client.clientId);
+  const yieldMetrics = computeClientYieldMetrics(db, client.clientId);
 
   return c.json({
     today: row?.today ?? 0,
@@ -388,6 +414,7 @@ app.get("/v1/earnings", (c) => {
       hourlyCap: caps.hourlyCap,
       dailyCap: caps.dailyCap,
     },
+    yield: yieldMetrics,
   });
 });
 
@@ -432,6 +459,7 @@ app.get("/v1/me/earnings", (c) => {
     .get(client.clientId);
   const caps = earningsCaps(db, client.clientId);
   const payoutLimits = payoutUsage(db, client.clientId);
+  const yieldMetrics = computeClientYieldMetrics(db, client.clientId);
   return c.json({
     ...(row ?? { today: 0, month: 0, lifetime: 0, pending: 0, payable: 0 }),
     caps: {
@@ -443,7 +471,43 @@ app.get("/v1/me/earnings", (c) => {
       dailyCap: caps.dailyCap,
     },
     payoutLimits,
+    yield: yieldMetrics,
   });
+});
+
+app.get("/v1/me/signal", (c) => {
+  const client = resolveClient(db, c.req.header("authorization"));
+  if (!client) return c.json({ error: "unauthorized" }, 401);
+  return c.json(getSignalProfile(db, client.clientId));
+});
+
+app.patch("/v1/me/signal", async (c) => {
+  const client = resolveClient(db, c.req.header("authorization"));
+  if (!client) return c.json({ error: "unauthorized" }, 401);
+  const body = (await c.req.json().catch(() => ({}))) as {
+    optIn?: boolean;
+    editor?: string | null;
+    languages?: string[];
+    stackTags?: string[];
+  };
+  const profile = updateSignalProfile(db, client.clientId, body);
+  return c.json(profile);
+});
+
+app.get("/v1/me/stripe-connect/status", async (c) => {
+  const client = resolveClient(db, c.req.header("authorization"));
+  if (!client) return c.json({ error: "unauthorized" }, 401);
+  const status = await getConnectStatus(db, client.clientId);
+  return c.json({ ...status, stripeEnabled: stripeEnabled() });
+});
+
+app.post("/v1/me/stripe-connect/onboard", async (c) => {
+  const client = resolveClient(db, c.req.header("authorization"));
+  if (!client) return c.json({ error: "unauthorized" }, 401);
+  if (!stripeEnabled()) return c.json({ error: "Stripe not configured" }, 503);
+  const result = await createConnectOnboarding(db, client.clientId, client.email || undefined);
+  if ("error" in result) return c.json({ error: result.error }, 400);
+  return c.json(result);
 });
 
 app.get("/v1/me/payout-method", (c) => {
@@ -491,7 +555,7 @@ app.post("/v1/me/payout-method", async (c) => {
   return c.json({ ok: true });
 });
 
-app.post("/v1/me/payout-request", (c) => {
+app.post("/v1/me/payout-request", async (c) => {
   const client = resolveClient(db, c.req.header("authorization"));
   if (!client) return c.json({ error: "unauthorized" }, 401);
 
@@ -510,7 +574,11 @@ app.post("/v1/me/payout-request", (c) => {
     .prepare("SELECT rail, handle FROM payout_methods WHERE client_id = ?")
     .get(client.clientId) as { rail: string; handle: string } | undefined;
 
-  if (!method?.handle) {
+  const connectStatus = await getConnectStatus(db, client.clientId);
+  const useStripe =
+    connectStatus.payoutsEnabled && (method?.rail === "stripe" || !method?.handle);
+
+  if (!useStripe && !method?.handle) {
     return c.json({ error: "Save a payout method first" }, 400);
   }
 
@@ -523,16 +591,21 @@ app.post("/v1/me/payout-request", (c) => {
   }
 
   const payoutId = randomUUID();
+  const rail = useStripe ? "stripe" : method!.rail;
+  const handle = useStripe ? connectStatus.accountId || "stripe_connect" : method!.handle;
+  let status = "requested";
+
   db.prepare(
     `INSERT INTO payouts (id, client_id, amount, referral_bonus, rail, handle, status, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, 'requested', ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     payoutId,
     client.clientId,
     totalAmount,
     referralBonus,
-    method.rail,
-    method.handle,
+    rail,
+    handle,
+    status,
     Date.now(),
   );
 
@@ -541,13 +614,28 @@ app.post("/v1/me/payout-request", (c) => {
     markReferralBonusPaid(db, client.clientId);
   }
 
+  if (useStripe) {
+    const transfer = await transferPayoutToConnect(db, client.clientId, totalAmount, payoutId);
+    if ("error" in transfer) {
+      db.prepare("UPDATE payouts SET status = 'failed' WHERE id = ?").run(payoutId);
+      db.prepare("UPDATE earnings SET payable = payable + ? WHERE client_id = ?").run(payable, client.clientId);
+      if (referralBonus > 0) {
+        db.prepare("UPDATE clients SET referral_bonus_paid = 0 WHERE id = ?").run(client.clientId);
+      }
+      return c.json({ error: transfer.error }, 502);
+    }
+    status = "paid";
+    db.prepare("UPDATE payouts SET status = 'paid' WHERE id = ?").run(payoutId);
+  }
+
   return c.json({
     ok: true,
     amount: totalAmount,
     baseAmount: payable,
     referralBonus,
     payoutId,
-    status: "requested",
+    status,
+    autoPaid: useStripe,
   });
 });
 
@@ -602,6 +690,7 @@ app.post("/v1/webhooks/stripe", async (c) => {
 app.route("/", auctionRoutes(db));
 app.route("/", billingRoutes(db));
 app.route("/", adminRoutes(db));
+app.route("/", advertiserApplyRoutes(db));
 
 app.get("/health", (c) =>
   c.json({

@@ -79,11 +79,13 @@ export function StatCards({
   month,
   lifetime,
   caps,
+  yieldMetrics,
 }: {
   today: number;
   month: number;
   lifetime: number;
   caps: Caps;
+  yieldMetrics?: { usdPerAgentHour: number; targetUsdPerAgentHour: number; earningsLastHour?: number };
 }) {
   const hourReset = useCountdown(nextHourBoundary());
   const dayReset = useCountdown(nextDayBoundary());
@@ -94,8 +96,16 @@ export function StatCards({
     { label: "Lifetime", value: lifetime, sub: "all-time credit" },
   ];
 
+  if (yieldMetrics) {
+    stats.push({
+      label: "$/agent/hr",
+      value: yieldMetrics.usdPerAgentHour,
+      sub: `Target $${yieldMetrics.targetUsdPerAgentHour.toFixed(2)}/hr · last hour`,
+    });
+  }
+
   return (
-    <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
       {stats.map((s) => (
         <div key={s.label} className="aibc-card-accent p-5 pl-6">
           <p className="font-mono text-[10px] uppercase tracking-widest text-zinc-500">{s.label}</p>

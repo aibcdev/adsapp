@@ -1,10 +1,13 @@
 import { IdeMockup } from "../aibc/ProductMockup";
 
+import { marketingCopy } from "../../lib/marketingCopy";
+
 const TRUST_ITEMS = [
   "We never read your code",
   "One small line — never a popup",
   "You keep 70%",
   "Uninstall and everything goes back to normal",
+  marketingCopy.q2Developers,
 ];
 
 type TrustSectionProps = {

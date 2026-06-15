@@ -4,6 +4,7 @@ import { Send, Check } from "lucide-react";
 import { AibcLogo } from "./brand/AibcLogo";
 
 const DEVELOPER_LINKS = [
+  { label: "Blog", to: "/blog" },
   { label: "How It Works", to: "/developers/how-it-works" },
   { label: "Payouts", to: "/developers/payouts" },
   { label: "Get Paid Using Claude", to: "/integrations/claude" },
@@ -147,6 +148,9 @@ export function SiteFooter() {
           </Link>
           <Link to="/contact" className="transition-colors hover:text-zinc-900">
             Contact
+          </Link>
+          <Link to="/blog" className="transition-colors hover:text-zinc-900">
+            Blog
           </Link>
           <Link to="/referral" className="transition-colors hover:text-zinc-900">
             Refer a developer — earn $10

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>AIBC Blog</title>
+    <link>https://aibcmedia.com/blog</link>
+    <description>Founder notes on AI coding, developer income, and monetizing your IDE.</description>
+    <language>en-us</language>
+    <atom:link href="https://aibcmedia.com/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>My first $100 from coding ads — what the dashboard actually showed</title>
+      <link>https://aibcmedia.com/blog/first-hundred-dollars-coding-ads-dashboard</link>
+      <guid isPermaLink="true">https://aibcmedia.com/blog/first-hundred-dollars-coding-ads-dashboard</guid>
+      <pubDate>Sun, 14 Jun 2026 18:00:00 GMT</pubDate>
+      <description>Realistic timeline: impressions, hold period, payable balance, and the first manual payout request.</description>
+    </item>
+    <item>
+      <title>SEO for developers who hate marketing (write once, rank forever)</title>
+      <link>https://aibcmedia.com/blog/seo-for-developers-who-hate-marketing</link>
+      <guid isPermaLink="true">https://aibcmedia.com/blog/seo-for-developers-who-hate-marketing</guid>
+      <pubDate>Sun, 14 Jun 2026 08:00:00 GMT</pubDate>
+      <description>You don't need a growth team. You need honest posts targeting searches you already understand.</description>
+    </item>
+    <item>
+      <title>Claude Code uninstall anxiety — why clean restore matters</title>
+      <link>https://aibcmedia.com/blog/claude-code-uninstall-anxiety-clean-restore</link>
+      <guid isPermaLink="true">https://aibcmedia.com/blog/claude-code-uninstall-anxiety-clean-restore</guid>
+      <pubDate>Sat, 13 Jun 2026 08:00:00 GMT</pubDate>
+      <description>Patches that don't revert kill trust. How we restore index.js, settings.json, and ~/.aibc artifacts.</description>
+    </item>
+    <item>
+      <title>The Tuesday afternoon problem: building is easy, getting paid is hard</title>
+      <link>https://aibcmedia.com/blog/tuesday-afternoon-problem-building-is-easy</link>
+      <guid isPermaLink="true">https://aibcmedia.com/blog/tuesday-afternoon-problem-building-is-easy</guid>
+      <pubDate>Fri, 12 Jun 2026 08:00:00 GMT</pubDate>
+      <description>Parag Agrawal nailed it. The code works. Silence is worse than complaints. Here's what we optimize for.</description>
+    </item>
+    <item>
+      <title>What advertisers pay for inside your IDE (without popups)</title>
+      <link>https://aibcmedia.com/blog/what-advertisers-pay-inside-your-ide</link>
+      <guid isPermaLink="true">https://aibcmedia.com/blog/what-advertisers-pay-inside-your-ide</guid>
+      <pubDate>Thu, 11 Jun 2026 08:00:00 GMT</pubDate>
+      <description>Auction mechanics, CPM-style bids, and why dev-tool brands want spinner inventory.</description>
+    </item>
+    <item>
+      <title>Vibe coding is 10% code, 90% distribution (and how to fix that)</title>
+      <link>https://aibcmedia.com/blog/vibe-coding-ten-percent-code-ninety-distribution</link>
+      <guid isPermaLink="true">https://aibcmedia.com/blog/vibe-coding-ten-percent-code-ninety-distribution</guid>
+      <pubDate>Wed, 10 Jun 2026 08:00:00 GMT</pubDate>
+      <description>You can ship in a weekend. Getting found is the hard part. SEO, community, and monetizing while you build.</description>
+    </item>
+    <item>
+      <title>Refer a developer, earn $10: the math behind our referral program</title>
+      <link>https://aibcmedia.com/blog/refer-a-developer-earn-ten-dollars</link>
+      <guid isPermaLink="true">https://aibcmedia.com/blog/refer-a-developer-earn-ten-dollars</guid>
+      <pubDate>Tue, 09 Jun 2026 08:00:00 GMT</pubDate>
+      <description>Qualified when they earn $10 lifetime. Bonus hits your first payout. Simple rules, no MLM nonsense.</description>
+    </item>
+    <item>
+      <title>Founding member +5% forever — why we're capping at 15,000</title>
+      <link>https://aibcmedia.com/blog/founding-member-five-percent-forever</link>
+      <guid isPermaLink="true">https://aibcmedia.com/blog/founding-member-five-percent-forever</guid>
+      <pubDate>Mon, 08 Jun 2026 08:00:00 GMT</pubDate>
+      <description>Scarcity with a reason. First 15k authenticated devs get a permanent earnings multiplier.</description>
+    </item>
+    <item>
+      <title>Cursor, Windsurf, VS Code: where developer ads actually work</title>
+      <link>https://aibcmedia.com/blog/cursor-windsurf-vscode-where-ads-work</link>
+      <guid isPermaLink="true">https://aibcmedia.com/blog/cursor-windsurf-vscode-where-ads-work</guid>
+      <pubDate>Sun, 07 Jun 2026 08:00:00 GMT</pubDate>
+      <description>Not every surface is equal. Why the AI wait state beats banners, sidebars, and notification spam.</description>
+    </item>
+    <item>
+      <title>The $10 payout threshold — why we set it that way</title>
+      <link>https://aibcmedia.com/blog/ten-dollar-minimum-payout-why</link>
+      <guid isPermaLink="true">https://aibcmedia.com/blog/ten-dollar-minimum-payout-why</guid>
+      <pubDate>Sat, 06 Jun 2026 08:00:00 GMT</pubDate>
+      <description>Not arbitrary. Fraud review, Wise fees, and keeping the queue manageable for a small team.</description>
+    </item>
+    <item>
+      <title>Kickbacks vs AIBC: what actually pays developers in 2026</title>
+      <link>https://aibcmedia.com/blog/kickbacks-vs-aibc-2026</link>
+      <guid isPermaLink="true">https://aibcmedia.com/blog/kickbacks-vs-aibc-2026</guid>
+      <pubDate>Fri, 05 Jun 2026 08:00:00 GMT</pubDate>
+      <description>Same category, different choices. A straight comparison of developer share, caps, and restore behavior.</description>
+    </item>
+    <item>
+      <title>Make money while Claude thinks: an honest guide for junior devs</title>
+      <link>https://aibcmedia.com/blog/make-money-while-claude-thinks</link>
+      <guid isPermaLink="true">https://aibcmedia.com/blog/make-money-while-claude-thinks</guid>
+      <pubDate>Thu, 04 Jun 2026 08:00:00 GMT</pubDate>
+      <description>No get-rich-quick. Just how developer spinner monetization actually works for people starting out.</description>
+    </item>
+    <item>
+      <title>I coded 80% of my week with Claude — here's what I do with the other 20%</title>
+      <link>https://aibcmedia.com/blog/eighty-percent-claude-twenty-percent-rest</link>
+      <guid isPermaLink="true">https://aibcmedia.com/blog/eighty-percent-claude-twenty-percent-rest</guid>
+      <pubDate>Wed, 03 Jun 2026 08:00:00 GMT</pubDate>
+      <description>Build speed isn't the hard part anymore. Distribution, judgment, and getting paid while you ship — that's the other 20%.</description>
+    </item>
+    <item>
+      <title>Why your AI spinner is the most undervalued ad slot on the internet</title>
+      <link>https://aibcmedia.com/blog/ai-spinner-undervalued-ad-slot</link>
+      <guid isPermaLink="true">https://aibcmedia.com/blog/ai-spinner-undervalued-ad-slot</guid>
+      <pubDate>Tue, 02 Jun 2026 08:00:00 GMT</pubDate>
+      <description>Developers hate ads. They don't hate relevant one-liners while Claude thinks. Here's the economics.</description>
+    </item>
+    <item>
+      <title>Claude Code is creating a new generation of paid solopreneurs</title>
+      <link>https://aibcmedia.com/blog/claude-code-paid-solopreneurs</link>
+      <guid isPermaLink="true">https://aibcmedia.com/blog/claude-code-paid-solopreneurs</guid>
+      <pubDate>Mon, 01 Jun 2026 08:00:00 GMT</pubDate>
+      <description>Junior devs ship 10x faster with Claude. Here's why the spinner — not the side project — is where the money hides.</description>
+    </item>
+  </channel>
+</rss>

@@ -5,6 +5,7 @@ import { PayoutsPanel } from "./PayoutsPanel";
 import { ActivityLedger } from "./ActivityLedger";
 import { AccountSection } from "./AccountSection";
 import { ReferralSection } from "./ReferralSection";
+import { EarnMorePanel } from "./EarnMorePanel";
 import { PartnerDashboardShell } from "./DashboardHubShell";
 
 type Earnings = {
@@ -21,6 +22,11 @@ type Earnings = {
     maxRequestsPerDay: number;
     maxRequestsPerWeek: number;
     maxUsdPerDay: number;
+  };
+  yield?: {
+    usdPerAgentHour: number;
+    earningsLastHour: number;
+    targetUsdPerAgentHour: number;
   };
 };
 
@@ -49,6 +55,8 @@ export function DeveloperDashboardPanel({
   referral,
   onSaveMethod,
   onRequestPayout,
+  onConnectStripe,
+  onLoadConnectStatus,
   onRetrieveActivity,
 }: {
   earnings: Earnings;
@@ -61,7 +69,14 @@ export function DeveloperDashboardPanel({
   foundingMember: boolean;
   referral: ReferralStats | null;
   onSaveMethod: (rail: string, handle: string) => Promise<void>;
-  onRequestPayout: () => Promise<void>;
+  onRequestPayout: () => Promise<{ autoPaid?: boolean }>;
+  onConnectStripe: () => Promise<string>;
+  onLoadConnectStatus: () => Promise<{
+    connected: boolean;
+    payoutsEnabled: boolean;
+    detailsSubmitted: boolean;
+    stripeEnabled: boolean;
+  }>;
   onRetrieveActivity: () => void;
 }) {
   return (
@@ -72,7 +87,17 @@ export function DeveloperDashboardPanel({
         </Link>
       </div>
 
-      <StatCards today={earnings.today} month={earnings.month} lifetime={earnings.lifetime} caps={earnings.caps} />
+      <StatCards
+        today={earnings.today}
+        month={earnings.month}
+        lifetime={earnings.lifetime}
+        caps={earnings.caps}
+        yieldMetrics={earnings.yield}
+      />
+
+      <div className="mb-6">
+        <EarnMorePanel />
+      </div>
 
       <div className="mb-6 grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
@@ -86,6 +111,8 @@ export function DeveloperDashboardPanel({
             payoutLimits={earnings.payoutLimits}
             onSaveMethod={onSaveMethod}
             onRequestPayout={onRequestPayout}
+            onConnectStripe={onConnectStripe}
+            onLoadConnectStatus={onLoadConnectStatus}
           />
         </div>
       </div>
