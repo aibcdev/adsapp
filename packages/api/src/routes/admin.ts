@@ -1,25 +1,165 @@
 import { Hono } from "hono";
 import type { Database as DbType } from "better-sqlite3";
-import { config } from "../config.js";
+import { isAdminEmail } from "../config.js";
+import { resolveClient } from "../db/schema.js";
 import { FOUNDING_MEMBER_CAP, payoutLimitsConfig } from "../billing/economics.js";
+import {
+  BLOCK_IMPRESSIONS,
+  impsPerMinute,
+  leaderboardRows,
+  priceHistoryPoints,
+} from "./auction.js";
 
-function requireAdmin(c: { req: { header: (name: string) => string | undefined } }) {
-  if (!config.adminKey) {
-    return { ok: false as const, status: 503 as const, error: "Admin API not configured (set AIBC_ADMIN_KEY)" };
+function requireAdminEmail(
+  db: DbType,
+  c: { req: { header: (name: string) => string | undefined } },
+) {
+  const client = resolveClient(db, c.req.header("authorization"));
+  if (!client) {
+    return { ok: false as const, status: 401 as const, error: "Sign in required" };
   }
-  const auth = c.req.header("authorization") || "";
-  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-  if (token !== config.adminKey) {
-    return { ok: false as const, status: 401 as const, error: "Unauthorized" };
+  if (!isAdminEmail(client.email)) {
+    return { ok: false as const, status: 403 as const, error: "Admin access denied" };
   }
-  return { ok: true as const };
+  return { ok: true as const, client };
+}
+
+function allPaidCampaigns(db: DbType) {
+  const onBoard = leaderboardRows(db, 200);
+  const statusById = new Map(onBoard.map((r) => [r.id, r.status]));
+
+  const rows = db
+    .prepare(`
+      SELECT id, ad_line, brand_name, bid_per_1k, blocks, status, spend,
+             buyer_email, created_at, impressions_target, impressions_served, impressions,
+             show_on_leaderboard, payment_status
+      FROM campaigns
+      WHERE payment_status = 'paid'
+      ORDER BY bid_per_1k DESC, created_at ASC
+    `)
+    .all() as Array<{
+      id: string;
+      ad_line: string;
+      brand_name: string | null;
+      bid_per_1k: number;
+      blocks: number;
+      status: string;
+      spend: number;
+      buyer_email: string | null;
+      created_at: number;
+      impressions_target: number;
+      impressions_served: number;
+      impressions: number;
+      show_on_leaderboard: number;
+      payment_status: string;
+    }>;
+
+  return rows.map((row) => {
+    const target = row.impressions_target || row.blocks * BLOCK_IMPRESSIONS;
+    const served = row.impressions_served || row.impressions || 0;
+    const remaining = Math.max(0, target - served);
+    let deliveryStatus = statusById.get(row.id);
+    if (deliveryStatus === undefined) {
+      deliveryStatus = remaining <= 0 ? "exhausted" : row.show_on_leaderboard ? "hidden" : "off_board";
+    }
+
+    return {
+      id: row.id,
+      ad_line: row.ad_line,
+      brand_name: row.brand_name,
+      buyer_email: row.buyer_email,
+      bid_usd: row.bid_per_1k,
+      spend: row.spend,
+      impressions_served: served,
+      impressions_target: target,
+      status: deliveryStatus,
+      created_at: new Date(row.created_at).toISOString(),
+    };
+  });
 }
 
 export function adminRoutes(db: DbType) {
   const app = new Hono();
 
+  app.get("/v1/admin/me", (c) => {
+    const gate = requireAdminEmail(db, c);
+    if (!gate.ok) return c.json({ error: gate.error }, gate.status);
+    return c.json({ email: gate.client.email, isAdmin: true });
+  });
+
+  app.get("/v1/admin/overview", (c) => {
+    const gate = requireAdminEmail(db, c);
+    if (!gate.ok) return c.json({ error: gate.error }, gate.status);
+
+    const since7d = Date.now() - 7 * 86_400_000;
+    const sinceToday = Date.now() - 24 * 60 * 60 * 1000;
+
+    const usersSignedUp = db
+      .prepare("SELECT COUNT(*) as c FROM clients WHERE email IS NOT NULL AND email != ''")
+      .get() as { c: number };
+
+    const usersNew7d = db
+      .prepare(
+        "SELECT COUNT(*) as c FROM clients WHERE email IS NOT NULL AND email != '' AND created_at > ?",
+      )
+      .get(since7d) as { c: number };
+
+    const advertisers = db
+      .prepare(
+        `SELECT COUNT(DISTINCT COALESCE(buyer_email, client_id)) as c
+         FROM campaigns WHERE payment_status = 'paid'`,
+      )
+      .get() as { c: number };
+
+    const spendRow = db
+      .prepare("SELECT COALESCE(SUM(spend), 0) as total FROM campaigns WHERE payment_status = 'paid'")
+      .get() as { total: number };
+
+    const pending = db
+      .prepare(
+        `SELECT COALESCE(SUM(amount), 0) as total, COUNT(*) as count
+         FROM payouts WHERE status = 'requested'`,
+      )
+      .get() as { total: number; count: number };
+
+    const impressionsToday = db
+      .prepare(
+        "SELECT COUNT(*) as c FROM impressions WHERE demo = 0 AND created_at > ?",
+      )
+      .get(sinceToday) as { c: number };
+
+    const leaderboard = leaderboardRows(db, 50);
+    const servingCount = leaderboard.filter((r) => r.status === "serving").length;
+    const ipm = impsPerMinute(db);
+    const topBid = leaderboard[0]?.bid_usd ?? 0;
+    const campaigns = allPaidCampaigns(db);
+
+    return c.json({
+      kpis: {
+        usersSignedUp: usersSignedUp.c,
+        usersNew7d: usersNew7d.c,
+        advertisers: advertisers.c,
+        totalSpend: spendRow.total,
+        topBid,
+        liveAds: servingCount,
+        impressionsPerMin: ipm,
+        impressionsToday: impressionsToday.c,
+        pendingPayoutTotal: pending.total,
+        pendingPayoutCount: pending.count,
+      },
+      bidMarket: {
+        top_bid: topBid,
+        serving_count: servingCount,
+        imps_per_min: ipm,
+        leaderboard,
+      },
+      pricePoints: priceHistoryPoints(db, 30),
+      campaigns,
+    });
+  });
+
   app.get("/v1/admin/stats", (c) => {
-    const gate = requireAdmin(c);
+    const gate = requireAdminEmail(db, c);
     if (!gate.ok) return c.json({ error: gate.error }, gate.status);
 
     const pending = db
@@ -45,7 +185,7 @@ export function adminRoutes(db: DbType) {
   });
 
   app.get("/v1/admin/payouts", (c) => {
-    const gate = requireAdmin(c);
+    const gate = requireAdminEmail(db, c);
     if (!gate.ok) return c.json({ error: gate.error }, gate.status);
 
     const status = c.req.query("status") || "requested";
@@ -86,7 +226,7 @@ export function adminRoutes(db: DbType) {
   });
 
   app.patch("/v1/admin/payouts/:id", async (c) => {
-    const gate = requireAdmin(c);
+    const gate = requireAdminEmail(db, c);
     if (!gate.ok) return c.json({ error: gate.error }, gate.status);
 
     const id = c.req.param("id");
@@ -134,7 +274,7 @@ export function adminRoutes(db: DbType) {
   });
 
   app.get("/v1/admin/users", (c) => {
-    const gate = requireAdmin(c);
+    const gate = requireAdminEmail(db, c);
     if (!gate.ok) return c.json({ error: gate.error }, gate.status);
 
     const search = (c.req.query("search") || "").trim();
@@ -191,7 +331,7 @@ export function adminRoutes(db: DbType) {
   });
 
   app.get("/v1/admin/users/:clientId", (c) => {
-    const gate = requireAdmin(c);
+    const gate = requireAdminEmail(db, c);
     if (!gate.ok) return c.json({ error: gate.error }, gate.status);
 
     const clientId = c.req.param("clientId");
@@ -285,7 +425,7 @@ export function adminRoutes(db: DbType) {
   });
 
   app.get("/v1/admin/limits", (c) => {
-    const gate = requireAdmin(c);
+    const gate = requireAdminEmail(db, c);
     if (!gate.ok) return c.json({ error: gate.error }, gate.status);
     return c.json(payoutLimitsConfig());
   });

@@ -23,8 +23,7 @@ export function AdminCompetitivePage() {
 
   return (
     <AdminGate>
-      {() => (
-        <div>
+      <div>
           <h2 className="font-instrument-serif text-2xl text-white">Competitive tracker</h2>
           <p className="mt-2 text-sm text-zinc-400">
             Cross-track vs{" "}
@@ -65,8 +64,7 @@ export function AdminCompetitivePage() {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+      </div>
     </AdminGate>
   );
 }

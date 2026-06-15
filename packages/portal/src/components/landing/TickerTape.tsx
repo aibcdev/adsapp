@@ -4,6 +4,8 @@ export type LeaderboardRow = {
   ad_line: string;
   bid_usd: number;
   impressions_remaining: number;
+  impressions_served?: number;
+  impressions_target?: number;
   status: string;
 };
 

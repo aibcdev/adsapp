@@ -5,6 +5,7 @@ import { LoginAuthCard } from "../components/auth/LoginAuthCard";
 import {
   completeAuthFromState,
   completeEmailSignIn,
+  consumeLoginRedirect,
   devSignInUrl,
   ensureAuthSession,
   getStoredAuthState,
@@ -80,6 +81,11 @@ export function LoginPage() {
         navigate(`/login?poll=done&source=extension&email=${encodeURIComponent(result.email)}`, { replace: true });
         return;
       }
+      const redirect = params.get("redirect") || consumeLoginRedirect();
+      if (redirect?.startsWith("/")) {
+        navigate(redirect, { replace: true });
+        return;
+      }
       navigate("/dashboard?tab=developer", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-in failed");
@@ -139,6 +145,11 @@ export function LoginPage() {
       setToken(result.accessToken);
       if (source === "extension") {
         navigate(`/login?poll=done&source=extension&email=${encodeURIComponent(result.email)}`, { replace: true });
+        return;
+      }
+      const redirect = params.get("redirect") || consumeLoginRedirect();
+      if (redirect?.startsWith("/")) {
+        navigate(redirect, { replace: true });
         return;
       }
       navigate("/dashboard?tab=developer", { replace: true });

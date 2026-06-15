@@ -89,3 +89,13 @@ export async function completeEmailSignIn(state: string, email: string): Promise
 export function devSignInUrl(state: string): string {
   return `${API}/v1/auth/dev-complete?state=${encodeURIComponent(state)}`;
 }
+
+export function storeLoginRedirect(path: string) {
+  sessionStorage.setItem("aibc_login_redirect", path);
+}
+
+export function consumeLoginRedirect(): string | null {
+  const path = sessionStorage.getItem("aibc_login_redirect");
+  if (path) sessionStorage.removeItem("aibc_login_redirect");
+  return path;
+}

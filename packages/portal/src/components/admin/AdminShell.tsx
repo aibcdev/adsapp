@@ -3,6 +3,7 @@ import { SiteHeader } from "../SiteHeader";
 import { SiteFooter } from "../SiteFooter";
 
 const tabs = [
+  { to: "/admin/overview", label: "Overview" },
   { to: "/admin/payouts", label: "Payouts" },
   { to: "/admin/users", label: "Users" },
   { to: "/admin/limits", label: "Limits" },

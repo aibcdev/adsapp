@@ -4,6 +4,7 @@ import { api, getToken, setToken } from "../lib/api";
 import {
   completeAuthFromState,
   completeEmailSignIn,
+  consumeLoginRedirect,
   devSignInUrl,
   ensureAuthSession,
   googleRedirectUrl,
@@ -161,6 +162,11 @@ export function DashboardPage() {
         setEmail(e);
         params.delete("auth_state");
         setParams(params, { replace: true });
+        const redirect = consumeLoginRedirect();
+        if (redirect) {
+          navigate(redirect, { replace: true });
+          return;
+        }
         return loadDeveloperData();
       })
       .catch(() => setAuthError("Sign-in failed. Try again."))

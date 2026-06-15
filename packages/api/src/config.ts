@@ -22,9 +22,19 @@ export const config = {
     .map((s) => s.trim())
     .filter(Boolean),
   viewThresholdSeconds: Number(process.env.AIBC_VIEW_THRESHOLD_SECONDS || 5),
-  /** Bearer token for /v1/admin/* routes (payout queue, etc.) */
-  adminKey: process.env.AIBC_ADMIN_KEY || "",
+  /** Comma-separated emails allowed to access /v1/admin/* and /admin portal */
+  adminEmails: (
+    process.env.AIBC_ADMIN_EMAILS || "watchaibc@gmail.com"
+  )
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean),
 };
+
+export function isAdminEmail(email: string | null | undefined): boolean {
+  if (!email || config.adminEmails.length === 0) return false;
+  return config.adminEmails.includes(email.trim().toLowerCase());
+}
 
 export function emailAuthEnabled(): boolean {
   return true;

@@ -63,6 +63,7 @@ function leaderboardRows(db: DbType, limit: number) {
 
     return {
       rank: i + 1,
+      id: row.id,
       display_name: row.brand_name || row.ad_line.slice(0, 32),
       ad_line: row.ad_line,
       bid_usd: row.bid_per_1k,
@@ -75,6 +76,46 @@ function leaderboardRows(db: DbType, limit: number) {
       created_at: new Date(row.created_at).toISOString(),
     };
   });
+}
+
+function priceHistoryPoints(db: DbType, days: number) {
+  const since = Date.now() - days * 86_400_000;
+  const rows = db
+    .prepare(`
+      SELECT bid_per_1k, brand_name, ad_line, status, created_at
+      FROM campaigns
+      WHERE payment_status = 'paid' AND created_at > ?
+      ORDER BY created_at ASC
+    `)
+    .all(since) as Array<{
+      bid_per_1k: number;
+      brand_name: string | null;
+      ad_line: string;
+      status: string;
+      created_at: number;
+    }>;
+
+  let peak = 1;
+  const points = rows.map((r) => {
+    peak = Math.max(peak, r.bid_per_1k);
+    return {
+      ts: new Date(r.created_at).toISOString(),
+      bid_usd: peak,
+      display_name: r.brand_name || r.ad_line.slice(0, 24),
+      status: r.status === "active" ? "market" : r.status,
+    };
+  });
+
+  if (points.length === 0) {
+    points.push({
+      ts: new Date().toISOString(),
+      bid_usd: 5,
+      display_name: "aibc",
+      status: "market",
+    });
+  }
+
+  return points;
 }
 
 export function auctionRoutes(db: DbType) {
@@ -98,43 +139,7 @@ export function auctionRoutes(db: DbType) {
 
   app.get("/v1/auction/price-history", (c) => {
     const days = Math.min(30, Math.max(1, Number(c.req.query("days") || 30)));
-    const since = Date.now() - days * 86_400_000;
-    const rows = db
-      .prepare(`
-        SELECT bid_per_1k, brand_name, ad_line, status, created_at
-        FROM campaigns
-        WHERE payment_status = 'paid' AND created_at > ?
-        ORDER BY created_at ASC
-      `)
-      .all(since) as Array<{
-        bid_per_1k: number;
-        brand_name: string | null;
-        ad_line: string;
-        status: string;
-        created_at: number;
-      }>;
-
-    let peak = 1;
-    const points = rows.map((r) => {
-      peak = Math.max(peak, r.bid_per_1k);
-      return {
-        ts: new Date(r.created_at).toISOString(),
-        bid_usd: peak,
-        display_name: r.brand_name || r.ad_line.slice(0, 24),
-        status: r.status === "active" ? "market" : r.status,
-      };
-    });
-
-    if (points.length === 0) {
-      points.push({
-        ts: new Date().toISOString(),
-        bid_usd: 5,
-        display_name: "aibc",
-        status: "market",
-      });
-    }
-
-    return c.json({ points });
+    return c.json({ points: priceHistoryPoints(db, days) });
   });
 
   app.get("/v1/stats/earnings-estimate", (c) => {
@@ -145,7 +150,6 @@ export function auctionRoutes(db: DbType) {
       )
       .get() as { c: number };
     const fromTraffic = Math.round(ipm * 0.007 * 100) / 100;
-    // Project regular dev earnings from sponsor demand; floor so early network never shows ~$3.
     const fromDemand = Math.round((40 + active.c * 18) * 100) / 100;
     const monthlyUsd = Math.max(40, fromTraffic, fromDemand);
     return c.json({ monthlyUsd, imps_per_min: ipm, developer_share: 0.7 });
@@ -182,4 +186,4 @@ export function auctionRoutes(db: DbType) {
   return app;
 }
 
-export { BLOCK_IMPRESSIONS, leaderboardRows, impsPerMinute };
+export { BLOCK_IMPRESSIONS, leaderboardRows, impsPerMinute, priceHistoryPoints };

@@ -169,51 +169,101 @@ export function CompactQueue({ rows }: { rows: LeaderboardRow[] }) {
   );
 }
 
-export function MarketTable({ rows, liveCount }: { rows: LeaderboardRow[]; liveCount: number }) {
+function formatImpressions(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${Math.round(n / 1000)}k`;
+  return String(n);
+}
+
+export function MarketTable({
+  rows,
+  liveCount,
+  variant = "light",
+  showImpressions = false,
+}: {
+  rows: LeaderboardRow[];
+  liveCount: number;
+  variant?: "light" | "dark";
+  showImpressions?: boolean;
+}) {
+  const dark = variant === "dark";
+  const colSpan = showImpressions ? 5 : 4;
+
   return (
-    <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-3">
-        <p className="text-sm font-semibold text-zinc-900">
-          <span className="text-emerald-600">{liveCount}</span> ads live
+    <div
+      className={
+        dark
+          ? "overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/60"
+          : "overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm"
+      }
+    >
+      <div className={`flex items-center justify-between border-b px-4 py-3 ${dark ? "border-zinc-800" : "border-zinc-100"}`}>
+        <p className={`text-sm font-semibold ${dark ? "text-zinc-200" : "text-zinc-900"}`}>
+          <span className="text-emerald-500">{liveCount}</span> ads live
         </p>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] font-mono text-xs">
-          <thead className="bg-zinc-50 text-zinc-500">
+          <thead className={dark ? "bg-zinc-950/60 text-zinc-500" : "bg-zinc-50 text-zinc-500"}>
             <tr>
               <th className="px-4 py-2 text-left">#</th>
               <th className="px-4 py-2 text-left">Campaign</th>
               <th className="px-4 py-2 text-left">Bid / 1,000 imps</th>
+              {showImpressions ? <th className="px-4 py-2 text-left">Impressions</th> : null}
               <th className="px-4 py-2 text-left">Status</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-zinc-400">
-                  No campaigns yet — yours can go first.
+                <td colSpan={colSpan} className={`px-4 py-6 text-center ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+                  No campaigns yet.
                 </td>
               </tr>
             ) : (
-              rows.map((row) => (
-                <tr key={row.rank} className="border-t border-zinc-100">
-                  <td className="px-4 py-2 text-zinc-500">{row.rank}</td>
-                  <td className="max-w-xs truncate px-4 py-2 text-zinc-800">{row.ad_line}</td>
-                  <td className="px-4 py-2 text-zinc-700">${row.bid_usd.toFixed(2)}</td>
-                  <td className="px-4 py-2">
-                    {row.status === "serving" ? (
-                      <span className="inline-flex items-center gap-1 text-emerald-600">
-                        <span className="live-dot h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                        LIVE
-                      </span>
-                    ) : row.status === "exhausted" ? (
-                      <span className="text-red-500">FILLED</span>
-                    ) : (
-                      <span className="text-zinc-500">QUEUED</span>
-                    )}
-                  </td>
-                </tr>
-              ))
+              rows.map((row) => {
+                const served = row.impressions_served ?? 0;
+                const target = row.impressions_target ?? 0;
+                const pct = target > 0 ? Math.min(100, (served / target) * 100) : 0;
+
+                return (
+                  <tr key={row.rank} className={dark ? "border-t border-zinc-800" : "border-t border-zinc-100"}>
+                    <td className={`px-4 py-2 ${dark ? "text-zinc-500" : "text-zinc-500"}`}>{row.rank}</td>
+                    <td className={`max-w-xs truncate px-4 py-2 ${dark ? "text-zinc-200" : "text-zinc-800"}`}>
+                      {row.ad_line}
+                    </td>
+                    <td className={`px-4 py-2 ${dark ? "text-zinc-300" : "text-zinc-700"}`}>
+                      ${row.bid_usd.toFixed(2)}
+                    </td>
+                    {showImpressions ? (
+                      <td className="px-4 py-2">
+                        <div className="flex min-w-[120px] flex-col gap-1">
+                          <span className={dark ? "text-zinc-300" : "text-zinc-700"}>
+                            {formatImpressions(served)} / {formatImpressions(target)}
+                          </span>
+                          <div className={`h-1.5 w-full overflow-hidden rounded-full ${dark ? "bg-zinc-800" : "bg-zinc-100"}`}>
+                            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      </td>
+                    ) : null}
+                    <td className="px-4 py-2">
+                      {row.status === "serving" ? (
+                        <span className="inline-flex items-center gap-1 text-emerald-500">
+                          <span className="live-dot h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          LIVE
+                        </span>
+                      ) : row.status === "exhausted" ? (
+                        <span className="text-red-400">FILLED</span>
+                      ) : (
+                        <span className={dark ? "text-zinc-500" : "text-zinc-500"}>
+                          {row.status === "queued" ? "QUEUED" : row.status.toUpperCase()}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

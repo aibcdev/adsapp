@@ -16,6 +16,7 @@ import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
 import { AdminUserDetailPage } from "./pages/admin/AdminUserDetailPage";
 import { AdminLimitsPage } from "./pages/admin/AdminLimitsPage";
 import { AdminCompetitivePage } from "./pages/admin/AdminCompetitivePage";
+import { AdminOverviewPage } from "./pages/admin/AdminOverviewPage";
 import { ReferralPage } from "./pages/ReferralPage";
 import { ContactPage } from "./pages/ContactPage";
 import { HowItWorksPage } from "./pages/HowItWorksPage";
@@ -44,7 +45,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/referral" element={<ReferralPage />} />
         <Route path="/admin" element={<AdminShell />}>
-          <Route index element={<Navigate to="/admin/payouts" replace />} />
+          <Route index element={<Navigate to="/admin/overview" replace />} />
+          <Route path="overview" element={<AdminOverviewPage />} />
           <Route path="payouts" element={<AdminPayoutsPage />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="users/:clientId" element={<AdminUserDetailPage />} />

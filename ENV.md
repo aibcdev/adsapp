@@ -66,7 +66,7 @@ GOOGLE_CLIENT_ID=YOUR_VALUE
 GOOGLE_CLIENT_SECRET=YOUR_VALUE
 STRIPE_SECRET_KEY=sk_live_YOUR_VALUE
 STRIPE_WEBHOOK_SECRET=whsec_YOUR_VALUE
-AIBC_ADMIN_KEY=generate-a-long-random-secret
+AIBC_ADMIN_EMAILS=watchaibc@gmail.com
 AIBC_POSTHOG_KEY=
 AIBC_POSTHOG_HOST=https://us.i.posthog.com
 ```
@@ -77,7 +77,7 @@ AIBC_POSTHOG_HOST=https://us.i.posthog.com
 | `GOOGLE_CLIENT_SECRET` | Same OAuth client |
 | `STRIPE_SECRET_KEY` | [Stripe Dashboard](https://dashboard.stripe.com/apikeys) → Secret key (live) |
 | `STRIPE_WEBHOOK_SECRET` | Stripe → Webhooks → endpoint for `https://api.aibcmedia.com/v1/webhooks/stripe` |
-| `AIBC_ADMIN_KEY` | Random secret for `GET/PATCH /v1/admin/payouts` and portal `/admin/payouts` |
+| `AIBC_ADMIN_EMAILS` | Comma-separated Google emails allowed on `/v1/admin/*` and portal `/admin` (default: `watchaibc@gmail.com`) |
 
 **Do not set** `AIBC_DEV_BYPASS` in production.
 
