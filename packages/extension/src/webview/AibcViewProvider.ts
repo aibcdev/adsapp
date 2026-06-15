@@ -11,7 +11,7 @@ import {
   getWebviewContent,
   getWebviewOptions,
 } from "./getWebviewContent";
-import { getDashboardUrl } from "../config";
+import { getSignedInDashboardUrl } from "../config";
 
 export class AibcViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "aibc.sidebar";
@@ -101,7 +101,18 @@ export class AibcViewProvider implements vscode.WebviewViewProvider {
           );
           break;
         case "open_dashboard":
-          await vscode.env.openExternal(vscode.Uri.parse(getDashboardUrl()));
+          await vscode.env.openExternal(
+            vscode.Uri.parse(
+              await getSignedInDashboardUrl(async () => {
+                if (!this.auth.isSignedIn()) return null;
+                const data = await this.auth.getApiClient().json<{ handoff?: string }>(
+                  "/v1/auth/handoff",
+                  { method: "POST" },
+                );
+                return data.handoff ?? null;
+              }),
+            ),
+          );
           break;
         case "tab_viewed":
           await this.analytics.trackTabViewed(raw.tab);

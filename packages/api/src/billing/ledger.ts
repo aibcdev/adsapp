@@ -13,6 +13,8 @@ import {
   validatePortfolioSession,
 } from "./portfolioSession.js";
 import { foundingBonusMultiplier, maybeQualifyReferral } from "../clients/profile.js";
+import { isNonBillableAd } from "./seedInventory.js";
+import { refreshEarningsPeriods, startOfDayMs, startOfMonthMs } from "./earningsPeriod.js";
 
 const BILLABLE_EVENTS = new Set([
   "view_threshold_met",
@@ -89,6 +91,7 @@ function settlePendingCredits(db: DbType, clientId: string): void {
 }
 
 export function settlePendingForClient(db: DbType, clientId: string): void {
+  refreshEarningsPeriods(db, clientId);
   settlePendingCredits(db, clientId);
 }
 
@@ -161,6 +164,20 @@ export function processMetricEvent(
     return { ok: false, rejected: "no_prior_impression" };
   }
 
+  if (isNonBillableAd(db, opts.adId)) {
+    db.prepare(
+      "INSERT INTO impressions (id, client_id, ad_id, event_type, amount, demo, created_at, event_uuid) VALUES (?, ?, ?, ?, 0, 0, ?, ?)",
+    ).run(
+      randomUUID(),
+      opts.clientId,
+      opts.adId,
+      event,
+      Date.now(),
+      opts.eventUuid || null,
+    );
+    return { ok: true, credited: 0 };
+  }
+
   const bid = resolveBid(db, opts.adId);
   const advertiserCost =
     event === "click"
@@ -178,6 +195,8 @@ export function processMetricEvent(
     return { ok: true };
   }
 
+  refreshEarningsPeriods(db, opts.clientId);
+
   const id = randomUUID();
   const settlesAt = Date.now() + SETTLEMENT_HOLD_MS;
 
@@ -186,14 +205,22 @@ export function processMetricEvent(
   ).run(id, opts.clientId, opts.adId, event, amount, Date.now(), opts.eventUuid || null);
 
   db.prepare(`
-    INSERT INTO earnings (client_id, today, month, lifetime, pending, payable)
-    VALUES (?, ?, ?, ?, ?, 0)
+    INSERT INTO earnings (client_id, today, month, lifetime, pending, payable, period_day, period_month)
+    VALUES (?, ?, ?, ?, ?, 0, ?, ?)
     ON CONFLICT(client_id) DO UPDATE SET
       today = today + excluded.today,
       month = month + excluded.month,
       lifetime = lifetime + excluded.lifetime,
       pending = pending + excluded.pending
-  `).run(opts.clientId, amount, amount, amount, amount);
+  `).run(
+    opts.clientId,
+    amount,
+    amount,
+    amount,
+    amount,
+    startOfDayMs(),
+    startOfMonthMs(),
+  );
 
   db.prepare(
     "INSERT INTO pending_credits (id, client_id, amount, settles_at, settled, impression_id) VALUES (?, ?, ?, ?, 0, ?)",

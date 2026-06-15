@@ -2,6 +2,7 @@ import type { Database as DbType } from "better-sqlite3";
 import { config } from "../config.js";
 import { mintToken } from "../db/schema.js";
 import { ensureClientProfile } from "../clients/profile.js";
+import { resolveAuthClientId } from "../clients/identity.js";
 
 interface GoogleTokenResponse {
   access_token?: string;
@@ -55,13 +56,13 @@ export async function completeGoogleAuth(
   const email = user.email;
   if (!email) return { ok: false, error: "No email from Google" };
 
-  db.prepare("UPDATE clients SET email = ? WHERE id = ?").run(email, row.client_id);
-  ensureClientProfile(db, row.client_id);
+  const clientId = resolveAuthClientId(db, row.client_id, email);
+  ensureClientProfile(db, clientId);
 
-  const token = mintToken(db, row.client_id, email);
+  const token = mintToken(db, clientId, email);
   db.prepare(
-    "UPDATE auth_states SET completed = 1, token = ?, email = ? WHERE state = ?",
-  ).run(token, email, state);
+    "UPDATE auth_states SET completed = 1, token = ?, email = ?, client_id = ? WHERE state = ?",
+  ).run(token, email, clientId, state);
 
   return { ok: true, email };
 }

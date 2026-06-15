@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { processMetricEvent } from "../billing/ledger.js";
+import { startOfDayMs, startOfMonthMs } from "../billing/earningsPeriod.js";
 import { ensureClientProfile } from "../clients/profile.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -128,6 +129,7 @@ export function createDb(): DbType {
   migrateCampaignColumns(db);
   migrateClientColumns(db);
   migratePayoutColumns(db);
+  migrateEarningsColumns(db);
   seedAds(db);
   seedCampaigns(db);
   return db;
@@ -154,6 +156,20 @@ function migrateClientColumns(db: DbType) {
   } catch {
     /* exists */
   }
+}
+
+function migrateEarningsColumns(db: DbType) {
+  const cols = db.prepare("PRAGMA table_info(earnings)").all() as { name: string }[];
+  const names = new Set(cols.map((c) => c.name));
+  const add = (sql: string) => {
+    try {
+      db.exec(sql);
+    } catch {
+      /* column exists */
+    }
+  };
+  if (!names.has("period_day")) add("ALTER TABLE earnings ADD COLUMN period_day INTEGER");
+  if (!names.has("period_month")) add("ALTER TABLE earnings ADD COLUMN period_month INTEGER");
 }
 
 function migratePayoutColumns(db: DbType) {
@@ -271,8 +287,8 @@ export function mintToken(db: DbType, clientId: string, email?: string, referred
     "INSERT OR REPLACE INTO sessions (token, client_id, email, expires_at) VALUES (?, ?, ?, ?)",
   ).run(token, clientId, email || null, expires);
   db.prepare(
-    "INSERT OR IGNORE INTO earnings (client_id) VALUES (?)",
-  ).run(clientId);
+    `INSERT OR IGNORE INTO earnings (client_id, period_day, period_month) VALUES (?, ?, ?)`,
+  ).run(clientId, startOfDayMs(), startOfMonthMs());
   db.prepare(
     "INSERT OR IGNORE INTO advertiser_balance (client_id) VALUES (?)",
   ).run(clientId);

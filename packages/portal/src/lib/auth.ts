@@ -99,3 +99,18 @@ export function consumeLoginRedirect(): string | null {
   if (path) sessionStorage.removeItem("aibc_login_redirect");
   return path;
 }
+
+export async function redeemDashboardHandoff(
+  code: string,
+): Promise<{ accessToken: string; email: string }> {
+  const res = await fetch(`${API}/v1/auth/handoff?code=${encodeURIComponent(code)}`);
+  const body = (await res.json()) as {
+    accessToken?: string;
+    email?: string;
+    error?: string;
+  };
+  if (!res.ok || !body.accessToken) {
+    throw new Error(body.error || "Handoff failed");
+  }
+  return { accessToken: body.accessToken, email: body.email || "" };
+}

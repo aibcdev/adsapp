@@ -16,7 +16,7 @@ import { KillSwitchService } from "./services/KillSwitchService";
 import { LoopbackServer } from "./services/LoopbackServer";
 import { StatusBarController } from "./ui/StatusBarController";
 import { AibcViewProvider } from "./webview/AibcViewProvider";
-import { getDashboardUrl } from "./config";
+import { getSignedInDashboardUrl } from "./config";
 
 let feedService: FeedService | undefined;
 let analyticsService: AnalyticsService | undefined;
@@ -280,7 +280,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
           applyCurrentAd();
           break;
         case "dashboard":
-          await vscode.env.openExternal(vscode.Uri.parse(getDashboardUrl()));
+          await vscode.env.openExternal(
+            vscode.Uri.parse(
+              await getSignedInDashboardUrl(async () => {
+                if (!auth.isSignedIn()) return null;
+                const data = await auth.getApiClient().json<{ handoff?: string }>(
+                  "/v1/auth/handoff",
+                  { method: "POST" },
+                );
+                return data.handoff ?? null;
+              }),
+            ),
+          );
           break;
       }
     }),

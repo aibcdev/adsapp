@@ -26,3 +26,16 @@ export function getPortalBase(): string {
 export function getDashboardUrl(): string {
   return portalDashboardUrl(getPortalBase());
 }
+
+export async function getSignedInDashboardUrl(
+  fetchHandoff: () => Promise<string | null>,
+): Promise<string> {
+  const base = getDashboardUrl();
+  try {
+    const handoff = await fetchHandoff();
+    if (handoff) return `${base}?handoff=${encodeURIComponent(handoff)}`;
+  } catch {
+    /* fall back to plain dashboard */
+  }
+  return base;
+}

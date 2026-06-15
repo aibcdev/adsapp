@@ -8,6 +8,7 @@ import {
   devSignInUrl,
   ensureAuthSession,
   googleRedirectUrl,
+  redeemDashboardHandoff,
 } from "../lib/auth";
 import { LoginAuthCard } from "../components/auth/LoginAuthCard";
 import {
@@ -136,6 +137,7 @@ export function DashboardPage() {
   const loadDeveloperData = async () => {
     if (!getToken()) return;
     await Promise.all([loadEarnings(), loadPayoutMethod(), loadProfile()]);
+    await retrieveActivity();
   };
 
   const retrieveActivity = async () => {
@@ -150,6 +152,22 @@ export function DashboardPage() {
   };
 
   useEffect(() => {
+    const handoff = params.get("handoff");
+    if (handoff) {
+      setAuthBusy(true);
+      void redeemDashboardHandoff(handoff)
+        .then(({ accessToken, email: e }) => {
+          setToken(accessToken);
+          setEmail(e);
+          params.delete("handoff");
+          setParams(params, { replace: true });
+          return loadDeveloperData();
+        })
+        .catch(() => setAuthError("Could not connect your editor session. Sign in again."))
+        .finally(() => setAuthBusy(false));
+      return;
+    }
+
     const authState = params.get("auth_state");
     if (!authState) {
       if (getToken()) void loadDeveloperData();

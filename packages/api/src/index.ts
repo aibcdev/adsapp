@@ -6,6 +6,12 @@ import {
   completeGoogleAuth,
   googleCallbackHtml,
 } from "./auth/google.js";
+import {
+  createDashboardHandoff,
+  ensureHandoffTable,
+  redeemDashboardHandoff,
+} from "./auth/handoff.js";
+import { mergeClients, resolveAuthClientId } from "./clients/identity.js";
 import { authStartUrl, config, emailAuthEnabled, googleAuthUrl, stripeEnabled } from "./config.js";
 import {
   createDb,
@@ -40,6 +46,7 @@ import { adminRoutes } from "./routes/admin.js";
 const db = createDb();
 ensurePortfolioSessionTables(db);
 ensureStripeTables(db);
+ensureHandoffTable(db);
 const app = new Hono();
 
 app.use(
@@ -198,12 +205,12 @@ app.post("/v1/auth/email/complete", async (c) => {
   if (!row) return c.json({ error: "Invalid sign-in session" }, 400);
   if (row.completed === 1) return c.json({ error: "Session already used" }, 400);
 
-  db.prepare("UPDATE clients SET email = ? WHERE id = ?").run(email, row.client_id);
-  ensureClientProfile(db, row.client_id);
-  const token = mintToken(db, row.client_id, email);
+  const clientId = resolveAuthClientId(db, row.client_id, email);
+  ensureClientProfile(db, clientId);
+  const token = mintToken(db, clientId, email);
   db.prepare(
-    "UPDATE auth_states SET completed = 1, token = ?, email = ? WHERE state = ?",
-  ).run(token, email, state);
+    "UPDATE auth_states SET completed = 1, token = ?, email = ?, client_id = ? WHERE state = ?",
+  ).run(token, email, clientId, state);
 
   return c.json({ ok: true, email });
 });
@@ -280,6 +287,10 @@ app.post("/v1/auth/extension/link", async (c) => {
     .get(state) as { client_id: string; completed: number } | undefined;
   if (!row) return c.json({ error: "invalid state" }, 404);
 
+  if (row.client_id !== client.clientId) {
+    mergeClients(db, row.client_id, client.clientId);
+  }
+
   if (row.completed !== 1) {
     db.prepare(
       "UPDATE auth_states SET completed = 1, token = ?, email = ?, client_id = ? WHERE state = ?",
@@ -287,6 +298,25 @@ app.post("/v1/auth/extension/link", async (c) => {
   }
 
   return c.json({ ok: true, email: client.email });
+});
+
+app.post("/v1/auth/handoff", (c) => {
+  const client = resolveClient(db, c.req.header("authorization"));
+  if (!client) return c.json({ error: "unauthorized" }, 401);
+  const handoff = createDashboardHandoff(db, client.clientId, client.email);
+  return c.json({ handoff });
+});
+
+app.get("/v1/auth/handoff", (c) => {
+  const code = c.req.query("code");
+  if (!code) return c.json({ error: "code required" }, 400);
+  const result = redeemDashboardHandoff(db, code);
+  if (!result) return c.json({ error: "invalid or expired handoff" }, 401);
+  return c.json({
+    accessToken: result.accessToken,
+    email: result.email,
+    clientId: result.clientId,
+  });
 });
 
 app.get("/v1/auth/extension/poll", (c) => {
