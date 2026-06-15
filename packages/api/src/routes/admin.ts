@@ -9,6 +9,10 @@ import {
   leaderboardRows,
   priceHistoryPoints,
 } from "./auction.js";
+import {
+  getMarketplaceDownloadStats,
+  refreshMarketplaceSnapshots,
+} from "../marketplace/stats.js";
 
 function requireAdminEmail(
   db: DbType,
@@ -87,9 +91,12 @@ export function adminRoutes(db: DbType) {
     return c.json({ email: gate.client.email, isAdmin: true });
   });
 
-  app.get("/v1/admin/overview", (c) => {
+  app.get("/v1/admin/overview", async (c) => {
     const gate = requireAdminEmail(db, c);
     if (!gate.ok) return c.json({ error: gate.error }, gate.status);
+
+    const sync = await refreshMarketplaceSnapshots(db);
+    const downloads = getMarketplaceDownloadStats(db, sync.errors);
 
     const since7d = Date.now() - 7 * 86_400_000;
     const sinceToday = Date.now() - 24 * 60 * 60 * 1000;
@@ -155,6 +162,7 @@ export function adminRoutes(db: DbType) {
       },
       pricePoints: priceHistoryPoints(db, 30),
       campaigns,
+      downloads,
     });
   });
 

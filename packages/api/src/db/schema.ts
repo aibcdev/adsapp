@@ -6,6 +6,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { processMetricEvent } from "../billing/ledger.js";
 import { startOfDayMs, startOfMonthMs } from "../billing/earningsPeriod.js";
+import { ensureMarketplaceTables } from "../marketplace/stats.js";
 import { ensureClientProfile } from "../clients/profile.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -130,6 +131,7 @@ export function createDb(): DbType {
   migrateClientColumns(db);
   migratePayoutColumns(db);
   migrateEarningsColumns(db);
+  migrateMarketplaceTables(db);
   seedAds(db);
   seedCampaigns(db);
   return db;
@@ -170,6 +172,10 @@ function migrateEarningsColumns(db: DbType) {
   };
   if (!names.has("period_day")) add("ALTER TABLE earnings ADD COLUMN period_day INTEGER");
   if (!names.has("period_month")) add("ALTER TABLE earnings ADD COLUMN period_month INTEGER");
+}
+
+function migrateMarketplaceTables(db: DbType) {
+  ensureMarketplaceTables(db);
 }
 
 function migratePayoutColumns(db: DbType) {

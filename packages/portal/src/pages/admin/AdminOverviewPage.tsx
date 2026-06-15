@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AdminGate } from "../../components/admin/AdminGate";
 import { BidMarketPanel } from "../../components/admin/BidMarketPanel";
+import { MarketplaceDownloadsPanel } from "../../components/admin/MarketplaceDownloadsPanel";
 import { adminFetch } from "../../lib/adminApi";
 import type { PricePoint } from "../../components/landing/PriceChart";
 import type { LeaderboardRow } from "../../components/landing/TickerTape";
@@ -35,6 +36,21 @@ type Overview = {
     impressions_target: number;
     status: string;
   }>;
+  downloads: {
+    marketplaces: Array<{
+      id: string;
+      label: string;
+      note: string;
+      total: number;
+      today: number | null;
+      week: number | null;
+      month: number | null;
+      lastSyncedAt: number | null;
+      error?: string;
+    }>;
+    totals: { total: number; today: number | null; week: number | null; month: number | null };
+    lastSyncedAt: number | null;
+  };
 };
 
 function KpiCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -108,6 +124,8 @@ function OverviewInner() {
           sub={`${k.pendingPayoutCount} requests`}
         />
       </div>
+
+      {data.downloads ? <MarketplaceDownloadsPanel downloads={data.downloads} /> : null}
 
       <BidMarketPanel
         topBid={data.bidMarket.top_bid || k.topBid}
