@@ -72,7 +72,7 @@ For VSCodium and other Open VSX–based editors.
 
 1. Sign in: https://open-vsx.org/ (GitHub — use **aibcdev** org account if possible)
 2. **User Settings → Access Tokens** → create token
-3. **Namespaces → Create** → name: `aibcdev` *(must match publisher)*
+3. **Namespaces → Create** → name: `AIBCMedia` *(must match publisher in package.json)*
 
 ### 2. Log in
 
@@ -92,7 +92,7 @@ npm run publish:openvsx
 
 ### 4. Check listing
 
-https://open-vsx.org/extension/aibcdev/aibc
+https://open-vsx.org/extension/AIBCMedia/aibc
 
 ---
 
@@ -111,7 +111,7 @@ npm run publish:all
 
 ```bash
 # VS Code / Cursor / Windsurf
-code --install-extension aibcdev.aibc
+code --install-extension AIBCMedia.aibc
 
 # VSCodium
 codium --install-extension aibcdev.aibc

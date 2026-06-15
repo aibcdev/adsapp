@@ -10,7 +10,7 @@ import {
 } from "../../lib/installLinks";
 import { PLATFORM_LOGOS } from "../../lib/platformLogos";
 
-const PRIMARY: InstallKey[] = ["vscode", "cursor", "windsurf"];
+const PRIMARY: InstallKey[] = ["vscode", "cursor", "windsurf", "openvsx"];
 
 function InstallHelp({ option, onClose }: { option: (typeof INSTALL)[InstallKey]; onClose: () => void }) {
   const [copied, setCopied] = useState(false);
@@ -49,6 +49,14 @@ function InstallHelp({ option, onClose }: { option: (typeof INSTALL)[InstallKey]
           {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
           {copied ? "Copied" : "Copy command"}
         </button>
+        <a
+          href={option.storeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
+        >
+          Open store page
+        </a>
         <span className="text-[11px] text-zinc-500">
           In Cursor: Cmd+Shift+P (not Terminal) → paste → Enter
         </span>
@@ -171,7 +179,16 @@ export function HeroInstallCta({ monthlyUsd }: { monthlyUsd: number }) {
           Click your editor to install
         </p>
         <p className="mb-4 text-center text-xs text-zinc-500">
-          Free forever · search <strong className="text-zinc-700">AIBCMedia</strong> in Extensions (can take a few hours to appear)
+          Free forever · Windsurf & VSCodium via{" "}
+          <a
+            href="https://open-vsx.org/extension/AIBCMedia/aibc"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-emerald-700 underline hover:text-emerald-800"
+          >
+            Open VSX
+          </a>
+          {" · "}search <strong className="text-zinc-700">AIBCMedia</strong> in Extensions
         </p>
         <InstallButtons />
       </div>
