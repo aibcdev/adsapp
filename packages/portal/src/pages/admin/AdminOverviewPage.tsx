@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AdminGate } from "../../components/admin/AdminGate";
+import { AdminCampaignsPanel } from "../../components/admin/AdminCampaignsPanel";
 import { BidMarketPanel } from "../../components/admin/BidMarketPanel";
 import { MarketplaceDownloadsPanel } from "../../components/admin/MarketplaceDownloadsPanel";
 import { adminFetch } from "../../lib/adminApi";
@@ -11,6 +12,7 @@ type Overview = {
     usersSignedUp: number;
     usersNew7d: number;
     advertisers: number;
+    sampleCampaigns: number;
     totalSpend: number;
     topBid: number;
     liveAds: number;
@@ -29,12 +31,14 @@ type Overview = {
   campaigns: Array<{
     id: string;
     ad_line: string;
+    brand_name: string | null;
     buyer_email: string | null;
     bid_usd: number;
     spend: number;
     impressions_served: number;
     impressions_target: number;
     status: string;
+    isSample: boolean;
   }>;
   downloads: {
     marketplaces: Array<{
@@ -88,18 +92,17 @@ function OverviewInner() {
   if (err && !data) return <p className="text-sm text-red-400">{err}</p>;
   if (!data) return <p className="text-sm text-zinc-500">Loading overview…</p>;
 
-  const campaignRows: LeaderboardRow[] = data.campaigns.map((c, i) => ({
-    rank: i + 1,
-    display_name: c.ad_line.slice(0, 32),
-    ad_line: c.ad_line,
-    bid_usd: c.bid_usd,
-    impressions_remaining: Math.max(0, c.impressions_target - c.impressions_served),
-    impressions_served: c.impressions_served,
-    impressions_target: c.impressions_target,
-    status: c.status,
+  const campaignRows: LeaderboardRow[] = data.bidMarket.leaderboard.map((r) => ({
+    ...r,
+    impressions_served: r.impressions_served ?? 0,
+    impressions_target: r.impressions_target ?? 0,
   }));
 
   const k = data.kpis;
+  const sampleNote =
+    k.sampleCampaigns > 0
+      ? `Sample: WOODS (demo only)`
+      : undefined;
 
   return (
     <div className="space-y-8">
@@ -110,7 +113,11 @@ function OverviewInner() {
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
         <KpiCard label="Users signed up" value={k.usersSignedUp.toLocaleString()} sub={`+${k.usersNew7d} this week`} />
-        <KpiCard label="Advertisers" value={k.advertisers.toLocaleString()} />
+        <KpiCard
+          label="Paying advertisers"
+          value={k.advertisers.toLocaleString()}
+          sub={sampleNote}
+        />
         <KpiCard label="Total ad spend" value={`$${k.totalSpend.toFixed(2)}`} />
         <KpiCard label="Live ads" value={String(k.liveAds)} />
         <KpiCard
@@ -135,6 +142,8 @@ function OverviewInner() {
         rows={campaignRows}
         showImpressions
       />
+
+      <AdminCampaignsPanel campaigns={data.campaigns} />
     </div>
   );
 }

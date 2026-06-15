@@ -35,7 +35,7 @@ export function MarketplaceDownloadsPanel({ downloads }: { downloads: DownloadsP
         <div>
           <h3 className="font-instrument-serif text-xl text-white">Extension downloads</h3>
           <p className="mt-1 text-sm text-zinc-500">
-            Live totals from VS Marketplace and Open VSX. Daily/weekly/monthly trends build from hourly snapshots.
+            Per-store install counts from each registry. Combined total is not deduplicated.
           </p>
         </div>
         <p className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">

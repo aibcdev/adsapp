@@ -35,3 +35,9 @@ export function isSeedCampaignAd(db: DbType, adId: string): boolean {
 export function isNonBillableAd(db: DbType, adId: string): boolean {
   return isSeedAdId(adId) || isSeedCampaignAd(db, adId);
 }
+
+export const SEED_CLIENT_ID = "seed";
+
+export function isSeedCampaignClient(clientId: string): boolean {
+  return clientId === SEED_CLIENT_ID;
+}

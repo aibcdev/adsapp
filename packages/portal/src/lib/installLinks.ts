@@ -22,7 +22,7 @@ export type InstallOption = {
 export const INSTALL: Record<InstallKey, InstallOption> = {
   vscode: {
     label: "VS Code",
-    sublabel: "(Antigravity, Codex, Claude)",
+    sublabel: "(VS Marketplace)",
     storeUrl: VS_MARKETPLACE_URL,
     protocols: [
       "vscode:extension/AIBCMedia.aibc",
@@ -38,6 +38,7 @@ export const INSTALL: Record<InstallKey, InstallOption> = {
   },
   cursor: {
     label: "Cursor",
+    sublabel: "(VS Marketplace)",
     storeUrl: VS_MARKETPLACE_URL,
     protocols: [
       "cursor:extension/AIBCMedia.aibc",

@@ -13,6 +13,9 @@ import {
   getMarketplaceDownloadStats,
   refreshMarketplaceSnapshots,
 } from "../marketplace/stats.js";
+import { isSeedCampaignClient } from "../billing/seedInventory.js";
+
+const REAL_CAMPAIGN_SQL = "payment_status = 'paid' AND client_id != 'seed'";
 
 function requireAdminEmail(
   db: DbType,
@@ -34,7 +37,7 @@ function allPaidCampaigns(db: DbType) {
 
   const rows = db
     .prepare(`
-      SELECT id, ad_line, brand_name, bid_per_1k, blocks, status, spend,
+      SELECT id, client_id, ad_line, brand_name, bid_per_1k, blocks, status, spend,
              buyer_email, created_at, impressions_target, impressions_served, impressions,
              show_on_leaderboard, payment_status
       FROM campaigns
@@ -43,6 +46,7 @@ function allPaidCampaigns(db: DbType) {
     `)
     .all() as Array<{
       id: string;
+      client_id: string;
       ad_line: string;
       brand_name: string | null;
       bid_per_1k: number;
@@ -67,6 +71,8 @@ function allPaidCampaigns(db: DbType) {
       deliveryStatus = remaining <= 0 ? "exhausted" : row.show_on_leaderboard ? "hidden" : "off_board";
     }
 
+    const isSample = isSeedCampaignClient(row.client_id);
+
     return {
       id: row.id,
       ad_line: row.ad_line,
@@ -78,6 +84,7 @@ function allPaidCampaigns(db: DbType) {
       impressions_target: target,
       status: deliveryStatus,
       created_at: new Date(row.created_at).toISOString(),
+      isSample,
     };
   });
 }
@@ -114,12 +121,18 @@ export function adminRoutes(db: DbType) {
     const advertisers = db
       .prepare(
         `SELECT COUNT(DISTINCT COALESCE(buyer_email, client_id)) as c
-         FROM campaigns WHERE payment_status = 'paid'`,
+         FROM campaigns WHERE ${REAL_CAMPAIGN_SQL}`,
+      )
+      .get() as { c: number };
+
+    const sampleCampaigns = db
+      .prepare(
+        `SELECT COUNT(*) as c FROM campaigns WHERE payment_status = 'paid' AND client_id = 'seed'`,
       )
       .get() as { c: number };
 
     const spendRow = db
-      .prepare("SELECT COALESCE(SUM(spend), 0) as total FROM campaigns WHERE payment_status = 'paid'")
+      .prepare(`SELECT COALESCE(SUM(spend), 0) as total FROM campaigns WHERE ${REAL_CAMPAIGN_SQL}`)
       .get() as { total: number };
 
     const pending = db
@@ -135,7 +148,7 @@ export function adminRoutes(db: DbType) {
       )
       .get(sinceToday) as { c: number };
 
-    const leaderboard = leaderboardRows(db, 50);
+    const leaderboard = leaderboardRows(db, 50, { excludeSeed: true });
     const servingCount = leaderboard.filter((r) => r.status === "serving").length;
     const ipm = impsPerMinute(db);
     const topBid = leaderboard[0]?.bid_usd ?? 0;
@@ -146,6 +159,7 @@ export function adminRoutes(db: DbType) {
         usersSignedUp: usersSignedUp.c,
         usersNew7d: usersNew7d.c,
         advertisers: advertisers.c,
+        sampleCampaigns: sampleCampaigns.c,
         totalSpend: spendRow.total,
         topBid,
         liveAds: servingCount,
@@ -160,7 +174,7 @@ export function adminRoutes(db: DbType) {
         imps_per_min: ipm,
         leaderboard,
       },
-      pricePoints: priceHistoryPoints(db, 30),
+      pricePoints: priceHistoryPoints(db, 30, { excludeSeed: true }),
       campaigns,
       downloads,
     });

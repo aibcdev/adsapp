@@ -4,8 +4,8 @@
 
 | Store | Covers |
 |-------|--------|
-| **VS Code Marketplace** | VS Code, Cursor (default), Windsurf |
-| **Open VSX** | VSCodium, some Linux IDEs |
+| **VS Code Marketplace** | VS Code, Cursor |
+| **Open VSX** | Windsurf (default), VSCodium, other Open VSX editors |
 
 There is **no separate Cursor store**. Publish to both below and you're done.
 

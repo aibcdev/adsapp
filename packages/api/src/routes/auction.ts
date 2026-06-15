@@ -38,14 +38,15 @@ function impsPerMinute(db: DbType): number {
   return Math.max(120, active.c * 400);
 }
 
-function leaderboardRows(db: DbType, limit: number) {
+function leaderboardRows(db: DbType, limit: number, opts?: { excludeSeed?: boolean }) {
+  const seedFilter = opts?.excludeSeed ? "AND client_id != 'seed'" : "";
   const rows = db
     .prepare(`
       SELECT id, ad_line, destination_url, brand_name, bid_per_1k, blocks,
              show_on_leaderboard, status, impressions, spend, created_at,
              payment_status, impressions_target, impressions_served
       FROM campaigns
-      WHERE payment_status = 'paid' AND show_on_leaderboard = 1
+      WHERE payment_status = 'paid' AND show_on_leaderboard = 1 ${seedFilter}
       ORDER BY bid_per_1k DESC, created_at ASC
       LIMIT ?
     `)
@@ -78,13 +79,14 @@ function leaderboardRows(db: DbType, limit: number) {
   });
 }
 
-function priceHistoryPoints(db: DbType, days: number) {
+function priceHistoryPoints(db: DbType, days: number, opts?: { excludeSeed?: boolean }) {
   const since = Date.now() - days * 86_400_000;
+  const seedFilter = opts?.excludeSeed ? "AND client_id != 'seed'" : "";
   const rows = db
     .prepare(`
       SELECT bid_per_1k, brand_name, ad_line, status, created_at
       FROM campaigns
-      WHERE payment_status = 'paid' AND created_at > ?
+      WHERE payment_status = 'paid' AND created_at > ? ${seedFilter}
       ORDER BY created_at ASC
     `)
     .all(since) as Array<{

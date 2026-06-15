@@ -30,7 +30,7 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
     },
     {
       q: "Which editors work?",
-      a: "VS Code, Cursor, and Windsurf (via Open VSX). Click install above — or open the Open VSX listing for VSCodium and other compatible editors.",
+      a: "VS Code and Cursor install from VS Marketplace. Windsurf and VSCodium install from Open VSX. Click install above — or open the Open VSX listing for other compatible editors.",
     },
   ];
 

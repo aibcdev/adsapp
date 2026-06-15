@@ -165,8 +165,8 @@ export function getMarketplaceDownloadStats(
   const monthStart = startOfMonthMs();
 
   const notes: Record<MarketplaceId, string> = {
-    vscode: "VS Code, Cursor, and compatible editors",
-    openvsx: "Windsurf, VSCodium, and Open VSX editors",
+    vscode: "VS Code and Cursor",
+    openvsx: "Windsurf (default), VSCodium, and other Open VSX editors",
   };
 
   const marketplaces: MarketplaceDownloadRow[] = [];

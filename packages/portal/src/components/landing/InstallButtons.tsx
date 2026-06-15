@@ -179,7 +179,7 @@ export function HeroInstallCta({ monthlyUsd }: { monthlyUsd: number }) {
           Click your editor to install
         </p>
         <p className="mb-4 text-center text-xs text-zinc-500">
-          Free forever · Windsurf & VSCodium via{" "}
+          VS Code &amp; Cursor → VS Marketplace · Windsurf &amp; VSCodium →{" "}
           <a
             href="https://open-vsx.org/extension/AIBCMedia/aibc"
             target="_blank"
