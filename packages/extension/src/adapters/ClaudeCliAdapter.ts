@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -54,7 +55,19 @@ export class ClaudeCliAdapter {
   private installed = false;
 
   preflight(): { compatible: boolean; reason?: string } {
-    return { compatible: true };
+    if (fs.existsSync(CLAUDE_SETTINGS) || fs.existsSync(path.join(os.homedir(), ".claude"))) {
+      return { compatible: true };
+    }
+    try {
+      execSync("claude --version", { stdio: "pipe", timeout: 4000 });
+      return { compatible: true };
+    } catch {
+      return {
+        compatible: false,
+        reason:
+          "Claude Code CLI not found — install @anthropic-ai/claude-code globally or use the Claude Code VS Code extension.",
+      };
+    }
   }
 
   apply(adText: string, clickUrl: string, adId = "aibc-ad"): boolean {

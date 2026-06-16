@@ -9,6 +9,17 @@ const root = join(__dirname, "..");
 const blogDir = join(root, "packages", "portal", "content", "blog");
 const distDir = join(root, "packages", "portal", "dist", "blog");
 const SITE = "https://aibcmedia.com";
+const OG_IMAGE = `${SITE}/og-image.png`;
+
+const SEO_HEAD = `
+  <link rel="icon" href="/favicon.ico" sizes="any"/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
+  <meta property="og:site_name" content="AIBC Media"/>
+  <meta property="og:image" content="${OG_IMAGE}"/>
+  <meta property="og:image:alt" content="AIBC Media — Make money whilst you code"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:image" content="${OG_IMAGE}"/>`;
 
 function escapeHtml(s) {
   return s
@@ -53,9 +64,9 @@ for (const post of posts) {
   <meta property="og:description" content="${escapeHtml(post.description)}"/>
   <meta property="og:url" content="${url}"/>
   <meta property="og:type" content="article"/>
-  <meta name="twitter:card" content="summary_large_image"/>
   <meta name="twitter:title" content="${escapeHtml(post.title)}"/>
   <meta name="twitter:description" content="${escapeHtml(post.description)}"/>
+  ${SEO_HEAD}
   <script type="application/ld+json">${JSON.stringify({
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -65,7 +76,8 @@ for (const post of posts) {
     author: { "@type": "Person", name: post.author },
     keywords: post.keywords,
     mainEntityOfPage: url,
-    publisher: { "@type": "Organization", name: "AIBC Media", url: SITE },
+    publisher: { "@type": "Organization", name: "AIBC Media", url: SITE, logo: `${SITE}/icon-512.png` },
+    image: OG_IMAGE,
   })}</script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;600&display=swap"/>
   <style>
@@ -107,6 +119,11 @@ const indexHtml = `<!doctype html>
   <meta name="description" content="Founder notes on AI coding, developer income, and monetizing your IDE. Claude, Cursor, VS Code."/>
   <link rel="canonical" href="${SITE}/blog"/>
   <link rel="alternate" type="application/rss+xml" title="AIBC Blog" href="/rss.xml"/>
+  <meta property="og:title" content="AIBC Blog — Make Money Whilst You Code"/>
+  <meta property="og:description" content="Founder notes on AI coding, developer income, and monetizing your IDE. Claude, Cursor, VS Code."/>
+  <meta property="og:url" content="${SITE}/blog"/>
+  <meta property="og:type" content="website"/>
+  ${SEO_HEAD}
 </head>
 <body style="font-family:Inter,system-ui,sans-serif;max-width:42rem;margin:0 auto;padding:2rem 1.5rem;color:#27272a">
   <h1 style="font-family:'Instrument Serif',serif;font-size:2.5rem">AIBC Blog</h1>

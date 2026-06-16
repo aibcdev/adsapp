@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { SiteSeo } from "./components/SiteSeo";
 import { LandingPage } from "./pages/LandingPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { PrivacyPage } from "./pages/PrivacyPage";
@@ -15,7 +16,6 @@ import { AdminPayoutsPage } from "./pages/admin/AdminPayoutsPage";
 import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
 import { AdminUserDetailPage } from "./pages/admin/AdminUserDetailPage";
 import { AdminLimitsPage } from "./pages/admin/AdminLimitsPage";
-import { AdminCompetitivePage } from "./pages/admin/AdminCompetitivePage";
 import { AdminOverviewPage } from "./pages/admin/AdminOverviewPage";
 import { AdminAdvertiserPipelinePage } from "./pages/admin/AdminAdvertiserPipelinePage";
 import { ReferralPage } from "./pages/ReferralPage";
@@ -30,6 +30,7 @@ import "./index.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
+      <SiteSeo />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
@@ -57,7 +58,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="users/:clientId" element={<AdminUserDetailPage />} />
           <Route path="limits" element={<AdminLimitsPage />} />
-          <Route path="competitive" element={<AdminCompetitivePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

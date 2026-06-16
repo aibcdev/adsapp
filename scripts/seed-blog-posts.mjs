@@ -124,18 +124,18 @@ The opportunity isn't "replace your salary." It's **get paid for time you're alr
 [Install →](/#install) · [Terms →](/terms)`,
   },
   {
-    slug: "kickbacks-vs-aibc-2026",
-    title: "Kickbacks vs AIBC: what actually pays developers in 2026",
+    slug: "developer-ad-share-2026",
+    title: "What actually pays developers in 2026",
     description:
-      "Same category, different choices. A straight comparison of developer share, caps, and restore behavior.",
+      "Spinner monetization in plain English — developer share, caps, restore behavior, and what to compare.",
     publishedAt: "2026-06-05T08:00:00Z",
-    tags: ["kickbacks", "comparison", "developer-income"],
-    keywords: ["kickbacks alternative", "aibc vs kickbacks", "developer ad share"],
-    body: `Kickbacks proved developers will tolerate one line in the spinner if the economics are fair.
+    tags: ["comparison", "developer-income", "economics"],
+    keywords: ["developer ad share", "spinner monetization", "ide extension earnings"],
+    body: `Developers will tolerate one line in the spinner if the economics are fair.
 
-We studied that market hard. Here's where AIBC lands in 2026:
+Here's where AIBC lands in 2026:
 
-**What we match**
+**Core model**
 - ~70% developer share on validated events
 - Auction-style bids from advertisers
 - Claude Code / CLI integration path
@@ -144,16 +144,14 @@ We studied that market hard. Here's where AIBC lands in 2026:
 **What we added**
 - Founding member +5% for the first 15,000 devs
 - Referral bonus: $10 when your referral earns $10+ lifetime
-- Admin tools: user search, payout restore on failed sends, competitive issue tracker
+- Admin tools: user search, payout restore on failed sends
 - Clean uninstall restore (no stale patches — we harden this constantly)
 
-**What we're still catching up on**
+**What we're still building**
 - Open VSX publish (in progress)
 - India rails beyond manual UPI review
 
 If you're comparing tools, compare **payout history, restore behavior, and caps** — not landing page copy.
-
-We're building in public. Track parity in our [Kickbacks issue tracker](/admin/competitive) if you're nerdy like us.
 
 [Install AIBC →](/#install)`,
   },
@@ -360,7 +358,7 @@ Fair. We harden restore constantly:
 - \`~/.aibc/*\` artifacts deleted on deactivate
 - \`aibc: Restore Claude Code\` command if you want manual control
 
-Kickbacks issue #97 is our reminder: trust is the product.
+Every uninstall bug we fix is a reminder: trust is the product.
 
 If restore fails, you won't recommend us. Neither will Reddit.
 
@@ -383,7 +381,7 @@ SEO is just **answering questions people already type into Google**.
 Examples that matter for us:
 
 - "make money with claude code"
-- "kickbacks alternative"
+- "developer ad share spinner"
 - "monetize cursor extension"
 
 Write like a human. First person. Specific numbers. No AI-slop listicles with zero opinion.

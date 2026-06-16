@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ads by aibc</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; background: #fafafa; color: #111; }
+      #shell { display: flex; flex-direction: column; height: 100%; }
+      header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 14px; border-bottom: 1px solid #e4e4e7; background: #fff;
+      }
+      header strong { font-size: 14px; }
+      header button {
+        border: 1px solid #d4d4d8; background: #fff; border-radius: 8px;
+        padding: 6px 10px; font-size: 12px; cursor: pointer;
+      }
+      #status { padding: 10px 14px; font-size: 12px; color: #52525b; }
+      #frame-wrap { flex: 1; min-height: 0; }
+      iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+      #gate {
+        display: none; flex: 1; align-items: center; justify-content: center;
+        padding: 24px; text-align: center;
+      }
+      #gate p { margin: 0 0 16px; color: #52525b; font-size: 14px; line-height: 1.5; }
+      #gate button {
+        border: 0; background: #000; color: #fff; border-radius: 10px;
+        padding: 12px 18px; font-size: 14px; cursor: pointer;
+      }
+      #gate a { display: block; margin-top: 14px; color: #52525b; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div id="shell">
+      <header>
+        <strong>ads by aibc</strong>
+        <button id="sign-out" type="button" hidden>Sign out</button>
+      </header>
+      <div id="status"></div>
+      <div id="gate">
+        <div>
+          <p>Sign in with your AIBC account to open earnings, payouts, and your dashboard.</p>
+          <button id="sign-in" type="button">Sign in with Google</button>
+          <a href="https://aibcmedia.com" target="_blank" rel="noreferrer">aibcmedia.com</a>
+        </div>
+      </div>
+      <div id="frame-wrap" hidden>
+        <iframe id="dashboard" title="AIBC dashboard"></iframe>
+      </div>
+    </div>
+    <script src="config.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

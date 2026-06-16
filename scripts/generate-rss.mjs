@@ -39,6 +39,11 @@ const rss = `<?xml version="1.0" encoding="UTF-8"?>
     <link>${SITE}/blog</link>
     <description>Founder notes on AI coding, developer income, and monetizing your IDE.</description>
     <language>en-us</language>
+    <image>
+      <url>${SITE}/icon-512.png</url>
+      <title>AIBC Media</title>
+      <link>${SITE}/</link>
+    </image>
     <atom:link href="${SITE}/rss.xml" rel="self" type="application/rss+xml"/>
 ${items
   .map(

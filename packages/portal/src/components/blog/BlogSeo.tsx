@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import type { BlogPost } from "../../lib/blog";
 import { SITE_URL } from "../../lib/blog";
+import { OG_IMAGE, SITE_NAME } from "../../lib/seo";
 
 function upsertMeta(name: string, content: string, attr: "name" | "property" = "name") {
   let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement | null;
@@ -43,9 +44,13 @@ export function BlogSeo({
     upsertMeta("og:description", description, "property");
     upsertMeta("og:url", url, "property");
     upsertMeta("og:type", type, "property");
+    upsertMeta("og:site_name", SITE_NAME, "property");
+    upsertMeta("og:image", OG_IMAGE, "property");
+    upsertMeta("og:image:alt", `${SITE_NAME} — ${description}`, "property");
     upsertMeta("twitter:card", "summary_large_image");
     upsertMeta("twitter:title", title);
     upsertMeta("twitter:description", description);
+    upsertMeta("twitter:image", OG_IMAGE);
 
     const existing = document.getElementById("blog-jsonld");
     existing?.remove();
@@ -63,7 +68,8 @@ export function BlogSeo({
         author: { "@type": "Person", name: post.author },
         keywords: post.keywords.join(", "),
         mainEntityOfPage: url,
-        publisher: { "@type": "Organization", name: "AIBC Media", url: SITE_URL },
+        publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL, logo: `${SITE_URL}/icon-512.png` },
+        image: OG_IMAGE,
       });
       document.head.appendChild(script);
     }

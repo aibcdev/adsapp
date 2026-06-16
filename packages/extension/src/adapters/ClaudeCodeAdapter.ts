@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
-import * as os from "node:os";
 import * as path from "node:path";
+import { extensionRoots } from "./extensionRoots.js";
 import { atomicWriteFile } from "../util/atomicWrite.js";
 
 const MARKER_START = "/* AIBC-AD-START */";
@@ -12,32 +12,12 @@ export interface AdapterPreflight {
   version?: string;
 }
 
-function extensionRoots(): string[] {
-  const home = os.homedir();
-  const roots = [
-    path.join(home, ".cursor", "extensions"),
-    path.join(home, ".vscode", "extensions"),
-    path.join(home, ".vscode-insiders", "extensions"),
-  ];
-
-  if (process.platform === "win32") {
-    const appData = process.env.APPDATA;
-    const userProfile = process.env.USERPROFILE || home;
-    if (appData) {
-      roots.push(path.join(appData, "Code", "extensions"));
-      roots.push(path.join(appData, "Code - Insiders", "extensions"));
-      roots.push(path.join(appData, "Cursor", "extensions"));
-    }
-    roots.push(path.join(userProfile, ".vscode", "extensions"));
-    roots.push(path.join(userProfile, ".vscode-insiders", "extensions"));
-    roots.push(path.join(userProfile, ".cursor", "extensions"));
-  }
-
-  return roots;
+function extensionRootsList(): string[] {
+  return extensionRoots();
 }
 
 export function locateClaudeCodeTarget(): string | null {
-  for (const root of extensionRoots()) {
+  for (const root of extensionRootsList()) {
     try {
       if (!fs.existsSync(root)) continue;
       const hits = fs
@@ -107,13 +87,28 @@ export class ClaudeCodeAdapter {
     return true;
   }
 
+  clearInjection(): void {
+    if (!this.target || !fs.existsSync(this.target)) return;
+    const content = fs.readFileSync(this.target, "utf8");
+    const stripped = stripInjection(content);
+    if (stripped !== content) atomicWriteFile(this.target, stripped);
+  }
+
   restore(): boolean {
     let restored = false;
     try {
       if (this.target && fs.existsSync(this.target)) {
-        if (this.backupPath && fs.existsSync(this.backupPath)) {
-          atomicWriteFile(this.target, fs.readFileSync(this.backupPath, "utf8"));
+        const resolvedBackup =
+          this.backupPath && fs.existsSync(this.backupPath)
+            ? this.backupPath
+            : fs.existsSync(`${this.target}.aibc-backup`)
+              ? `${this.target}.aibc-backup`
+              : null;
+
+        if (resolvedBackup) {
+          atomicWriteFile(this.target, fs.readFileSync(resolvedBackup, "utf8"));
           restored = true;
+          this.backupPath = resolvedBackup;
         } else {
           const content = fs.readFileSync(this.target, "utf8");
           const stripped = stripInjection(content);
@@ -201,4 +196,23 @@ function buildInjection(
   inject();
 })();
 ${MARKER_END}`;
+}
+
+export function restoreAllClaudeCodePatches(): number {
+  let restored = 0;
+  for (const root of extensionRootsList()) {
+    try {
+      if (!fs.existsSync(root)) continue;
+      for (const dir of fs.readdirSync(root)) {
+        if (!dir.startsWith("anthropic.claude-code-")) continue;
+        const target = path.join(root, dir, "webview", "index.js");
+        if (!fs.existsSync(target)) continue;
+        const adapter = new ClaudeCodeAdapter(target);
+        if (adapter.restore()) restored += 1;
+      }
+    } catch {
+      /* skip */
+    }
+  }
+  return restored;
 }

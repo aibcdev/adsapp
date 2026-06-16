@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "lsof -ti :5175 | xargs kill -9 2>/dev/null || true; vite",
-    "build": "node ../../scripts/generate-sitemap.mjs && node ../../scripts/generate-rss.mjs && vite build && node ../../scripts/generate-blog-static.mjs",
+    "build": "python3 ../../scripts/generate-site-assets.py && node ../../scripts/generate-sitemap.mjs && node ../../scripts/generate-rss.mjs && vite build && node ../../scripts/generate-blog-static.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

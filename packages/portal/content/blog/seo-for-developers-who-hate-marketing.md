@@ -16,7 +16,7 @@ SEO is just **answering questions people already type into Google**.
 Examples that matter for us:
 
 - "make money with claude code"
-- "kickbacks alternative"
+- "developer ad share spinner"
 - "monetize cursor extension"
 
 Write like a human. First person. Specific numbers. No AI-slop listicles with zero opinion.

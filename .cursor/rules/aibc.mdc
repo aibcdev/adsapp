@@ -1,5 +1,5 @@
 ---
-description: aibc monorepo conventions — extension, API, portal, clean-room Kickbacks parity
+description: aibc monorepo conventions — extension, API, portal
 alwaysApply: true
 ---
 
@@ -28,10 +28,6 @@ npm run package
 - Dev: `http://127.0.0.1:8787`
 - Prod: `https://api.aibcmedia.com`
 - Env: `AIBC_API_BASE`, `AIBC_DEV_BYPASS=1` for demo auth
-
-## Clean-room policy
-
-Do NOT copy Kickbacks proprietary source. Reimplement behavior from public docs only.
 
 ## Privacy
 

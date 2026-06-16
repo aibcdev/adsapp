@@ -1,4 +1,4 @@
-/** aibc economics — aligned with kickbacks.ai auction model, 70% developer share. */
+/** aibc economics — auction model, 70% developer share. */
 
 export const DEVELOPER_SHARE = 0.7;
 export const PLATFORM_SHARE = 0.3;

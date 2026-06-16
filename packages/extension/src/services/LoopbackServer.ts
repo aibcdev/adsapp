@@ -1,5 +1,6 @@
 import * as http from "node:http";
 import { randomBytes } from "node:crypto";
+import { isLoopbackHost } from "../util/loopback.js";
 
 export type LoopbackViewHandler = (adId: string) => void;
 export type LoopbackClickHandler = (adId: string, dest?: string) => void;
@@ -21,7 +22,12 @@ export class LoopbackServer {
 
     return new Promise((resolve, reject) => {
       this.server = http.createServer((req, res) => {
-        res.setHeader("Access-Control-Allow-Origin", "http://127.0.0.1");
+        const origin = req.headers.origin;
+        if (origin && isLoopbackHost(new URL(origin).hostname)) {
+          res.setHeader("Access-Control-Allow-Origin", origin);
+        } else {
+          res.setHeader("Access-Control-Allow-Origin", "http://127.0.0.1");
+        }
         if (req.method === "OPTIONS") {
           res.writeHead(204, {
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS",

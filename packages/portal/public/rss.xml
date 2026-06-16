@@ -5,6 +5,11 @@
     <link>https://aibcmedia.com/blog</link>
     <description>Founder notes on AI coding, developer income, and monetizing your IDE.</description>
     <language>en-us</language>
+    <image>
+      <url>https://aibcmedia.com/icon-512.png</url>
+      <title>AIBC Media</title>
+      <link>https://aibcmedia.com/</link>
+    </image>
     <atom:link href="https://aibcmedia.com/rss.xml" rel="self" type="application/rss+xml"/>
     <item>
       <title>My first $100 from coding ads — what the dashboard actually showed</title>
@@ -77,11 +82,11 @@
       <description>Not arbitrary. Fraud review, Wise fees, and keeping the queue manageable for a small team.</description>
     </item>
     <item>
-      <title>Kickbacks vs AIBC: what actually pays developers in 2026</title>
-      <link>https://aibcmedia.com/blog/kickbacks-vs-aibc-2026</link>
-      <guid isPermaLink="true">https://aibcmedia.com/blog/kickbacks-vs-aibc-2026</guid>
+      <title>What actually pays developers in 2026</title>
+      <link>https://aibcmedia.com/blog/developer-ad-share-2026</link>
+      <guid isPermaLink="true">https://aibcmedia.com/blog/developer-ad-share-2026</guid>
       <pubDate>Fri, 05 Jun 2026 08:00:00 GMT</pubDate>
-      <description>Same category, different choices. A straight comparison of developer share, caps, and restore behavior.</description>
+      <description>Spinner monetization in plain English — developer share, caps, restore behavior, and what to compare.</description>
     </item>
     <item>
       <title>Make money while Claude thinks: an honest guide for junior devs</title>

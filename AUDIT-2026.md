@@ -49,7 +49,7 @@
 | Contact page + footer links | **Pass** | /contact, Privacy, Terms | Growth | — |
 | Referral page + footer promo | **Pass** | /referral + dashboard section | Growth | 2026-06-14 |
 | Header audience pills | **Pass** | Developers / Advertisers / Publishers | Growth | — |
-| Admin users + limits + competitive | **Pass** | /admin/* shell | Ops | 2026-06-14 |
+| Admin users + limits | **Pass** | /admin/* shell | Ops | 2026-06-14 |
 | PostHog / analytics events | **Fix planned** | Extension analytics partial; portal TBD | Growth | TBD |
 | Legal copy accuracy (founding 15k) | **Pass** | DB-backed founding_member + badge | Growth | 2026-06-14 |
 

@@ -18,7 +18,7 @@ Fair. We harden restore constantly:
 - `~/.aibc/*` artifacts deleted on deactivate
 - `aibc: Restore Claude Code` command if you want manual control
 
-Kickbacks issue #97 is our reminder: trust is the product.
+Every uninstall bug we fix is a reminder: trust is the product.
 
 If restore fails, you won't recommend us. Neither will Reddit.
 

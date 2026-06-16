@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import {
   ClaudeCodeAdapter,
   locateClaudeCodeTarget,
+  restoreAllClaudeCodePatches,
 } from "./adapters/ClaudeCodeAdapter";
 import { ClaudeCliAdapter, cleanupAibcArtifacts } from "./adapters/ClaudeCliAdapter";
 import { AuthService } from "./services/AuthService";
@@ -320,7 +321,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 export async function deactivate(): Promise<void> {
   if (relocateTimer) clearInterval(relocateTimer);
   if (killPollTimer) clearInterval(killPollTimer);
-  claudeAdapter?.restore();
+  // Harden uninstall: restore every known Claude Code webview version we may
+  // have patched, not only the currently-detected one.
+  restoreAllClaudeCodePatches();
   cliAdapter?.restore();
   cleanupAibcArtifacts();
   feedService?.dispose();
