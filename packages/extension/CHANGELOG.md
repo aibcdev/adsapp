@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.5 — 2026-06-16
+
+- Harden Claude Code uninstall restore (backup path, `deactivate()` cleanup, `~/.aibc` artifacts)
+- Fix IPv6 loopback CORS for local click/view tracking
+- Safer JSONC parsing in Claude CLI settings
+- Real `claude --version` preflight before marking incompatible
+- Shared extension root discovery for VS Code, Cursor, and Windsurf on Windows
+
 ## 0.1.4 — 2026-06-12
 
 - Fix editor sign-in when already logged in on aibcmedia.com (auto-link flow)

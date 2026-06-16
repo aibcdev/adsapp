@@ -17,8 +17,8 @@ const apiKey = process.env.GEMINI_API_KEY;
 const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
 
 if (!apiKey) {
-  console.error("GEMINI_API_KEY required");
-  process.exit(1);
+  console.log("[blog] GEMINI_API_KEY not set — skipping auto-publish");
+  process.exit(0);
 }
 
 function slugify(s) {

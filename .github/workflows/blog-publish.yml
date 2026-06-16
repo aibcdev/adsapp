@@ -32,11 +32,17 @@ jobs:
           echo "### Blog publish run" >> $GITHUB_STEP_SUMMARY
           ls -la packages/portal/content/blog/*.md 2>/dev/null | tail -5 >> $GITHUB_STEP_SUMMARY || true
 
+      - name: Regenerate SEO feeds
+        if: success()
+        run: |
+          node scripts/generate-sitemap.mjs
+          node scripts/generate-rss.mjs
+
       - name: Commit and push
         run: |
           git config user.name "aibc-blog-bot"
           git config user.email "blog@aibcmedia.com"
-          git add packages/portal/content/blog/*.md packages/portal/content/blog/.topic-used.json
+          git add packages/portal/content/blog/*.md packages/portal/content/blog/.topic-used.json packages/portal/public/sitemap.xml packages/portal/public/rss.xml
           if git diff --staged --quiet; then
             echo "No new post"
             exit 0

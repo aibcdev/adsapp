@@ -23,6 +23,7 @@
     "deploy:api": "bash scripts/deploy-digitalocean.sh",
     "deploy:do": "bash scripts/deploy-digitalocean.sh",
     "package": "node scripts/package-vsix.mjs",
+    "package:chrome": "bash scripts/package-chrome-extension.sh",
     "publish:marketplace": "node scripts/publish-marketplace.mjs",
     "publish:openvsx": "node scripts/publish-openvsx.mjs",
     "publish:all": "npm run publish:marketplace && npm run publish:openvsx",
