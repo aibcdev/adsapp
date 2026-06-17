@@ -18,6 +18,7 @@ import { AdminUserDetailPage } from "./pages/admin/AdminUserDetailPage";
 import { AdminLimitsPage } from "./pages/admin/AdminLimitsPage";
 import { AdminOverviewPage } from "./pages/admin/AdminOverviewPage";
 import { AdminAdvertiserPipelinePage } from "./pages/admin/AdminAdvertiserPipelinePage";
+import { AdminCompetitivePage } from "./pages/admin/AdminCompetitivePage";
 import { ReferralPage } from "./pages/ReferralPage";
 import { ContactPage } from "./pages/ContactPage";
 import { HowItWorksPage } from "./pages/HowItWorksPage";
@@ -58,6 +59,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="users/:clientId" element={<AdminUserDetailPage />} />
           <Route path="limits" element={<AdminLimitsPage />} />
+          <Route path="competitive" element={<AdminCompetitivePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

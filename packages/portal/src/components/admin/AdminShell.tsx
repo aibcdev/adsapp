@@ -8,6 +8,7 @@ const tabs = [
   { to: "/admin/payouts", label: "Payouts" },
   { to: "/admin/users", label: "Users" },
   { to: "/admin/limits", label: "Limits" },
+  { to: "/admin/competitive", label: "Competitive" },
 ];
 
 export function AdminShell() {

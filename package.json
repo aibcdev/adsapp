@@ -22,6 +22,7 @@
     "stripe:fix-live": "bash scripts/stripe-fix-live.sh",
     "deploy:api": "bash scripts/deploy-digitalocean.sh",
     "deploy:do": "bash scripts/deploy-digitalocean.sh",
+    "sync:kickbacks": "node scripts/sync-kickbacks-issues.mjs",
     "package": "node scripts/package-vsix.mjs",
     "package:chrome": "bash scripts/package-chrome-extension.sh",
     "publish:marketplace": "node scripts/publish-marketplace.mjs",

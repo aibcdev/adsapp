@@ -1,0 +1,25 @@
+name: Sync Kickbacks issues
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm run sync:kickbacks
+      - name: Commit tracker if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add packages/portal/public/kickbacks-tracker.json
+          git diff --staged --quiet || git commit -m "chore: sync Kickbacks competitive tracker"
+          git push

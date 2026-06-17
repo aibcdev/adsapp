@@ -1,6 +1,15 @@
 import { randomUUID } from "node:crypto";
+import * as vscode from "vscode";
 import { ApiClient } from "./ApiClient";
 import { AuthService } from "./AuthService";
+
+function editorBucket(): string {
+  const name = vscode.env.appName.toLowerCase();
+  if (name.includes("cursor")) return "cursor";
+  if (name.includes("windsurf")) return "windsurf";
+  if (name.includes("vscodium")) return "vscodium";
+  return "vscode";
+}
 
 export class MetricsService {
   private sessionToken?: string;
@@ -34,6 +43,7 @@ export class MetricsService {
           kind: event,
           nonce: randomUUID(),
           session_token: this.sessionToken,
+          editor: editorBucket(),
           ...payload,
         }),
       });

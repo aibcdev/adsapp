@@ -4,6 +4,9 @@ import type { Database as DbType } from "better-sqlite3";
 /** Portfolio ad session TTL — aligns with rotation interval. */
 export const SESSION_TTL_MS = 120_000;
 
+/** Max fresh sessions per signed-in client per hour (anti headless farming). */
+export const MAX_SESSIONS_PER_CLIENT_HOUR = 40;
+
 export function ensurePortfolioSessionTables(db: DbType): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS portfolio_sessions (
@@ -22,14 +25,38 @@ export function ensurePortfolioSessionTables(db: DbType): void {
   `);
 }
 
+export function canMintPortfolioSession(db: DbType, clientId: string | null): boolean {
+  if (!clientId) return true;
+  const hourAgo = Date.now() - 60 * 60 * 1000;
+  const row = db
+    .prepare(
+      "SELECT COUNT(*) as c FROM portfolio_sessions WHERE client_id = ? AND created_at > ?",
+    )
+    .get(clientId, hourAgo) as { c: number };
+  return row.c < MAX_SESSIONS_PER_CLIENT_HOUR;
+}
+
 export function mintPortfolioSession(
   db: DbType,
   opts: { clientId: string | null; deviceId?: string },
-): { sessionToken: string; expiresAt: number } {
-  const token = randomUUID();
+): { sessionToken: string; expiresAt: number; rateLimited?: boolean } {
   const now = Date.now();
   const expiresAt = now + SESSION_TTL_MS;
 
+  if (opts.clientId && !canMintPortfolioSession(db, opts.clientId)) {
+    const existing = db
+      .prepare(
+        `SELECT token, expires_at FROM portfolio_sessions
+         WHERE client_id = ? AND expires_at > ?
+         ORDER BY created_at DESC LIMIT 1`,
+      )
+      .get(opts.clientId, now) as { token: string; expires_at: number } | undefined;
+    if (existing) {
+      return { sessionToken: existing.token, expiresAt: existing.expires_at, rateLimited: true };
+    }
+  }
+
+  const token = randomUUID();
   db.prepare(
     "INSERT INTO portfolio_sessions (token, client_id, device_id, expires_at, created_at) VALUES (?, ?, ?, ?, ?)",
   ).run(token, opts.clientId, opts.deviceId || null, expiresAt, now);
