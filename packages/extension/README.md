@@ -2,6 +2,8 @@
 
 **The #1 way for developers to earn from ads while they code.** 🏆
 
+**Used Kickbacks before?** AIBC is the active extension in the same category — 70% to you, spinner-only ads, clean uninstall.
+
 Built by devs — including **early OpenAI contributors (pre-2020)** — who got tired of waiting on AI with zero upside.
 
 ### Why AIBC is #1 🚀

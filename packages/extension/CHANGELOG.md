@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.7 — 2026-06-17
+
+- Send editor tag (Cursor, Windsurf, VS Code) with earnings metrics for Earn more mode
+- Marketplace listing: Kickbacks alternative keywords and clearer description
+
+## 0.1.6 — 2026-06-16
+
+- Marketplace listing updated for Kickbacks search terms (description + keywords only)
+
 ## 0.1.5 — 2026-06-16
 
 - Harden Claude Code uninstall restore (backup path, `deactivate()` cleanup, `~/.aibc` artifacts)

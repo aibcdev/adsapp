@@ -1,8 +1,8 @@
 {
   "name": "aibc",
   "displayName": "ads by aibc - earn whilst you code",
-  "description": "The #1 developer ads extension — earn whilst you code. 70% revenue share. Built by early OpenAI contributors. Native AI spinner ads in VS Code, Cursor & Claude.",
-  "version": "0.1.5",
+  "description": "Earn whilst you code — 70% revenue share. The active alternative for developers who used Kickbacks: native AI spinner ads in VS Code, Cursor, Windsurf & Claude Code. No popups. Clean uninstall. aibcmedia.com",
+  "version": "0.1.7",
   "publisher": "AIBCMedia",
   "license": "MIT",
   "repository": {
@@ -19,7 +19,19 @@
   },
   "extensionKind": ["ui", "workspace"],
   "categories": ["Other"],
-  "keywords": ["discover", "mcp", "ads", "earnings", "claude-code", "developer tools"],
+  "keywords": [
+    "kickbacks",
+    "kickbacks alternative",
+    "kickbacks replacement",
+    "ads",
+    "earnings",
+    "claude-code",
+    "cursor",
+    "windsurf",
+    "developer tools",
+    "spinner",
+    "monetize"
+  ],
   "homepage": "https://aibcmedia.com",
   "main": "./dist/extension.js",
   "activationEvents": ["onStartupFinished"],
