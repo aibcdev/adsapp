@@ -72,7 +72,7 @@ def save_og_image() -> None:
 
     draw.text((320, 210), "AIBC", fill=BLACK, font=title_font)
     draw.text((320, 300), "Make money whilst you code", fill=ZINC_600, font=tag_font)
-    draw.text((320, 370), "70% developer share · VS Code, Cursor, Claude", fill=EMERALD, font=tag_font)
+    draw.text((320, 370), "60% developer share · VS Code, Cursor, Claude", fill=EMERALD, font=tag_font)
     draw.text((96, h - 72), "aibcmedia.com", fill=ZINC_600, font=url_font)
 
     img.save(OUT / "og-image.png", format="PNG", optimize=True)
