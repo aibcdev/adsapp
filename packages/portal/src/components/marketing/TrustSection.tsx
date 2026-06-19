@@ -1,3 +1,4 @@
+import { DEVELOPER_SHARE_PCT } from "@aibc/shared";
 import { IdeMockup } from "../aibc/ProductMockup";
 
 import { marketingCopy } from "../../lib/marketingCopy";
@@ -5,7 +6,7 @@ import { marketingCopy } from "../../lib/marketingCopy";
 const TRUST_ITEMS = [
   "We never read your code",
   "One small line — never a popup",
-  "You keep 70%",
+  `You keep ${DEVELOPER_SHARE_PCT}%`,
   "Uninstall and everything goes back to normal",
   marketingCopy.q2Developers,
 ];

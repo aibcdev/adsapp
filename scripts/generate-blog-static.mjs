@@ -97,7 +97,7 @@ for (const post of posts) {
   <p class="desc">${escapeHtml(post.description)}</p>
   <article>${post.html}</article>
   <div class="cta">
-    <strong>Install free. Keep 70%.</strong>
+    <strong>Install free. Keep 60%.</strong>
     <p style="margin:.5rem 0 0;font-size:.875rem">One sponsored line in your AI spinner. <a href="/#install">Install now</a> · <a href="/developers/how-it-works">How it works</a></p>
   </div>
 </body>

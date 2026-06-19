@@ -4,6 +4,9 @@ import type { Database as DbType } from "better-sqlite3";
 import { createCampaignCheckout } from "../stripe.js";
 import { mintToken } from "../db/schema.js";
 import { BLOCK_IMPRESSIONS } from "./auction.js";
+import { attributeAdvertiserReferral } from "../advertiser/partners.js";
+import { resolveBrandForCampaign } from "../advertiser/brands.js";
+import { serializeTargetCountries } from "../advertiser/tables.js";
 
 const BID_FLOOR = 1;
 
@@ -16,6 +19,12 @@ export function billingRoutes(db: DbType) {
     const destinationUrl = String(body.destination_url || body.destinationUrl || "").trim();
     const buyerEmail = String(body.buyer_email || body.buyerEmail || "").trim();
     const brand = body.brand ? String(body.brand) : null;
+    const brandId = body.brand_id || body.brandId ? String(body.brand_id || body.brandId) : null;
+    const partnerCode = body.partner_code || body.partnerCode ? String(body.partner_code || body.partnerCode) : null;
+    const rawCountries = body.target_countries ?? body.targetCountries;
+    const targetCountries = serializeTargetCountries(
+      Array.isArray(rawCountries) ? rawCountries.map(String) : [],
+    );
     const iconUrl = body.icon_url ? String(body.icon_url) : null;
     const optinLeaderboard = body.optin_leaderboard !== false && body.showOnLeaderboard !== false;
     const blocks = Math.max(1, Math.min(500, Number(body.blocks || 1)));
@@ -62,21 +71,32 @@ export function billingRoutes(db: DbType) {
       mintToken(db, clientId, buyerEmail);
     }
 
+    if (partnerCode) attributeAdvertiserReferral(db, clientId, partnerCode);
+
+    let resolvedBrandId: string | null = brandId;
+    let resolvedBrandName: string | null = brand;
+    if (clientId && (brandId || brand)) {
+      const resolved = resolveBrandForCampaign(db, clientId, brandId, brand);
+      resolvedBrandId = resolved.brandId;
+      resolvedBrandName = resolved.brandName;
+    }
+
     const campaignId = randomUUID();
     const impressionsTarget = blocks * BLOCK_IMPRESSIONS;
 
     db.prepare(`
       INSERT INTO campaigns (
-        id, client_id, ad_line, destination_url, brand_name, bid_per_1k, blocks,
+        id, client_id, ad_line, destination_url, brand_name, brand_id, bid_per_1k, blocks,
         show_on_leaderboard, status, created_at, buyer_email, icon_url,
-        payment_status, impressions_target, impressions_served
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, 'pending', ?, 0)
+        payment_status, impressions_target, impressions_served, target_countries
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, 'pending', ?, 0, ?)
     `).run(
       campaignId,
       clientId,
       adLine,
       destinationUrl,
-      brand,
+      resolvedBrandName,
+      resolvedBrandId,
       bidPer1k,
       blocks,
       optinLeaderboard ? 1 : 0,
@@ -84,6 +104,7 @@ export function billingRoutes(db: DbType) {
       buyerEmail,
       iconUrl,
       impressionsTarget,
+      targetCountries,
     );
 
     const result = await createCampaignCheckout(db, {

@@ -33,6 +33,8 @@ export class MetricsService {
   ): Promise<void> {
     if (!this.auth.isSignedIn()) return;
 
+    const language = vscode.env.language;
+
     try {
       await this.api.fetch("/v1/metrics", {
         method: "POST",
@@ -44,6 +46,7 @@ export class MetricsService {
           nonce: randomUUID(),
           session_token: this.sessionToken,
           editor: editorBucket(),
+          language,
           ...payload,
         }),
       });

@@ -144,3 +144,27 @@ npm run publish:all
 | Privacy | https://aibcmedia.com/privacy |
 | Repository | https://github.com/aibcdev/adsapp |
 | Support email | watchaibc@gmail.com |
+
+---
+
+## 48-hour install push (2–3k target)
+
+Real installs only — no bots. Run in parallel:
+
+1. `npm run publish:all` after bumping to latest version (currently 0.1.8)
+2. **Partner blast** — ask aads.com to email their list with `https://aibcmedia.com/#install`
+3. **Show HN** — post to Hacker News with honest “earn while you code” pitch
+4. **Reddit** — r/vscode, r/cursor, r/SideProject (follow each sub’s rules)
+5. **Email** — blast existing waitlist / signups with install link
+6. **Track** — admin `/admin/overview` → Marketplace downloads panel
+
+Stretch: sponsor a dev newsletter (Bytes, TLDR) or a 5-min dev YouTuber segment.
+
+**New advertiser platform (e.g. aads.com):** backend is ready — ask in Cursor to “set up partner X” when you sign them. No setup until then.
+
+When ready:
+```bash
+npm run create:partner -- <code> <partner-email> [0.2]
+# example: npm run create:partner -- aads partners@aads.com 0.2
+```
+Or admin API: `POST /v1/admin/partners` with `{ "code": "aads", "email": "partners@aads.com", "commissionPct": 0.2 }`.

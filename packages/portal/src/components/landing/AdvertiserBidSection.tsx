@@ -1,6 +1,8 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { startCampaignCheckout } from "../../lib/api";
+import { CountryPicker } from "../advertiser/CountryPicker";
+import { getStoredPartnerCode } from "../../lib/partnerRef";
 import { BrandHeading } from "../brand/BrandHeading";
 import { BrandAccent } from "../brand/BrandAccent";
 import { CompactQueue, MarketTable } from "./BidMarket";
@@ -40,8 +42,23 @@ export function AdvertiserBidSection({
   const [bidPerBlock, setBidPerBlock] = useState("5.00");
   const [blocks, setBlocks] = useState("1");
   const [leaderboard, setLeaderboard] = useState(true);
+  const [targetCountries, setTargetCountries] = useState<string[]>([]);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("aibc_launch_countries");
+      if (stored) setTargetCountries(JSON.parse(stored) as string[]);
+      const brandId = sessionStorage.getItem("aibc_launch_brand");
+      if (brandId) {
+        /* brand name filled via dashboard — pass brandId at checkout when logged in */
+        sessionStorage.setItem("aibc_checkout_brand_id", brandId);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const bidPerBlockN = parseFloat(bidPerBlock) || 0;
   const blocksN = Math.max(1, parseInt(blocks, 10) || 1);
@@ -75,11 +92,14 @@ export function AdvertiserBidSection({
         ad_line: adLine.trim(),
         destination_url: destUrl.trim(),
         brand: brand.trim() || null,
+        brand_id: sessionStorage.getItem("aibc_checkout_brand_id") || undefined,
         icon_url: iconUrl,
         cpm_usd: cpmN,
         blocks: blocksN,
         optin_leaderboard: leaderboard,
         bid_usd: bidPerBlockN,
+        target_countries: targetCountries,
+        partner_code: getStoredPartnerCode() || undefined,
       });
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Checkout failed");
@@ -170,6 +190,8 @@ export function AdvertiserBidSection({
                   placeholder="WOODS"
                 />
               </label>
+
+              <CountryPicker selected={targetCountries} onChange={setTargetCountries} />
 
               <div>
                 <span className={labelClass}>Brand icon (optional, PNG/JPG/WebP ≤ 64 KB)</span>

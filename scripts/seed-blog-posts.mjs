@@ -32,7 +32,7 @@ Three things I'm seeing in the wild:
 2. **The creative win.** The people who know a niche — finance ops, indie SaaS, vertical workflows — can now build without a co-founder who codes.
 3. **Micro-monetization matters.** Not every product needs a $29/mo subscription on day one. Sometimes you monetize the workflow itself.
 
-That's why we built AIBC: one sponsored line in the spinner. No popup. No tab hijack. You keep 70%.
+That's why we built AIBC: one sponsored line in the spinner. No popup. No tab hijack. You keep 60%.
 
 If you're coding 80% of your week with AI, the other 20% should include getting paid for the attention you're already giving away.
 
@@ -136,7 +136,7 @@ The opportunity isn't "replace your salary." It's **get paid for time you're alr
 Here's where AIBC lands in 2026:
 
 **Core model**
-- ~70% developer share on validated events
+- ~60% developer share on validated events
 - Auction-style bids from advertisers
 - Claude Code / CLI integration path
 - No popups — spinner only
@@ -307,7 +307,7 @@ Spinner = waiting = cognitive pause = readable line of text.
 Economics (simplified):
 
 - Bid per 1,000 impressions
-- Developer share ~70%
+- Developer share ~60%
 - Clicks pay a multiple of impressions
 - Campaigns exhaust when budget/impression cap hits
 
@@ -315,7 +315,7 @@ We block sketchy categories. Dev trust is inventory.
 
 If you're a brand: you're not buying popups. You're buying a single native line in the AI wait state. [Launch a campaign →](/advertisers).
 
-If you're a dev: you're the supply side. [Keep 70% →](/developers/how-it-works).`,
+If you're a dev: you're the supply side. [Keep 60% →](/developers/how-it-works).`,
   },
   {
     slug: "tuesday-afternoon-problem-building-is-easy",

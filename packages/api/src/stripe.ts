@@ -1,6 +1,7 @@
 import type { Database as DbType } from "better-sqlite3";
 import Stripe from "stripe";
 import { config, stripeEnabled } from "./config.js";
+import { withAibcUtm } from "./advertiser/clickUrl.js";
 
 let stripe: Stripe | null = null;
 
@@ -150,9 +151,10 @@ export function activateCampaign(
 
   if (row) {
     const adId = `campaign-${campaignId.slice(0, 8)}`;
+    const clickUrl = withAibcUtm(row.destination_url, campaignId.slice(0, 8));
     db.prepare(
       "INSERT OR REPLACE INTO ads (ad_id, text, click_url, brand, bid_per_1k, active) VALUES (?, ?, ?, ?, ?, 1)",
-    ).run(adId, row.ad_line, row.destination_url, row.brand_name, row.bid_per_1k);
+    ).run(adId, row.ad_line, clickUrl, row.brand_name, row.bid_per_1k);
   }
 
   db.prepare("UPDATE deposit_sessions SET status = 'completed' WHERE session_id = ?").run(sessionId);

@@ -26,7 +26,7 @@ import {
   mintPortfolioSession,
   purgeExpiredSessions,
 } from "./billing/portfolioSession.js";
-import { MIN_PAYOUT_USD } from "./billing/economics.js";
+import { MIN_PAYOUT_USD, DEVELOPER_SHARE } from "./billing/economics.js";
 import { checkPayoutLimits, payoutUsage } from "./billing/payoutLimits.js";
 import {
   computeReferralBonus,
@@ -35,7 +35,6 @@ import {
   markReferralBonusPaid,
 } from "./clients/profile.js";
 import {
-  createDepositCheckout,
   ensureStripeTables,
   handleStripeWebhook,
 } from "./stripe.js";
@@ -52,10 +51,14 @@ import {
   updateSignalProfile,
 } from "./clients/signalProfile.js";
 import { computeClientYieldMetrics, computeYieldMetrics } from "./stats/yield.js";
-import { auctionRoutes, BLOCK_IMPRESSIONS } from "./routes/auction.js";
+import { auctionRoutes } from "./routes/auction.js";
 import { billingRoutes } from "./routes/billing.js";
 import { adminRoutes } from "./routes/admin.js";
 import { advertiserApplyRoutes, ensureAdvertiserApplicationsTable } from "./routes/advertiserApply.js";
+import { advertiserRoutes } from "./routes/advertiser.js";
+import { ensureAdvertiserPartnerTables } from "./advertiser/tables.js";
+import { resolveCountryFromRequest, updateClientCountry } from "./advertiser/geo.js";
+import { attributeAdvertiserReferral } from "./advertiser/partners.js";
 
 const db = createDb();
 ensurePortfolioSessionTables(db);
@@ -63,6 +66,7 @@ ensureStripeTables(db);
 ensureStripeConnectColumns(db);
 ensureSignalColumns(db);
 ensureAdvertiserApplicationsTable(db);
+ensureAdvertiserPartnerTables(db);
 ensureHandoffTable(db);
 const app = new Hono();
 
@@ -97,11 +101,17 @@ app.use("*", async (c, next) => {
 const VIEW_THRESHOLD = config.viewThresholdSeconds;
 const ROTATION_MS = 120_000;
 
-function portfolioPayload(clientId: string | null, deviceId?: string) {
+function portfolioPayload(
+  c: { req: { header: (name: string) => string | undefined } },
+  clientId: string | null,
+  deviceId?: string,
+) {
   purgeExpiredSessions(db);
+  const countryCode = resolveCountryFromRequest(c as Parameters<typeof resolveCountryFromRequest>[0], db, clientId);
+  if (clientId && countryCode) updateClientCountry(db, clientId, countryCode);
   const session = mintPortfolioSession(db, { clientId, deviceId });
   return {
-    ads: getPortfolioAds(db, clientId),
+    ads: getPortfolioAds(db, clientId, countryCode),
     rotationIntervalMs: ROTATION_MS,
     view_threshold_seconds: VIEW_THRESHOLD,
     session_token: session.sessionToken,
@@ -121,13 +131,13 @@ app.get("/v1/killswitch", (c) => {
 app.get("/v1/portfolio/demo", (c) => {
   const deviceId = c.req.query("client_id") || "demo";
   if (!deviceId) return c.json({ error: "client_id required" }, 400);
-  return c.json(portfolioPayload(null, deviceId));
+  return c.json(portfolioPayload(c, null, deviceId));
 });
 
 app.get("/v1/portfolio", (c) => {
   const client = resolveClient(db, c.req.header("authorization"));
   if (!client) return c.json({ error: "unauthorized" }, 401);
-  return c.json(portfolioPayload(client.clientId));
+  return c.json(portfolioPayload(c, client.clientId));
 });
 
 app.post("/v1/metrics/demo", async (c) => {
@@ -165,6 +175,9 @@ app.post("/v1/metrics", async (c) => {
     updateObservedSignal(db, client.clientId, { editor, language });
   }
 
+  const countryCode = resolveCountryFromRequest(c, db, client.clientId);
+  if (countryCode) updateClientCountry(db, client.clientId, countryCode);
+
   const result = processMetricEvent(db, {
     clientId: client.clientId,
     adId,
@@ -174,6 +187,7 @@ app.post("/v1/metrics", async (c) => {
     sessionToken,
     editor,
     language,
+    countryCode: countryCode ?? undefined,
   });
 
   if (result.rejected) {
@@ -405,7 +419,7 @@ app.get("/v1/earnings", (c) => {
     lifetime_usd: (row?.lifetime ?? 0).toFixed(2),
     pending: row?.pending ?? 0,
     payable: row?.payable ?? 0,
-    developer_share: 0.7,
+    developer_share: DEVELOPER_SHARE,
     caps: {
       hourlyCapHit: caps.hourlyCapHit,
       dailyCapHit: caps.dailyCapHit,
@@ -639,46 +653,6 @@ app.post("/v1/me/payout-request", async (c) => {
   });
 });
 
-app.get("/v1/advertiser/balance", (c) => {
-  const client = resolveClient(db, c.req.header("authorization"));
-  if (!client) return c.json({ error: "unauthorized" }, 401);
-  const row = db
-    .prepare("SELECT balance FROM advertiser_balance WHERE client_id = ?")
-    .get(client.clientId) as { balance: number } | undefined;
-  return c.json({ balance: row?.balance ?? 0 });
-});
-
-app.post("/v1/advertiser/deposit/checkout", async (c) => {
-  const client = resolveClient(db, c.req.header("authorization"));
-  if (!client) return c.json({ error: "unauthorized" }, 401);
-  const body = (await c.req.json()) as { amount?: number };
-  const amount = Number(body.amount || 0);
-  const result = await createDepositCheckout(db, client.clientId, amount);
-  if ("error" in result) return c.json({ error: result.error }, 400);
-  return c.json({ url: result.url });
-});
-
-app.post("/v1/advertiser/deposit", async (c) => {
-  const client = resolveClient(db, c.req.header("authorization"));
-  if (!client) return c.json({ error: "unauthorized" }, 401);
-  if (stripeEnabled()) {
-    return c.json(
-      { error: "Use Stripe checkout. POST /v1/advertiser/deposit/checkout" },
-      400,
-    );
-  }
-  if (!config.devBypass) {
-    return c.json({ error: "Deposits require Stripe in production" }, 503);
-  }
-  const body = (await c.req.json()) as { amount?: number };
-  const amount = Math.max(0, Number(body.amount || 0));
-  db.prepare(`
-    INSERT INTO advertiser_balance (client_id, balance) VALUES (?, ?)
-    ON CONFLICT(client_id) DO UPDATE SET balance = balance + excluded.balance
-  `).run(client.clientId, amount);
-  return c.json({ ok: true });
-});
-
 app.post("/v1/webhooks/stripe", async (c) => {
   const raw = await c.req.text();
   const sig = c.req.header("stripe-signature");
@@ -691,6 +665,15 @@ app.route("/", auctionRoutes(db));
 app.route("/", billingRoutes(db));
 app.route("/", adminRoutes(db));
 app.route("/", advertiserApplyRoutes(db));
+app.route("/", advertiserRoutes(db));
+
+app.post("/v1/advertiser/referral/attribute", async (c) => {
+  const client = resolveClient(db, c.req.header("authorization"));
+  if (!client) return c.json({ error: "unauthorized" }, 401);
+  const body = (await c.req.json().catch(() => ({}))) as { partnerCode?: string };
+  const ok = attributeAdvertiserReferral(db, client.clientId, body.partnerCode);
+  return c.json({ ok, attributed: ok });
+});
 
 app.get("/health", (c) =>
   c.json({
@@ -699,106 +682,6 @@ app.get("/health", (c) =>
     stripe: stripeEnabled(),
   }),
 );
-
-app.get("/v1/advertiser/campaigns", (c) => {
-  const client = resolveClient(db, c.req.header("authorization"));
-  if (!client) return c.json({ error: "unauthorized" }, 401);
-  const rows = db
-    .prepare(
-      "SELECT id, ad_line as adLine, destination_url as destinationUrl, brand_name as brandName, bid_per_1k as bidPer1k, blocks, show_on_leaderboard as showOnLeaderboard, status, impressions, spend, created_at as createdAt FROM campaigns WHERE client_id = ? ORDER BY created_at DESC",
-    )
-    .all(client.clientId);
-  return c.json(rows);
-});
-
-app.post("/v1/advertiser/campaigns", async (c) => {
-  const client = resolveClient(db, c.req.header("authorization"));
-  if (!client) return c.json({ error: "unauthorized" }, 401);
-  const body = (await c.req.json()) as Record<string, unknown>;
-  const adLine = String(body.adLine || "");
-  const destinationUrl = String(body.destinationUrl || "");
-  if (adLine.length < 3 || adLine.length > 60) {
-    return c.json({ error: "Ad line must be 3-60 chars" }, 400);
-  }
-  if (!destinationUrl.startsWith("https://")) {
-    return c.json({ error: "Destination URL must be https://" }, 400);
-  }
-
-  const bidPer1k = Number(body.bidPer1k || 5);
-  const blocks = Math.max(1, Number(body.blocks || 10));
-  const bidPerBlock = (bidPer1k * BLOCK_IMPRESSIONS) / 1000;
-  const totalCost = bidPerBlock * blocks;
-  const impressionsTarget = blocks * BLOCK_IMPRESSIONS;
-
-  if (stripeEnabled() && !config.devBypass) {
-    const deducted = db
-      .prepare(
-        "UPDATE advertiser_balance SET balance = balance - ? WHERE client_id = ? AND balance >= ?",
-      )
-      .run(totalCost, client.clientId, totalCost);
-
-    if (deducted.changes === 0) {
-      const balanceRow = db
-        .prepare("SELECT balance FROM advertiser_balance WHERE client_id = ?")
-        .get(client.clientId) as { balance: number } | undefined;
-      return c.json(
-        {
-          error:
-            "Insufficient prepaid balance. Add funds in the Advertise tab, or launch via Stripe at /advertisers.",
-          required: totalCost,
-          balance: balanceRow?.balance ?? 0,
-        },
-        402,
-      );
-    }
-  } else if (!config.devBypass) {
-    return c.json(
-      {
-        error: "Campaign checkout required. Use /advertisers or POST /v1/billing/checkout.",
-      },
-      403,
-    );
-  }
-
-  const id = randomUUID();
-  db.prepare(`
-    INSERT INTO campaigns (
-      id, client_id, ad_line, destination_url, brand_name, bid_per_1k, blocks,
-      show_on_leaderboard, status, created_at, payment_status, impressions_target, impressions_served
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, 'paid', ?, 0)
-  `).run(
-    id,
-    client.clientId,
-    adLine,
-    destinationUrl,
-    body.brandName || null,
-    bidPer1k,
-    blocks,
-    body.showOnLeaderboard ? 1 : 0,
-    Date.now(),
-    impressionsTarget,
-  );
-
-  const adId = `campaign-${id.slice(0, 8)}`;
-  db.prepare(
-    "INSERT INTO ads (ad_id, text, click_url, brand, bid_per_1k) VALUES (?, ?, ?, ?, ?)",
-  ).run(adId, adLine, destinationUrl, body.brandName || null, bidPer1k);
-
-  return c.json({ id, adId, charged: stripeEnabled() && !config.devBypass ? totalCost : 0 });
-});
-
-app.patch("/v1/advertiser/campaigns/:id", async (c) => {
-  const client = resolveClient(db, c.req.header("authorization"));
-  if (!client) return c.json({ error: "unauthorized" }, 401);
-  const id = c.req.param("id");
-  const body = (await c.req.json()) as { status?: string };
-  db.prepare("UPDATE campaigns SET status = ? WHERE id = ? AND client_id = ?").run(
-    body.status || "paused",
-    id,
-    client.clientId,
-  );
-  return c.json({ ok: true });
-});
 
 app.post("/v1/me/consent", async (c) => {
   await c.req.json().catch(() => ({}));

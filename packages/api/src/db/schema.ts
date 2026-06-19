@@ -9,6 +9,8 @@ import { startOfDayMs, startOfMonthMs } from "../billing/earningsPeriod.js";
 import { ensureMarketplaceTables } from "../marketplace/stats.js";
 import { ensureClientProfile } from "../clients/profile.js";
 import { effectiveBidForClient, getSignalProfile } from "../clients/signalProfile.js";
+import { withAibcUtm } from "../advertiser/clickUrl.js";
+import { campaignMatchesGeo } from "../advertiser/geo.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DB_PATH = process.env.AIBC_DB_PATH || join(__dirname, "..", "aibc.db");
@@ -133,9 +135,49 @@ export function createDb(): DbType {
   migratePayoutColumns(db);
   migrateEarningsColumns(db);
   migrateMarketplaceTables(db);
+  migrateCampaignAdvertiserExtras(db);
+  migrateImpressionAnalyticsExtras(db);
   seedAds(db);
   seedCampaigns(db);
   return db;
+}
+
+function migrateCampaignAdvertiserExtras(db: DbType) {
+  const cols = db.prepare("PRAGMA table_info(campaigns)").all() as { name: string }[];
+  const names = new Set(cols.map((c) => c.name));
+  const add = (sql: string) => {
+    try {
+      db.exec(sql);
+    } catch {
+      /* exists */
+    }
+  };
+  if (!names.has("brand_id")) add("ALTER TABLE campaigns ADD COLUMN brand_id TEXT");
+  if (!names.has("target_countries")) add("ALTER TABLE campaigns ADD COLUMN target_countries TEXT");
+}
+
+function migrateImpressionAnalyticsExtras(db: DbType) {
+  const cols = db.prepare("PRAGMA table_info(impressions)").all() as { name: string }[];
+  const names = new Set(cols.map((c) => c.name));
+  const add = (sql: string) => {
+    try {
+      db.exec(sql);
+    } catch {
+      /* exists */
+    }
+  };
+  if (!names.has("editor")) add("ALTER TABLE impressions ADD COLUMN editor TEXT");
+  if (!names.has("language")) add("ALTER TABLE impressions ADD COLUMN language TEXT");
+  if (!names.has("country_code")) add("ALTER TABLE impressions ADD COLUMN country_code TEXT");
+  if (!names.has("campaign_id")) add("ALTER TABLE impressions ADD COLUMN campaign_id TEXT");
+  const clientCols = db.prepare("PRAGMA table_info(clients)").all() as { name: string }[];
+  if (!clientCols.some((c) => c.name === "country_code")) {
+    try {
+      db.exec("ALTER TABLE clients ADD COLUMN country_code TEXT");
+    } catch {
+      /* exists */
+    }
+  }
 }
 
 function migrateClientColumns(db: DbType) {
@@ -316,7 +358,11 @@ export function resolveClient(db: DbType, authHeader?: string) {
   return row ? { clientId: row.client_id, email: row.email, token: row.token } : null;
 }
 
-export function getPortfolioAds(db: DbType, clientId?: string | null) {
+export function getPortfolioAds(
+  db: DbType,
+  clientId?: string | null,
+  countryCode?: string | null,
+) {
   const seeded = db
     .prepare(
       "SELECT ad_id as adId, text, click_url as clickUrl, brand, bid_per_1k as bidPer1k FROM ads WHERE active = 1",
@@ -326,13 +372,26 @@ export function getPortfolioAds(db: DbType, clientId?: string | null) {
   const campaigns = db
     .prepare(`
       SELECT 'campaign-' || substr(id, 1, 8) as adId, ad_line as text, destination_url as clickUrl,
-             brand_name as brand, bid_per_1k as bidPer1k
+             brand_name as brand, bid_per_1k as bidPer1k, target_countries as targetCountries,
+             substr(id, 1, 8) as campaignPrefix
       FROM campaigns
       WHERE payment_status = 'paid' AND status = 'active' AND client_id != 'seed'
         AND impressions_served < impressions_target
       ORDER BY bid_per_1k DESC
     `)
-    .all() as { adId: string; text: string; clickUrl: string; brand?: string; bidPer1k: number }[];
+    .all() as {
+      adId: string;
+      text: string;
+      clickUrl: string;
+      brand?: string;
+      bidPer1k: number;
+      targetCountries: string | null;
+      campaignPrefix: string;
+    }[];
+
+  const geoFilteredCampaigns = campaigns.filter((c) =>
+    campaignMatchesGeo(c.targetCountries, countryCode ?? null),
+  );
 
   let sortBid = (bid: number) => bid;
   if (clientId) {
@@ -340,15 +399,19 @@ export function getPortfolioAds(db: DbType, clientId?: string | null) {
     sortBid = (bid) => effectiveBidForClient(bid, profile, "");
   }
 
-  const merged = [...campaigns, ...seeded];
+  const merged = [...geoFilteredCampaigns, ...seeded];
   merged.sort((a, b) => sortBid(b.bidPer1k || 0) - sortBid(a.bidPer1k || 0));
-  return merged.map(({ adId, text, clickUrl, brand }) => ({
-    adId,
-    text,
-    clickUrl,
-    brand,
-    campaignId: adId.startsWith("campaign-") ? adId.slice("campaign-".length) : adId,
-  }));
+  return merged.map((row) => {
+    const { adId, text, clickUrl, brand } = row;
+    const campaignId = adId.startsWith("campaign-") ? adId.slice("campaign-".length) : adId;
+    return {
+      adId,
+      text,
+      clickUrl: withAibcUtm(clickUrl, campaignId),
+      brand,
+      campaignId,
+    };
+  });
 }
 
 export function creditEarnings(

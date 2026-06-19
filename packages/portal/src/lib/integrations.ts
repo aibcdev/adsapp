@@ -1,3 +1,4 @@
+import { DEVELOPER_SHARE_PCT } from "@aibc/shared";
 import type { IntegrationConfig } from "../components/marketing/IntegrationPage";
 import { marketingCopy } from "./marketingCopy";
 
@@ -12,7 +13,7 @@ export const INTEGRATIONS: Record<string, IntegrationConfig> = {
     slug: "claude",
     toolName: "Claude",
     headline: "Get Paid Using Claude",
-    description: `Earn while Claude Code or Claude CLI processes your requests. One sponsor line in the spinner — 70% to you. ${marketingCopy.q2Inventory}`,
+    description: `Earn while Claude Code or Claude CLI processes your requests. One sponsor line in the spinner — ${DEVELOPER_SHARE_PCT}% to you. ${marketingCopy.q2Inventory}`,
     logoSrc: "/logos/claude-code.svg",
     whyTitle: "Why Claude + AIBC works",
     whyPoints: [
@@ -31,7 +32,7 @@ export const INTEGRATIONS: Record<string, IntegrationConfig> = {
     faqs: [
       { q: "Does AIBC read my Claude conversations?", a: "No. We only show ads during wait states. Your code and prompts stay private." },
       { q: "Does it work with Claude Pro?", a: "Yes. Install the extension in your editor — Pro subscription unchanged." },
-      { q: "How much can I earn?", a: "Most active developers earn $40+/month — power users often hit $90–150. You keep 70% of advertiser spend." },
+      { q: "How much can I earn?", a: `Most active developers earn $40+/month — power users often hit $90–150. You keep ${DEVELOPER_SHARE_PCT}% of advertiser spend.` },
     ],
   },
   cursor: {

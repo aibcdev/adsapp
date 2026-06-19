@@ -16,6 +16,7 @@ import { foundingBonusMultiplier, maybeQualifyReferral } from "../clients/profil
 import { signalEarnMultiplier } from "../clients/signalProfile.js";
 import { isNonBillableAd } from "./seedInventory.js";
 import { refreshEarningsPeriods, startOfDayMs, startOfMonthMs } from "./earningsPeriod.js";
+import { recordPartnerCommission } from "../advertiser/partners.js";
 
 const BILLABLE_EVENTS = new Set([
   "view_threshold_met",
@@ -66,6 +67,8 @@ function incrementCampaignDelivery(
       WHERE substr(id, 1, 8) = ? AND status = 'exhausted'
     )
   `).run(adId, prefix);
+
+  recordPartnerCommission(db, prefix, advertiserCost);
 }
 
 function settlePendingCredits(db: DbType, clientId: string): void {
@@ -126,6 +129,7 @@ export function processMetricEvent(
     sessionToken?: string;
     editor?: string;
     language?: string;
+    countryCode?: string;
   },
 ): { ok: boolean; credited?: number; demo?: boolean; rejected?: string } {
   const event = opts.eventType;
@@ -169,7 +173,9 @@ export function processMetricEvent(
 
   if (isNonBillableAd(db, opts.adId)) {
     db.prepare(
-      "INSERT INTO impressions (id, client_id, ad_id, event_type, amount, demo, created_at, event_uuid) VALUES (?, ?, ?, ?, 0, 0, ?, ?)",
+      `INSERT INTO impressions (id, client_id, ad_id, event_type, amount, demo, created_at, event_uuid,
+        editor, language, country_code, campaign_id)
+       VALUES (?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?)`,
     ).run(
       randomUUID(),
       opts.clientId,
@@ -177,6 +183,10 @@ export function processMetricEvent(
       event,
       Date.now(),
       opts.eventUuid || null,
+      opts.editor || null,
+      opts.language || null,
+      opts.countryCode || null,
+      campaignIdFromAdId(opts.adId),
     );
     return { ok: true, credited: 0 };
   }
@@ -205,8 +215,22 @@ export function processMetricEvent(
   const settlesAt = Date.now() + SETTLEMENT_HOLD_MS;
 
   db.prepare(
-    "INSERT INTO impressions (id, client_id, ad_id, event_type, amount, demo, created_at, event_uuid) VALUES (?, ?, ?, ?, ?, 0, ?, ?)",
-  ).run(id, opts.clientId, opts.adId, event, amount, Date.now(), opts.eventUuid || null);
+    `INSERT INTO impressions (id, client_id, ad_id, event_type, amount, demo, created_at, event_uuid,
+      editor, language, country_code, campaign_id)
+     VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    id,
+    opts.clientId,
+    opts.adId,
+    event,
+    amount,
+    Date.now(),
+    opts.eventUuid || null,
+    opts.editor || null,
+    opts.language || null,
+    opts.countryCode || null,
+    campaignIdFromAdId(opts.adId),
+  );
 
   db.prepare(`
     INSERT INTO earnings (client_id, today, month, lifetime, pending, payable, period_day, period_month)

@@ -1,3 +1,4 @@
+import { DEVELOPER_SHARE_PCT } from "@aibc/shared";
 import { useEffect, useState } from "react";
 
 import { marketingCopy } from "../../lib/marketingCopy";
@@ -22,7 +23,7 @@ const STEPS = [
   {
     id: 3,
     title: "Get paid",
-    description: `You keep 70%. Stripe Connect auto cash-out, or Wise / PayPal / UPI from $10. ${marketingCopy.yieldTarget}`,
+    description: `You keep ${DEVELOPER_SHARE_PCT}%. Stripe Connect auto cash-out, or Wise / PayPal / UPI from $10. ${marketingCopy.yieldTarget}`,
     image: "https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?q=80&w=2574&auto=format&fit=crop",
     action: "Open dashboard",
     href: "/dashboard",

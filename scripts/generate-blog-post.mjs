@@ -56,7 +56,7 @@ if (slugs.has(slug)) {
   process.exit(0);
 }
 
-const prompt = `Write a blog post for AIBC Media (developer spinner monetization — install free, keep 70%, Claude Code / Cursor / VS Code).
+const prompt = `Write a blog post for AIBC Media (developer spinner monetization — install free, keep 60%, Claude Code / Cursor / VS Code).
 
 Topic: ${next.topic}
 

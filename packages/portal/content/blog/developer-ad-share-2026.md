@@ -14,7 +14,7 @@ Developers will tolerate one line in the spinner if the economics are fair.
 Here's where AIBC lands in 2026:
 
 **Core model**
-- ~70% developer share on validated events
+- ~60% developer share on validated events
 - Auction-style bids from advertisers
 - Claude Code / CLI integration path
 - No popups — spinner only

@@ -1,3 +1,4 @@
+import { DEVELOPER_SHARE_PCT } from "@aibc/shared";
 import { Link } from "react-router-dom";
 import { ArrowDownRight } from "lucide-react";
 
@@ -22,7 +23,7 @@ export function HeroVideo() {
           <h1 className="mb-12 font-instrument-serif text-6xl leading-[0.9] tracking-tighter text-white md:text-8xl lg:text-9xl">
             Make Money Whilst You Code
             <br />
-            <span className="text-zinc-500">Keep 70%. One line only.</span>
+            <span className="text-zinc-500">Keep {DEVELOPER_SHARE_PCT}%. One line only.</span>
           </h1>
 
           <div className="flex w-full flex-col gap-12 text-lg font-light text-zinc-300 xl:flex-row xl:items-end">

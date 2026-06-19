@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { SiteSeo } from "./components/SiteSeo";
 import { LandingPage } from "./pages/LandingPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { AdvertiserCampaignDetailPage } from "./pages/AdvertiserCampaignDetailPage";
 import { PrivacyPage } from "./pages/PrivacyPage";
 import { TermsPage } from "./pages/TermsPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -35,6 +36,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/dashboard/advertiser/campaigns/:id" element={<AdvertiserCampaignDetailPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/advertisers" element={<AdvertisersPage />} />
         <Route path="/advertisers/apply" element={<AdvertiserApplyPage />} />

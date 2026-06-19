@@ -18,6 +18,8 @@ import {
 import { DeveloperDashboardPanel } from "../components/dashboard/DeveloperDashboardPanel";
 import { AdvertiserDashboardPanel } from "../components/dashboard/AdvertiserDashboardPanel";
 import { PublisherDashboardPanel } from "../components/dashboard/PublisherDashboardPanel";
+import { attributePartnerReferral } from "../lib/advertiserApi";
+import { capturePartnerFromUrl, getStoredPartnerCode, clearStoredPartnerCode } from "../lib/partnerRef";
 
 type Earnings = {
   today: number;
@@ -102,6 +104,7 @@ export function DashboardPage() {
   const loggedIn = Boolean(getToken());
 
   useEffect(() => {
+    capturePartnerFromUrl(window.location.search);
     if (params.get("tab")) return;
     setParams(
       (prev) => {
@@ -155,6 +158,17 @@ export function DashboardPage() {
       setActivityLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!loggedIn) return;
+    const code = getStoredPartnerCode();
+    if (!code) return;
+    void attributePartnerReferral(code)
+      .then((r) => {
+        if (r.attributed) clearStoredPartnerCode();
+      })
+      .catch(() => undefined);
+  }, [loggedIn]);
 
   useEffect(() => {
     const handoff = params.get("handoff");

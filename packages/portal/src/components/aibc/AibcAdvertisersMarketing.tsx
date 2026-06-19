@@ -409,7 +409,7 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
                 {[
                   { title: "Right place, right time", desc: "Your ad shows while developers code — 6–8 hours of focused attention daily, scaling with install growth through Q2." },
                   { title: "Smart targeting", desc: "Developers opt in to coarse editor and language tags today. No private code — advertiser filters deepen as inventory grows." },
-                  { title: "Developers get paid too", desc: "70% goes to the coder. We expect that split to drive the highest trust — and click-through — in this format." }
+                  { title: "Developers get paid too", desc: "60% goes to the coder. We expect that split to drive the highest trust — and click-through — in this format." }
                 ].map((item, idx) => (
                   <li key={idx} className="flex gap-3.5 items-start">
                     <Check className="text-emerald-600 w-4 h-4 mt-0.5 shrink-0" />
@@ -581,9 +581,9 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
               {[
                 { label: "Native placement", metric: "Shows inside VS Code, Cursor, and Windsurf" },
                 { label: "Live dashboard", metric: "Track impressions and spend in real time" },
-                { label: "Click tracking", metric: "UTM tags work with your existing analytics" },
+                { label: "Click tracking", metric: "UTM tags on every click — works with your analytics" },
                 { label: "Impression reports", metric: "See exactly how many devs saw your ad" },
-                { label: "Audience filters", metric: "Target by language, editor, and project type" },
+                { label: "Audience filters", metric: "Target by country (IP) — editor filters expanding" },
                 { label: "Account support", metric: "A real person helps you launch and optimize" }
               ].map((item, index) => (
                 <div key={index} className="flex gap-3.5 items-start p-4 border border-zinc-200 bg-white rounded-xl hover:border-emerald-200 transition-colors shadow-sm">

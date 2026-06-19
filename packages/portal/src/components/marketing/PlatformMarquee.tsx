@@ -1,3 +1,4 @@
+import { DEVELOPER_SHARE_PCT } from "@aibc/shared";
 import { PLATFORM_INSTALL_KEY, installStoreUrl } from "../../lib/installLinks";
 
 import { marketingCopy } from "../../lib/marketingCopy";
@@ -18,7 +19,7 @@ const PLATFORMS = [
   {
     id: 3,
     name: "Claude Code",
-    description: "Spinner swap while Claude thinks. You keep 70% of every view.",
+    description: `Spinner swap while Claude thinks. You keep ${DEVELOPER_SHARE_PCT}% of every view.`,
     image: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=2574&auto=format&fit=crop",
     href: "/#install",
   },
@@ -56,7 +57,7 @@ export function PlatformMarquee() {
           </h2>
           <div className="lg:pl-12">
             <p className="text-lg font-light leading-relaxed text-zinc-400 md:text-xl">
-              VS Code, Cursor, Windsurf, Open VSX, and more. One extension. One line in the spinner. You keep 70%.{" "}
+              VS Code, Cursor, Windsurf, Open VSX, and more. One extension. One line in the spinner. You keep {DEVELOPER_SHARE_PCT}%.{" "}
               {marketingCopy.q2Inventory}
             </p>
             <div className="mt-6 flex flex-wrap gap-4 font-mono text-sm text-zinc-500">

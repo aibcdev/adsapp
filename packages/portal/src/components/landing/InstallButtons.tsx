@@ -1,3 +1,4 @@
+import { DEVELOPER_SHARE_PCT, PLATFORM_SHARE_PCT } from "@aibc/shared";
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { BrandAccent } from "../brand/BrandAccent";
@@ -160,10 +161,10 @@ export function HeroInstallCta({ monthlyUsd }: { monthlyUsd: number }) {
         </div>
         <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-5 text-center shadow-sm">
           <p className="font-brand-heading text-4xl text-zinc-950 md:text-5xl">
-            70<span className="text-2xl">%</span>
+            {DEVELOPER_SHARE_PCT}<span className="text-2xl">%</span>
           </p>
           <p className="mt-1 text-sm font-semibold text-zinc-700">of ad spend</p>
-          <p className="mt-1 text-xs text-zinc-500">every dollar advertisers pay — you keep 70¢. We keep 30¢.</p>
+          <p className="mt-1 text-xs text-zinc-500">every dollar advertisers pay — you keep {DEVELOPER_SHARE_PCT}¢. We keep {PLATFORM_SHARE_PCT}¢.</p>
         </div>
         <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-5 text-center shadow-sm">
           <p className="font-brand-heading text-3xl text-zinc-950 md:text-4xl">

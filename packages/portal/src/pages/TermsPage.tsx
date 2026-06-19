@@ -67,7 +67,7 @@ export function TermsPage() {
         <h2>Earnings & payouts</h2>
         <h3>Earning money</h3>
         <ul>
-          <li>Developers receive <strong>70%</strong> of attributed ad revenue</li>
+          <li>Developers receive <strong>60%</strong> of attributed ad revenue</li>
           <li>Earnings require valid impressions (view threshold + session verification)</li>
           <li>Rates vary with advertiser bids and demand</li>
           <li>We may withhold or forfeit earnings for fraud or Terms violations</li>

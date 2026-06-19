@@ -1,3 +1,4 @@
+import { DEVELOPER_SHARE_PCT } from "@aibc/shared";
 import { SiteHeader } from "../components/SiteHeader";
 import { SiteFooter } from "../components/SiteFooter";
 import { MarketingPageHero } from "../components/marketing/MarketingPageHero";
@@ -15,7 +16,7 @@ export function HowItWorksPage() {
       <MarketingPageHero
         eyebrow="For developers"
         title="Turn waiting into earning"
-        description={`Every time AI processes your request, you have idle time. AIBC fills that gap with relevant ads and shares 70% of revenue with you. ${marketingCopy.yieldTarget}`}
+        description={`Every time AI processes your request, you have idle time. AIBC fills that gap with relevant ads and shares ${DEVELOPER_SHARE_PCT}% of revenue with you. ${marketingCopy.yieldTarget}`}
         primaryCta="Install free"
         primaryHref="/#install"
       />
@@ -26,7 +27,7 @@ export function HowItWorksPage() {
         steps={[
           { num: "1", title: "AI processing", body: "Claude, Copilot, or Cursor processes your request.", icon: <Terminal className="h-5 w-5" /> },
           { num: "2", title: "Ad displayed", body: "A relevant dev-tool sponsor line appears in your spinner.", icon: <Code className="h-5 w-5" /> },
-          { num: "3", title: "You earn", body: "70% of advertiser spend goes to your account — scaling with inventory through Q2.", icon: <Wallet className="h-5 w-5" /> },
+          { num: "3", title: "You earn", body: `${DEVELOPER_SHARE_PCT}% of advertiser spend goes to your account — scaling with inventory through Q2.`, icon: <Wallet className="h-5 w-5" /> },
         ]}
       />
 

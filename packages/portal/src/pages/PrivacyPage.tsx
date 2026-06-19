@@ -102,7 +102,7 @@ export function PrivacyPage() {
       <section id="use">
         <h2>How we use your data</h2>
         <ul>
-          <li>Calculate and pay your 70% revenue share</li>
+          <li>Calculate and pay your 60% revenue share</li>
           <li>Prevent fraud (session tokens, rate limits, impression ordering)</li>
           <li>Run advertiser campaigns and aggregated reporting</li>
           <li>Improve the product with anonymized metrics</li>

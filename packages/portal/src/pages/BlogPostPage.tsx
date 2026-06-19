@@ -1,3 +1,4 @@
+import { DEVELOPER_SHARE_PCT } from "@aibc/shared";
 import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { BlogArticle } from "../components/blog/BlogArticle";
@@ -51,7 +52,7 @@ export function BlogPostPage() {
       <BlogArticle markdown={post.body} />
 
       <div className="mt-14 rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
-        <p className="font-brand-heading text-xl text-zinc-900">Install free. Keep 70%.</p>
+        <p className="font-brand-heading text-xl text-zinc-900">Install free. Keep {DEVELOPER_SHARE_PCT}%.</p>
         <p className="mt-2 text-sm text-zinc-600">
           One sponsored line in your AI spinner — no popups.{" "}
           <Link to="/developers/how-it-works" className="text-emerald-700 underline">

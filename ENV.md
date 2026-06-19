@@ -143,7 +143,7 @@ No env vars on the server. Defaults are in `packages/extension/package.json`:
 | `aibc.apiBase` | `https://api.aibcmedia.com` |
 | `aibc.portalBase` | `https://aibcmedia.com` |
 
-**Developer earnings:** Paid campaigns credit **70%** of CPM automatically per validated view (72h hold, then payable). Sample filler ads pay **$0**. Cash-out to Wise/PayPal is **manual** admin review. One Google email = one wallet (extension + dashboard share the same balance). After deploy, run `node scripts/fix-duplicate-earnings.mjs` on the API server if old duplicate accounts exist.
+**Developer earnings:** Paid campaigns credit **60%** of CPM automatically per validated view (72h hold, then payable). Sample filler ads pay **$0**. Cash-out to Wise/PayPal is **manual** admin review. One Google email = one wallet (extension + dashboard share the same balance). After deploy, run `node scripts/fix-duplicate-earnings.mjs` on the API server if old duplicate accounts exist.
 
 Publish token: create at https://marketplace.visualstudio.com/manage → Personal Access Tokens.
 

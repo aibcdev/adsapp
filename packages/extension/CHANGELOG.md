@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.8 — 2026-06-19
+
+- Founding advertiser program live — partner referral links and geo targeting
+- Click URLs include aibc UTM params for advertiser analytics
+- Language tag sent with metrics for richer advertiser reporting
+
 ## 0.1.7 — 2026-06-17
 
 - Send editor tag (Cursor, Windsurf, VS Code) with earnings metrics for Earn more mode

@@ -1,3 +1,4 @@
+import { DEVELOPER_SHARE_PCT, PLATFORM_SHARE_PCT } from "@aibc/shared";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Terminal, Code, Wallet, ChevronDown, Award } from "lucide-react";
@@ -16,11 +17,11 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
   const faqs = [
     {
       q: "How much can I earn?",
-      a: `Most active developers earn $${earningsDisplay}/month. You keep 70% of every dollar an advertiser pays when your machine shows their ad — the other 30% runs the platform.`,
+      a: `Most active developers earn $${earningsDisplay}/month. You keep ${DEVELOPER_SHARE_PCT}% of every dollar an advertiser pays when your machine shows their ad — the other ${PLATFORM_SHARE_PCT}% runs the platform.`,
     },
     {
-      q: "70% of what, exactly?",
-      a: "Of the money advertisers pay us. Example: if a brand pays $1 to show an ad on your screen, you get 70¢ and AIBC keeps 30¢. No hidden fees on your side.",
+      q: `${DEVELOPER_SHARE_PCT}% of what, exactly?`,
+      a: `Of the money advertisers pay us. Example: if a brand pays $1 to show an ad on your screen, you get ${DEVELOPER_SHARE_PCT}¢ and AIBC keeps ${PLATFORM_SHARE_PCT}¢. No hidden fees on your side.`,
     },
     {
       q: "Why are payouts high right now?",
@@ -65,7 +66,7 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
 
           <p className="text-xl md:text-2xl text-zinc-600 font-medium max-w-2xl mx-auto leading-snug">
             Click install. Keep coding. One sponsor line in your AI spinner pays you{" "}
-            <strong className="text-zinc-950">70% of every ad dollar</strong> — from top dev-tool brands onboarding now.
+            <strong className="text-zinc-950">{DEVELOPER_SHARE_PCT}% of every ad dollar</strong> — from top dev-tool brands onboarding now.
           </p>
 
           <p className="text-base text-zinc-500 max-w-2xl mx-auto leading-relaxed">
@@ -148,7 +149,7 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
               </div>
               <h3 className="text-xl font-bold text-zinc-950 mb-2">3. Get paid</h3>
               <p className="text-sm text-zinc-600 leading-relaxed">
-                You keep <strong className="text-zinc-900">70% of every ad dollar</strong> shown on your screen. Track it in your dashboard and cash out when ready.
+                You keep <strong className="text-zinc-900">{DEVELOPER_SHARE_PCT}% of every ad dollar</strong> shown on your screen. Track it in your dashboard and cash out when ready.
               </p>
             </div>
           </div>

@@ -16,7 +16,7 @@ Spinner = waiting = cognitive pause = readable line of text.
 Economics (simplified):
 
 - Bid per 1,000 impressions
-- Developer share ~70%
+- Developer share ~60%
 - Clicks pay a multiple of impressions
 - Campaigns exhaust when budget/impression cap hits
 
@@ -24,4 +24,4 @@ We block sketchy categories. Dev trust is inventory.
 
 If you're a brand: you're not buying popups. You're buying a single native line in the AI wait state. [Launch a campaign →](/advertisers).
 
-If you're a dev: you're the supply side. [Keep 70% →](/developers/how-it-works).
+If you're a dev: you're the supply side. [Keep 60% →](/developers/how-it-works).

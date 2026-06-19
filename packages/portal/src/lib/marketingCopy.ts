@@ -1,19 +1,19 @@
+import { DEVELOPER_SHARE_PCT } from "@aibc/shared";
+
 /** Honest today + suggestive forward-looking lines — keep in sync across site. */
 export const marketingCopy = {
   q2Inventory:
     "We expect to run the largest captive developer ad inventory in IDE spinners by the end of Q2 2026.",
   q2Developers:
     "We're building toward the largest opt-in developer install base in this category by the end of Q2.",
-  yieldTarget:
-    "We're targeting $1 per active agent-hour — transparent yield, with 70% paid to developers.",
+  yieldTarget: `We're targeting $1 per active agent-hour — transparent yield, with ${DEVELOPER_SHARE_PCT}% paid to developers.`,
   earlyCohort:
     "Opening cohort today — early installs earn first when premium campaigns switch on.",
   founderAdvertisers:
     "Founding advertisers get priority placement as inventory scales through Q2.",
-  honestLaunch:
-    "Live today: VS Code, Cursor, Windsurf, Open VSX, Stripe checkout, and 70% developer share.",
+  honestLaunch: `Live today: VS Code, Cursor, Windsurf, Open VSX, Stripe checkout, and ${DEVELOPER_SHARE_PCT}% developer share.`,
   targetingRollout:
-    "Opt-in editor and language tags are live on the developer dashboard; advertiser filters expand as inventory grows.",
+    "Country targeting by IP is live at campaign launch; editor and language filters expand as inventory grows.",
   cohortMixNote:
     "Projected cohort mix as we scale through Q2 — based on early install and signup trends.",
   scaleAmbition:
@@ -33,7 +33,7 @@ export type ComparisonRow = {
 export const AIBC_VS_OTHERS: ComparisonRow[] = [
   {
     label: "Developer revenue share",
-    aibc: "70% — published on every page",
+    aibc: `${DEVELOPER_SHARE_PCT}% — published on every page`,
     others: "Typically ~50% or less",
     highlight: true,
   },

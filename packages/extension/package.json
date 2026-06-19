@@ -1,8 +1,8 @@
 {
   "name": "aibc",
   "displayName": "ads by aibc - earn whilst you code",
-  "description": "Earn whilst you code — 70% revenue share. The active alternative for developers who used Kickbacks: native AI spinner ads in VS Code, Cursor, Windsurf & Claude Code. No popups. Clean uninstall. aibcmedia.com",
-  "version": "0.1.7",
+  "description": "Earn whilst you code — 60% revenue share. The active alternative for developers who used Kickbacks: native AI spinner ads in VS Code, Cursor, Windsurf & Claude Code. No popups. Clean uninstall. aibcmedia.com",
+  "version": "0.1.8",
   "publisher": "AIBCMedia",
   "license": "MIT",
   "repository": {

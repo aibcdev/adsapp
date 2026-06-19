@@ -15,6 +15,11 @@ import {
 } from "../marketplace/stats.js";
 import { isSeedCampaignClient } from "../billing/seedInventory.js";
 import { computeYieldMetrics } from "../stats/yield.js";
+import { config } from "../config.js";
+import {
+  listAdvertiserPartners,
+  provisionAdvertiserPartner,
+} from "../advertiser/partners.js";
 
 const REAL_CAMPAIGN_SQL = "payment_status = 'paid' AND client_id != 'seed'";
 
@@ -456,6 +461,60 @@ export function adminRoutes(db: DbType) {
     const gate = requireAdminEmail(db, c);
     if (!gate.ok) return c.json({ error: gate.error }, gate.status);
     return c.json(payoutLimitsConfig());
+  });
+
+  app.get("/v1/admin/partners", (c) => {
+    const gate = requireAdminEmail(db, c);
+    if (!gate.ok) return c.json({ error: gate.error }, gate.status);
+    const partners = listAdvertiserPartners(db).map((p) => ({
+      id: p.id,
+      code: p.code,
+      email: p.email,
+      commissionPct: p.commissionPct,
+      referralCount: p.referralCount,
+      totalCommission: p.totalCommission,
+      referralLink: `${config.portalUrl.replace(/\/$/, "")}/advertisers?partner=${p.code}`,
+      createdAt: new Date(p.createdAt).toISOString(),
+    }));
+    return c.json({ partners });
+  });
+
+  app.post("/v1/admin/partners", async (c) => {
+    const gate = requireAdminEmail(db, c);
+    if (!gate.ok) return c.json({ error: gate.error }, gate.status);
+
+    const body = (await c.req.json().catch(() => ({}))) as {
+      email?: string;
+      code?: string;
+      commissionPct?: number;
+    };
+    const email = String(body.email || "").trim();
+    const code = String(body.code || "").trim();
+    if (!email || !email.includes("@")) {
+      return c.json({ error: "Valid partner email required" }, 400);
+    }
+    if (!code) return c.json({ error: "Partner code required (e.g. aads)" }, 400);
+
+    const commissionPct =
+      body.commissionPct !== undefined ? Number(body.commissionPct) : undefined;
+    if (commissionPct !== undefined && (commissionPct <= 0 || commissionPct > 1)) {
+      return c.json({ error: "commissionPct must be between 0 and 1 (e.g. 0.2 for 20%)" }, 400);
+    }
+
+    try {
+      const result = provisionAdvertiserPartner(db, {
+        email,
+        code,
+        commissionPct,
+        portalUrl: config.portalUrl,
+      });
+      return c.json(result, result.partnerCreated ? 201 : 200);
+    } catch (e) {
+      return c.json(
+        { error: e instanceof Error ? e.message : "Could not create partner" },
+        400,
+      );
+    }
   });
 
   return app;

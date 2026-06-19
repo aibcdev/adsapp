@@ -1,7 +1,8 @@
-/** aibc economics — auction model, 70% developer share. */
+/** aibc economics — auction model, 60% developer share. */
 
-export const DEVELOPER_SHARE = 0.7;
-export const PLATFORM_SHARE = 0.3;
+import { DEVELOPER_SHARE, PLATFORM_SHARE } from "@aibc/shared";
+
+export { DEVELOPER_SHARE, PLATFORM_SHARE };
 export const CLICK_MULTIPLIER = 50;
 export const BLOCK_IMPRESSIONS = 1000;
 export const BID_FLOOR_PER_1K = 1;

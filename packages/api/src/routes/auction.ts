@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import type { Database as DbType } from "better-sqlite3";
+import { DEVELOPER_SHARE, DEVELOPER_SHARE_PCT } from "@aibc/shared";
 
 const BLOCK_IMPRESSIONS = 1000;
 const ROTATION_DEPTH = 5;
@@ -154,7 +155,7 @@ export function auctionRoutes(db: DbType) {
     const fromTraffic = Math.round(ipm * 0.007 * 100) / 100;
     const fromDemand = Math.round((40 + active.c * 18) * 100) / 100;
     const monthlyUsd = Math.max(40, fromTraffic, fromDemand);
-    return c.json({ monthlyUsd, imps_per_min: ipm, developer_share: 0.7 });
+    return c.json({ monthlyUsd, imps_per_min: ipm, developer_share: DEVELOPER_SHARE });
   });
 
   app.get("/v1/bulletin", (c) => {
@@ -167,7 +168,7 @@ export function auctionRoutes(db: DbType) {
       items: [
         {
           ts: "Now",
-          text: "Live today: VS Code, Cursor, Windsurf, Open VSX, Stripe checkout, and 70% developer share.",
+          text: `Live today: VS Code, Cursor, Windsurf, Open VSX, Stripe checkout, and ${DEVELOPER_SHARE_PCT}% developer share.`,
         },
         {
           ts: "Q2",
@@ -179,7 +180,7 @@ export function auctionRoutes(db: DbType) {
         },
         {
           ts: "Now",
-          text: "Developers earn 70% of ad revenue — higher than typical alternatives. Opt-in Earn more mode adds ~15% when enabled.",
+          text: `Developers earn ${DEVELOPER_SHARE_PCT}% of ad revenue — higher than typical alternatives. Opt-in Earn more mode adds ~15% when enabled.`,
         },
         {
           ts: "Now",

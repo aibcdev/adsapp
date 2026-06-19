@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ads by aibc - earn whilst you browse",
-  "description": "Earn from developer ads in Chrome. 70% revenue share. Dashboard and payouts at aibcmedia.com.",
+  "description": "Earn from developer ads in Chrome. 60% revenue share. Dashboard and payouts at aibcmedia.com.",
   "version": "0.1.0",
   "permissions": ["storage", "sidePanel", "tabs"],
   "host_permissions": [

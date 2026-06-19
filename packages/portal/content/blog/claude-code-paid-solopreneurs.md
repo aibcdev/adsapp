@@ -21,7 +21,7 @@ Three things I'm seeing in the wild:
 2. **The creative win.** The people who know a niche — finance ops, indie SaaS, vertical workflows — can now build without a co-founder who codes.
 3. **Micro-monetization matters.** Not every product needs a $29/mo subscription on day one. Sometimes you monetize the workflow itself.
 
-That's why we built AIBC: one sponsored line in the spinner. No popup. No tab hijack. You keep 70%.
+That's why we built AIBC: one sponsored line in the spinner. No popup. No tab hijack. You keep 60%.
 
 If you're coding 80% of your week with AI, the other 20% should include getting paid for the attention you're already giving away.
 
