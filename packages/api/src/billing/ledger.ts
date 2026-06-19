@@ -68,6 +68,7 @@ function incrementCampaignDelivery(
     )
   `).run(adId, prefix);
 
+  // Partner commission on delivered ad spend only — never on wallet top-ups or prepaid balance.
   recordPartnerCommission(db, prefix, advertiserCost);
 }
 

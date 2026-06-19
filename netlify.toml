@@ -5,8 +5,9 @@
 [build.environment]
   NODE_VERSION = "22"
 
-# SPA routing (React Router)
+# SPA routing (React Router) — also mirrored in packages/portal/public/_redirects
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+  force = false

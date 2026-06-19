@@ -4,6 +4,7 @@ import { SiteFooter } from "../SiteFooter";
 
 const tabs = [
   { to: "/admin/overview", label: "Overview" },
+  { to: "/admin/alternate", label: "Alternate" },
   { to: "/admin/pipeline", label: "Pipeline" },
   { to: "/admin/payouts", label: "Payouts" },
   { to: "/admin/users", label: "Users" },

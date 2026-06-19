@@ -60,6 +60,11 @@ export type CampaignAnalytics = {
 export type PartnerDashboard = {
   code: string;
   commissionPct: number;
+  commissionBasePct: number;
+  commissionTierPct: number;
+  commissionTierThresholdUsd: number;
+  tierUnlocked: boolean;
+  spendUntilTierUsd: number;
   referralLink: string;
   referrals: { clientId: string; email: string | null; attributedAt: string }[];
   totalReferredSpend: number;

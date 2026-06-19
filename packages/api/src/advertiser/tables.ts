@@ -20,7 +20,7 @@ export function ensureAdvertiserPartnerTables(db: DbType): void {
       id TEXT PRIMARY KEY,
       client_id TEXT NOT NULL UNIQUE,
       code TEXT NOT NULL UNIQUE,
-      commission_pct REAL DEFAULT 0.20,
+      commission_pct REAL DEFAULT 0.15,
       created_at INTEGER NOT NULL
     );
 

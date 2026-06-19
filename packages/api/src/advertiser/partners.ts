@@ -1,7 +1,50 @@
 import { randomUUID } from "node:crypto";
 import type { Database as DbType } from "better-sqlite3";
 
-export const DEFAULT_PARTNER_COMMISSION_PCT = 0.2;
+/** Tiered partner commission — aggregate settled spend across all referred clients. */
+export const PARTNER_COMMISSION_BASE_PCT = 0.15;
+export const PARTNER_COMMISSION_TIER_PCT = 0.2;
+export const PARTNER_COMMISSION_TIER_THRESHOLD_USD = 15_000;
+
+/** @deprecated Use tier constants; stored on row for legacy display only. */
+export const DEFAULT_PARTNER_COMMISSION_PCT = PARTNER_COMMISSION_BASE_PCT;
+
+export function partnerSettledSpend(db: DbType, partnerId: string): number {
+  const row = db
+    .prepare(
+      `SELECT COALESCE(SUM(spend_usd), 0) as total FROM partner_commission_ledger WHERE partner_id = ?`,
+    )
+    .get(partnerId) as { total: number };
+  return row.total ?? 0;
+}
+
+/** Split commission when a spend event crosses the $15k aggregate threshold. */
+export function commissionForPartnerSpend(
+  settledSpendBeforeUsd: number,
+  newSpendUsd: number,
+): number {
+  if (newSpendUsd <= 0) return 0;
+
+  if (settledSpendBeforeUsd >= PARTNER_COMMISSION_TIER_THRESHOLD_USD) {
+    return Math.round(newSpendUsd * PARTNER_COMMISSION_TIER_PCT * 1e6) / 1e6;
+  }
+
+  const roomBelowThreshold = PARTNER_COMMISSION_TIER_THRESHOLD_USD - settledSpendBeforeUsd;
+  const atBase = Math.min(newSpendUsd, roomBelowThreshold);
+  const atTier = newSpendUsd - atBase;
+
+  return (
+    Math.round(
+      (atBase * PARTNER_COMMISSION_BASE_PCT + atTier * PARTNER_COMMISSION_TIER_PCT) * 1e6,
+    ) / 1e6
+  );
+}
+
+export function currentPartnerCommissionPct(settledSpendUsd: number): number {
+  return settledSpendUsd >= PARTNER_COMMISSION_TIER_THRESHOLD_USD
+    ? PARTNER_COMMISSION_TIER_PCT
+    : PARTNER_COMMISSION_BASE_PCT;
+}
 
 export function normalizePartnerCode(code: string): string {
   return code.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
@@ -58,6 +101,7 @@ export function recordPartnerCommission(
   campaignIdPrefix: string,
   spendUsd: number,
 ): void {
+  // Settled spend only — call from ad delivery paths, never wallet top-ups or prepaid credits.
   if (spendUsd <= 0) return;
 
   const campaign = db
@@ -68,7 +112,8 @@ export function recordPartnerCommission(
   const partner = getPartnerForReferredClient(db, campaign.client_id);
   if (!partner) return;
 
-  const commissionUsd = Math.round(spendUsd * partner.commissionPct * 1e6) / 1e6;
+  const settledBefore = partnerSettledSpend(db, partner.id);
+  const commissionUsd = commissionForPartnerSpend(settledBefore, spendUsd);
   if (commissionUsd <= 0) return;
 
   db.prepare(`
@@ -104,9 +149,18 @@ export function getPartnerDashboard(db: DbType, clientId: string) {
     `)
     .get(partner.id) as { totalSpend: number; totalCommission: number };
 
+  const tierUnlocked = totals.totalSpend >= PARTNER_COMMISSION_TIER_THRESHOLD_USD;
+
   return {
     code: partner.code,
-    commissionPct: partner.commissionPct,
+    commissionPct: currentPartnerCommissionPct(totals.totalSpend),
+    commissionBasePct: PARTNER_COMMISSION_BASE_PCT,
+    commissionTierPct: PARTNER_COMMISSION_TIER_PCT,
+    commissionTierThresholdUsd: PARTNER_COMMISSION_TIER_THRESHOLD_USD,
+    tierUnlocked,
+    spendUntilTierUsd: tierUnlocked
+      ? 0
+      : Math.max(0, PARTNER_COMMISSION_TIER_THRESHOLD_USD - totals.totalSpend),
     referralLink: `https://aibcmedia.com/advertisers?partner=${partner.code}`,
     referrals: referrals.map((r) => ({
       clientId: r.clientId,
@@ -140,32 +194,34 @@ export function provisionAdvertiserPartner(
   opts: {
     email: string;
     code: string;
-    commissionPct?: number;
     portalUrl?: string;
   },
 ): {
   partnerId: string;
   clientId: string;
   code: string;
-  commissionPct: number;
+  commissionBasePct: number;
+  commissionTierPct: number;
+  commissionTierThresholdUsd: number;
   referralLink: string;
   clientCreated: boolean;
   partnerCreated: boolean;
 } {
-  const commissionPct = opts.commissionPct ?? DEFAULT_PARTNER_COMMISSION_PCT;
   const { id: clientId, created: clientCreated } = findOrCreateClientByEmail(db, opts.email);
   const before = db
     .prepare("SELECT id FROM advertiser_partners WHERE client_id = ? OR code = ?")
     .get(clientId, normalizePartnerCode(opts.code)) as { id: string } | undefined;
 
-  const partner = createPartner(db, clientId, opts.code, commissionPct);
+  const partner = createPartner(db, clientId, opts.code);
   const base = (opts.portalUrl || "https://aibcmedia.com").replace(/\/$/, "");
 
   return {
     partnerId: partner.id,
     clientId,
     code: partner.code,
-    commissionPct,
+    commissionBasePct: PARTNER_COMMISSION_BASE_PCT,
+    commissionTierPct: PARTNER_COMMISSION_TIER_PCT,
+    commissionTierThresholdUsd: PARTNER_COMMISSION_TIER_THRESHOLD_USD,
     referralLink: `${base}/advertisers?partner=${partner.code}`,
     clientCreated,
     partnerCreated: !before,

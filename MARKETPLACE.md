@@ -164,7 +164,9 @@ Stretch: sponsor a dev newsletter (Bytes, TLDR) or a 5-min dev YouTuber segment.
 
 When ready:
 ```bash
-npm run create:partner -- <code> <partner-email> [0.2]
-# example: npm run create:partner -- aads partners@aads.com 0.2
+npm run create:partner -- <code> <partner-email>
+# example: npm run create:partner -- aads partners@aads.com
 ```
-Or admin API: `POST /v1/admin/partners` with `{ "code": "aads", "email": "partners@aads.com", "commissionPct": 0.2 }`.
+Or admin API: `POST /v1/admin/partners` with `{ "code": "aads", "email": "partners@aads.com" }`.
+
+Partner commission: **15%** on settled ad spend until **$15,000** total across all referred clients, then **20%** on new spend.

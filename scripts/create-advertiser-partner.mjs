@@ -2,12 +2,14 @@
 /**
  * Onboard an advertiser reseller platform (e.g. aads.com).
  *
- * Usage:
- *   node scripts/create-advertiser-partner.mjs <code> <email> [commission_pct]
+ * Commission tiers (all referred clients combined):
+ *   15% until $15,000 settled spend → 20% thereafter
  *
- * Examples:
+ * Usage:
+ *   node scripts/create-advertiser-partner.mjs <code> <email>
+ *
+ * Example:
  *   node scripts/create-advertiser-partner.mjs aads partners@aads.com
- *   node scripts/create-advertiser-partner.mjs acme ads@acme.com 0.2
  */
 import Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
@@ -20,16 +22,10 @@ const PORTAL_URL = (process.env.AIBC_PORTAL_URL || "https://aibcmedia.com").repl
 
 const code = (process.argv[2] || "").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
 const email = (process.argv[3] || "").trim().toLowerCase();
-const commissionPct = process.argv[4] !== undefined ? Number(process.argv[4]) : 0.2;
 
 if (!code || !email || !email.includes("@")) {
-  console.error("Usage: node scripts/create-advertiser-partner.mjs <code> <email> [commission_pct]");
-  console.error("Example: node scripts/create-advertiser-partner.mjs aads partners@aads.com 0.2");
-  process.exit(1);
-}
-
-if (!(commissionPct > 0 && commissionPct <= 1)) {
-  console.error("commission_pct must be between 0 and 1 (e.g. 0.2 = 20%)");
+  console.error("Usage: node scripts/create-advertiser-partner.mjs <code> <email>");
+  console.error("Example: node scripts/create-advertiser-partner.mjs aads partners@aads.com");
   process.exit(1);
 }
 
@@ -40,7 +36,7 @@ db.exec(`
     id TEXT PRIMARY KEY,
     client_id TEXT NOT NULL UNIQUE,
     code TEXT NOT NULL UNIQUE,
-    commission_pct REAL DEFAULT 0.20,
+    commission_pct REAL DEFAULT 0.15,
     created_at INTEGER NOT NULL
   );
 `);
@@ -58,16 +54,14 @@ const existing = db
   .prepare("SELECT id, code FROM advertiser_partners WHERE client_id = ? OR code = ?")
   .get(client.id, code);
 
-let partnerCreated = false;
 if (existing) {
   console.log(`Partner already exists: code=${existing.code}`);
 } else {
   const id = randomUUID();
   db.prepare(
     "INSERT INTO advertiser_partners (id, client_id, code, commission_pct, created_at) VALUES (?, ?, ?, ?, ?)",
-  ).run(id, client.id, code, commissionPct, Date.now());
-  partnerCreated = true;
-  console.log(`Created partner "${code}" at ${(commissionPct * 100).toFixed(0)}% commission`);
+  ).run(id, client.id, code, 0.15, Date.now());
+  console.log(`Created partner "${code}" — 15% base, 20% after $15,000 settled spend (all clients)`);
 }
 
 if (clientCreated) console.log(`Created login account for ${email}`);

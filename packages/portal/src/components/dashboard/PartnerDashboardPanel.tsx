@@ -29,11 +29,19 @@ export function PartnerDashboardPanel() {
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           <p className="font-mono text-[10px] uppercase tracking-widest text-zinc-500">Commission rate</p>
-          <p className="mt-2 text-3xl font-bold text-zinc-900">{(data.commissionPct * 100).toFixed(0)}%</p>
+          <p className="mt-2 text-3xl font-bold text-zinc-900">
+            {((data.tierUnlocked ? data.commissionTierPct : data.commissionBasePct) * 100).toFixed(0)}%
+          </p>
+          <p className="mt-1 text-xs text-zinc-500">
+            {data.tierUnlocked
+              ? `${(data.commissionBasePct * 100).toFixed(0)}% on the first $${data.commissionTierThresholdUsd.toLocaleString()} combined; ${(data.commissionTierPct * 100).toFixed(0)}% only on spend after that`
+              : `${(data.commissionTierPct * 100).toFixed(0)}% after $${data.commissionTierThresholdUsd.toLocaleString()} combined settled spend ($${data.spendUntilTierUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })} to go)`}
+          </p>
         </div>
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-zinc-500">Referred spend</p>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-zinc-500">Settled spend</p>
           <p className="mt-2 text-3xl font-bold text-zinc-900">${data.totalReferredSpend.toFixed(2)}</p>
+          <p className="mt-1 text-xs text-zinc-500">Delivered ads only — not unused account balance</p>
         </div>
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           <p className="font-mono text-[10px] uppercase tracking-widest text-zinc-500">Commission earned</p>
@@ -43,7 +51,12 @@ export function PartnerDashboardPanel() {
 
       <div className="mb-8 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
         <p className="text-sm font-semibold text-zinc-900">Your referral link</p>
-        <p className="mt-1 text-sm text-zinc-600">Share with advertisers — you earn {(data.commissionPct * 100).toFixed(0)}% of their ad spend.</p>
+        <p className="mt-1 text-sm text-zinc-600">
+          Share with advertisers — {(data.commissionBasePct * 100).toFixed(0)}% on the first $
+          {data.commissionTierThresholdUsd.toLocaleString()} of settled ad spend combined across all referred clients;
+          {(data.commissionTierPct * 100).toFixed(0)}% only on spend after that. Commission is on delivered ads, not
+          unused account balance.
+        </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <code className="flex-1 rounded-lg bg-zinc-50 px-3 py-2 text-sm text-zinc-800">{data.referralLink}</code>
           <button

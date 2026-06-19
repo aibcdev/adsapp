@@ -18,6 +18,7 @@ import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
 import { AdminUserDetailPage } from "./pages/admin/AdminUserDetailPage";
 import { AdminLimitsPage } from "./pages/admin/AdminLimitsPage";
 import { AdminOverviewPage } from "./pages/admin/AdminOverviewPage";
+import { AdminAlternateOverviewPage } from "./pages/admin/AdminAlternateOverviewPage";
 import { AdminAdvertiserPipelinePage } from "./pages/admin/AdminAdvertiserPipelinePage";
 import { AdminCompetitivePage } from "./pages/admin/AdminCompetitivePage";
 import { ReferralPage } from "./pages/ReferralPage";
@@ -56,6 +57,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Route path="/admin" element={<AdminShell />}>
           <Route index element={<Navigate to="/admin/overview" replace />} />
           <Route path="overview" element={<AdminOverviewPage />} />
+          <Route path="alternate" element={<AdminAlternateOverviewPage />} />
           <Route path="pipeline" element={<AdminAdvertiserPipelinePage />} />
           <Route path="payouts" element={<AdminPayoutsPage />} />
           <Route path="users" element={<AdminUsersPage />} />

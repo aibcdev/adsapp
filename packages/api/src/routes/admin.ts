@@ -19,6 +19,9 @@ import { config } from "../config.js";
 import {
   listAdvertiserPartners,
   provisionAdvertiserPartner,
+  PARTNER_COMMISSION_BASE_PCT,
+  PARTNER_COMMISSION_TIER_PCT,
+  PARTNER_COMMISSION_TIER_THRESHOLD_USD,
 } from "../advertiser/partners.js";
 
 const REAL_CAMPAIGN_SQL = "payment_status = 'paid' AND client_id != 'seed'";
@@ -470,7 +473,9 @@ export function adminRoutes(db: DbType) {
       id: p.id,
       code: p.code,
       email: p.email,
-      commissionPct: p.commissionPct,
+      commissionBasePct: PARTNER_COMMISSION_BASE_PCT,
+      commissionTierPct: PARTNER_COMMISSION_TIER_PCT,
+      commissionTierThresholdUsd: PARTNER_COMMISSION_TIER_THRESHOLD_USD,
       referralCount: p.referralCount,
       totalCommission: p.totalCommission,
       referralLink: `${config.portalUrl.replace(/\/$/, "")}/advertisers?partner=${p.code}`,
@@ -486,7 +491,6 @@ export function adminRoutes(db: DbType) {
     const body = (await c.req.json().catch(() => ({}))) as {
       email?: string;
       code?: string;
-      commissionPct?: number;
     };
     const email = String(body.email || "").trim();
     const code = String(body.code || "").trim();
@@ -495,17 +499,10 @@ export function adminRoutes(db: DbType) {
     }
     if (!code) return c.json({ error: "Partner code required (e.g. aads)" }, 400);
 
-    const commissionPct =
-      body.commissionPct !== undefined ? Number(body.commissionPct) : undefined;
-    if (commissionPct !== undefined && (commissionPct <= 0 || commissionPct > 1)) {
-      return c.json({ error: "commissionPct must be between 0 and 1 (e.g. 0.2 for 20%)" }, 400);
-    }
-
     try {
       const result = provisionAdvertiserPartner(db, {
         email,
         code,
-        commissionPct,
         portalUrl: config.portalUrl,
       });
       return c.json(result, result.partnerCreated ? 201 : 200);
