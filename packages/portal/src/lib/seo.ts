@@ -76,6 +76,11 @@ const STATIC_SEO: Record<string, Omit<SeoConfig, "path">> = {
     description: "Your AIBC earnings, payout settings, and account overview.",
     noindex: true,
   },
+  "/admin/alternate": {
+    title: `Admin Alternate | ${SITE_NAME}`,
+    description: "Presentation view of network metrics for partner demos.",
+    noindex: true,
+  },
   "/extension/connect": {
     title: `Connect Extension | ${SITE_NAME}`,
     description: "Link your IDE extension to your AIBC account.",

@@ -64,6 +64,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="users/:clientId" element={<AdminUserDetailPage />} />
           <Route path="limits" element={<AdminLimitsPage />} />
           <Route path="competitive" element={<AdminCompetitivePage />} />
+          <Route path="*" element={<Navigate to="/admin/overview" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>
