@@ -7,6 +7,7 @@ const dir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
+  envDir: path.resolve(dir, "../.."),
   resolve: {
     alias: {
       "@aibc/shared": path.resolve(dir, "../shared/src/index.ts"),

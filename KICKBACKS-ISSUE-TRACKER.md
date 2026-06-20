@@ -34,4 +34,4 @@ Run sync to refresh counts. Typical split: **~33 fixed**, **~40 backlog** (adapt
 | Editors | VS Code, Cursor, Windsurf, Open VSX |
 | Uninstall | `deactivate()` restores patches — no stale shims |
 | Anti-farm | Portfolio session + hourly mint cap |
-| Split | 70% vs ~50% |
+| Split | 60% vs ~50% |

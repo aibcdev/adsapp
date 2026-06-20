@@ -66,7 +66,7 @@ async function main() {
     openCount: rows.length,
     summary: summarize(rows),
     aibcAdvantages: [
-      "70% developer share vs ~50%",
+      "60% developer share vs ~50%",
       "Cursor + Windsurf + Open VSX + VS Code",
       "Stripe Connect + PayPal + Wise + UPI payouts",
       "No Claude/Codex file patching — cleaner uninstall",

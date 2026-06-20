@@ -148,7 +148,7 @@ def side_panel_layer(w: int, h: int, earnings="$42.18") -> Image.Image:
     draw.rounded_rectangle((s(16), s(64), w - s(16), s(150)), radius=s(12), fill=EMERALD_LIGHT)
     draw.text((s(28), s(82)), "Today's earnings", font=font(13), fill=ZINC_600)
     draw.text((s(28), s(108)), earnings, font=font(34, True, display=True), fill=EMERALD_DARK)
-    draw.text((s(28), s(178)), "70% revenue share", font=font(13, True), fill=EMERALD)
+    draw.text((s(28), s(178)), "60% revenue share", font=font(13, True), fill=EMERALD)
     draw.text((s(28), s(210)), "Impressions: 128", font=font(12), fill=ZINC_600)
     draw.text((s(28), s(232)), "Pending payout: $18.40", font=font(12), fill=ZINC_600)
     draw.rounded_rectangle((s(16), h - s(56), w - s(16), h - s(16)), radius=s(10), fill=BLACK)
@@ -170,7 +170,7 @@ def screenshot_1_hero() -> Image.Image:
     card_draw.text((s(32), s(148)), "ChatGPT is thinking…", font=font(16), fill=ZINC_600)
     card_draw.rounded_rectangle((s(32), s(188), s(780), s(238)), radius=s(10), fill=ZINC_100, outline=ZINC_200, width=1)
     card_draw.text((s(52), s(204)), "Sponsored · Deploy Postgres in 60s —", font=font(15), fill=EMERALD)
-    card_draw.text((s(52), s(226)), "get 70% back to you via aibc", font=font(13), fill=ZINC_600)
+    card_draw.text((s(52), s(226)), "get 60% back to you via aibc", font=font(13), fill=ZINC_600)
     base = add_shadow(base, card, (s(40), s(120)))
 
     panel = side_panel_layer(s(300), s(630))
@@ -233,7 +233,7 @@ def screenshot_3_dashboard() -> Image.Image:
     info = rounded_rect_rgba(s(1080), s(160), s(14), (249, 250, 251), ZINC_200, 1)
     idraw = ImageDraw.Draw(info)
     idraw.text((s(30), s(30)), "Transparent yield", font=font(20, True), fill=BLACK)
-    idraw.text((s(30), s(70)), "$0.84 / agent-hour · 70% paid to you", font=font(18), fill=ZINC_600)
+    idraw.text((s(30), s(70)), "$0.84 / agent-hour · 60% paid to you", font=font(18), fill=ZINC_600)
     idraw.text((s(30), s(110)), "Stripe payouts from $10 minimum", font=font(18), fill=ZINC_600)
     shell.alpha_composite(info, (s(40), s(270)))
     sd.text((s(40), s(470)), "Track earnings in real time from Chrome side panel", font=font(26, True), fill=BLACK)
@@ -272,7 +272,7 @@ def screenshot_5_how_it_works() -> Image.Image:
         ("1", "Install", "Add ads by aibc from Chrome Web Store"),
         ("2", "Sign in", "Connect with Google at aibcmedia.com"),
         ("3", "Use AI as normal", "See relevant dev-tool ads while you wait"),
-        ("4", "Get paid", "Keep 70% — cash out via Stripe"),
+        ("4", "Get paid", "Keep 60% — cash out via Stripe"),
     ]
     x = s(80)
     for num, title, body in steps:
@@ -297,7 +297,7 @@ def promo_small() -> Image.Image:
     draw.text((s(100), s(44)), "ads by aibc", font=font(24, True, display=True), fill=WHITE)
     draw.text((s(40), s(120)), "Earn whilst", font=font(30, True, display=True), fill=WHITE)
     draw.text((s(40), s(158)), "you prompt", font=font(30, True, display=True), fill=WHITE)
-    draw.text((s(40), s(220)), "70% to developers", font=font(16), fill=(220, 252, 231))
+    draw.text((s(40), s(220)), "60% to developers", font=font(16), fill=(220, 252, 231))
     return finish(base, size)
 
 
@@ -308,7 +308,7 @@ def promo_marquee() -> Image.Image:
     draw_logo(draw, s(120), s(180), 52)
     draw.text((s(200), s(120)), "ads by aibc", font=font(48, True, display=True), fill=WHITE)
     draw.text((s(120), s(260)), "Get paid while AI thinks.", font=font(56, True, display=True), fill=WHITE)
-    draw.text((s(120), s(340)), "Developer ads · 70% revenue share · Privacy-first", font=font(28), fill=(212, 212, 216))
+    draw.text((s(120), s(340)), "Developer ads · 60% revenue share · Privacy-first", font=font(28), fill=(212, 212, 216))
     cta = rounded_rect_rgba(s(300), s(70), s(14), EMERALD)
     ctd = ImageDraw.Draw(cta)
     ctd.text((s(30), s(20)), "Install free", font=font(26, True), fill=WHITE)

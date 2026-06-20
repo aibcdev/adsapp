@@ -63,7 +63,7 @@ Install globally: `npm link --workspace=@aibc/cli` then use `aibc` anywhere.
 
 ## Features
 
-- **Earn** — spinner ads in Claude Code, status bar balance, 50/50 revenue share
+- **Earn** — spinner ads in Claude Code, status bar balance, 60% revenue share
 - **Discover** — tools, MCP, resources (sidebar tabs)
 - **Advertise** — place campaigns, prepaid balance (portal)
 - **Dashboard** — IdleAds-style Earn + Advertise layout
