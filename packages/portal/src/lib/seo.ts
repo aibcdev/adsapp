@@ -4,8 +4,10 @@ import { INTEGRATIONS } from "./integrations";
 export const SITE_URL = "https://aibcmedia.com";
 export const SITE_NAME = "AIBC Media";
 export const SITE_TAGLINE = "Make Money Whilst You Code";
+export const SITE_KEYWORDS =
+  "kickbacks, kickbacks ai, kickbacks.ai, kickbacks alternative, make money, earn money, remote work, developer ads, earn while coding, VS Code, Cursor, Windsurf, Claude Code, AIBC";
 export const DEFAULT_DESCRIPTION =
-  `Install free. Keep ${DEVELOPER_SHARE_PCT}%. One sponsored line in your AI spinner — no popups. Works with VS Code, Cursor, Windsurf, and Claude Code.`;
+  `Kickbacks & Kickbacks AI alternative. Install free. Keep ${DEVELOPER_SHARE_PCT}%. One sponsored line in your AI spinner — no popups. Works with VS Code, Cursor, Windsurf, and Claude Code.`;
 export const OG_IMAGE = `${SITE_URL}/og-image.png`;
 
 export type SeoConfig = {
@@ -34,7 +36,7 @@ const STATIC_SEO: Record<string, Omit<SeoConfig, "path">> = {
   "/developers/how-it-works": {
     title: `How It Works for Developers | ${SITE_NAME}`,
     description:
-      `Install the extension, sign in, and earn ${DEVELOPER_SHARE_PCT}% when a sponsor line appears in your AI spinner. No popups. No code access.`,
+      `Kickbacks AI alternative: install the extension, sign in, and earn ${DEVELOPER_SHARE_PCT}% when a sponsor line appears in your AI spinner. No popups. No code access.`,
   },
   "/developers/payouts": {
     title: `Developer Payouts | ${SITE_NAME}`,

@@ -1,8 +1,8 @@
 ## ads by aibc — earn whilst you code 💸
 
-**The #1 way for developers to earn from ads while they code.** 🏆
+**Kickbacks & Kickbacks AI alternative** — the active way to earn from ads while you code. 🏆
 
-**Used Kickbacks before?** AIBC is the active extension in the same category — 60% to you, spinner-only ads, clean uninstall.
+**Searching for Kickbacks or kickbacks.ai?** AIBC is the live replacement — 60% to you, spinner-only ads, clean uninstall, VS Code + Cursor + Windsurf + Claude Code.
 
 Built by devs — including **early OpenAI contributors (pre-2020)** — who got tired of waiting on AI with zero upside.
 

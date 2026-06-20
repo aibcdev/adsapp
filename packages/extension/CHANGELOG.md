@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.10 — 2026-06-20
+
+- Marketplace tags: make money, earn money, remote work, side income, passive income
+
+## 0.1.9 — 2026-06-20
+
+- Marketplace SEO: Kickbacks, Kickbacks AI, and kickbacks.ai in description and keywords
+- README positions AIBC as the active Kickbacks / kickbacks.ai replacement
+
 ## 0.1.8 — 2026-06-19
 
 - Founding advertiser program live — partner referral links and geo targeting

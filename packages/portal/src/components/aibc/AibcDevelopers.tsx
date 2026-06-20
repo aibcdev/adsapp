@@ -28,6 +28,10 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
       a: "We are onboarding premium dev-tool brands before the full public launch. Early installs join the opening cohort. We expect the deepest IDE spinner inventory and developer base in this category by the end of Q2 — founding members earn first as campaigns go live.",
     },
     {
+      q: "Is this a Kickbacks or Kickbacks AI alternative?",
+      a: "Yes. If you used Kickbacks or kickbacks.ai, AIBC is the active replacement — same spinner-style ads, 60% to you, and support for VS Code, Cursor, Windsurf, and Claude Code.",
+    },
+    {
       q: "Do I have to change how I work?",
       a: "No. Install the extension, code as normal. One small sponsor line appears in your AI spinner. No pop-ups. No extra clicks.",
     },

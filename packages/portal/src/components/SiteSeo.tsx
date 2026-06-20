@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import {
   DEFAULT_DESCRIPTION,
   OG_IMAGE,
+  SITE_KEYWORDS,
   SITE_NAME,
   SITE_URL,
   seoForPath,
@@ -44,6 +45,7 @@ export function SiteSeo() {
 
     document.title = seo.title;
     upsertMeta("description", seo.description);
+    upsertMeta("keywords", SITE_KEYWORDS);
     upsertLink("canonical", url);
     upsertMeta("robots", seo.noindex ? "noindex, nofollow" : "index, follow");
 
@@ -82,6 +84,7 @@ export function SiteSeo() {
             name: SITE_NAME,
             url: SITE_URL,
             description: DEFAULT_DESCRIPTION,
+            alternateName: ["Kickbacks alternative", "Kickbacks AI alternative", "kickbacks.ai alternative"],
             publisher: { "@type": "Organization", name: SITE_NAME },
           },
         ],
