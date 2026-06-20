@@ -11,8 +11,9 @@ import {
   ensureHandoffTable,
   redeemDashboardHandoff,
 } from "./auth/handoff.js";
-import { mergeClients, resolveAuthClientId } from "./clients/identity.js";
+import { mergeClients, resolveAuthClientId, findCanonicalClientByEmail } from "./clients/identity.js";
 import { authStartUrl, config, emailAuthEnabled, googleAuthUrl, stripeEnabled } from "./config.js";
+import { registerEmailAuthRoutes, registerInstallRoutes } from "./auth/emailRoutes.js";
 import {
   createDb,
   getFeedJson,
@@ -54,11 +55,19 @@ import { computeClientYieldMetrics, computeYieldMetrics } from "./stats/yield.js
 import { auctionRoutes } from "./routes/auction.js";
 import { billingRoutes } from "./routes/billing.js";
 import { adminRoutes } from "./routes/admin.js";
+import { cliRoutes } from "./routes/cli.js";
 import { advertiserApplyRoutes, ensureAdvertiserApplicationsTable } from "./routes/advertiserApply.js";
 import { advertiserRoutes } from "./routes/advertiser.js";
 import { ensureAdvertiserPartnerTables } from "./advertiser/tables.js";
 import { resolveCountryFromRequest, updateClientCountry } from "./advertiser/geo.js";
 import { attributeAdvertiserReferral } from "./advertiser/partners.js";
+import {
+  applyAuthStateAttribution,
+  ensureAttributionColumns,
+  parseAttributionInput,
+  recordClientAttribution,
+  storeAuthStateAttribution,
+} from "./clients/attribution.js";
 
 const db = createDb();
 ensurePortfolioSessionTables(db);
@@ -67,6 +76,7 @@ ensureStripeConnectColumns(db);
 ensureSignalColumns(db);
 ensureAdvertiserApplicationsTable(db);
 ensureAdvertiserPartnerTables(db);
+ensureAttributionColumns(db);
 ensureHandoffTable(db);
 const app = new Hono();
 
@@ -223,40 +233,16 @@ app.get("/v1/auth/google/redirect", (c) => {
   }
 });
 
-app.post("/v1/auth/email/complete", async (c) => {
-  if (!emailAuthEnabled()) {
-    return c.json({ error: "Email sign-in is disabled in production. Use Google." }, 403);
-  }
-  const body = (await c.req.json().catch(() => ({}))) as {
-    state?: string;
-    email?: string;
-  };
-  const state = body.state?.trim();
-  const email = body.email?.trim().toLowerCase();
-  if (!state || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return c.json({ error: "Valid state and email required" }, 400);
-  }
-
-  const row = db
-    .prepare("SELECT client_id, completed FROM auth_states WHERE state = ?")
-    .get(state) as { client_id: string; completed: number } | undefined;
-
-  if (!row) return c.json({ error: "Invalid sign-in session" }, 400);
-  if (row.completed === 1) return c.json({ error: "Session already used" }, 400);
-
-  const clientId = resolveAuthClientId(db, row.client_id, email);
-  ensureClientProfile(db, clientId);
-  const token = mintToken(db, clientId, email);
-  db.prepare(
-    "UPDATE auth_states SET completed = 1, token = ?, email = ?, client_id = ? WHERE state = ?",
-  ).run(token, email, clientId, state);
-
-  return c.json({ ok: true, email });
-});
+registerEmailAuthRoutes(app, db);
+registerInstallRoutes(app, db);
 
 app.post("/v1/auth/extension/start", async (c) => {
-  const body = (await c.req.json().catch(() => ({}))) as { referralCode?: string };
+  const body = (await c.req.json().catch(() => ({}))) as {
+    referralCode?: string;
+    attribution?: unknown;
+  };
   const referredByCode = body.referralCode?.trim();
+  const attribution = parseAttributionInput(body.attribution);
 
   const state = randomUUID();
   const clientId = randomUUID();
@@ -264,9 +250,11 @@ app.post("/v1/auth/extension/start", async (c) => {
     "INSERT INTO clients (id, created_at) VALUES (?, ?)",
   ).run(clientId, Date.now());
   ensureClientProfile(db, clientId, referredByCode);
+  recordClientAttribution(db, clientId, attribution);
   db.prepare(
     "INSERT INTO auth_states (state, client_id, created_at) VALUES (?, ?, ?)",
   ).run(state, clientId, Date.now());
+  if (attribution) storeAuthStateAttribution(db, state, attribution);
 
   try {
     const authUrl = authStartUrl(state);
@@ -663,6 +651,7 @@ app.post("/v1/webhooks/stripe", async (c) => {
 
 app.route("/", auctionRoutes(db));
 app.route("/", billingRoutes(db));
+app.route("/", cliRoutes(db));
 app.route("/", adminRoutes(db));
 app.route("/", advertiserApplyRoutes(db));
 app.route("/", advertiserRoutes(db));

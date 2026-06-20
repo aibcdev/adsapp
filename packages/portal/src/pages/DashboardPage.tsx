@@ -3,12 +3,14 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { api, getToken, setToken } from "../lib/api";
 import {
   completeAuthFromState,
-  completeEmailSignIn,
   consumeLoginRedirect,
   devSignInUrl,
   ensureAuthSession,
   googleRedirectUrl,
   redeemDashboardHandoff,
+  registerWithPassword,
+  sendMagicLink,
+  signInWithPassword,
 } from "../lib/auth";
 import { LoginAuthCard } from "../components/auth/LoginAuthCard";
 import {
@@ -234,22 +236,40 @@ export function DashboardPage() {
     }
   };
 
-  const signInEmail = async (addr: string) => {
+  const signInEmailPassword = async (addr: string, password: string) => {
     setAuthBusy(true);
     setAuthError("");
     try {
-      const state = await ensureAuthSession(signInState);
-      setSignInState(state);
-      const result = await completeEmailSignIn(state, addr);
+      const result = await signInWithPassword(addr, password);
       setToken(result.accessToken);
       navigate(`/dashboard?tab=${tab}`, { replace: true });
       await loadDeveloperData();
     } catch (e) {
-      setAuthError(e instanceof Error ? e.message : "Email sign-in failed");
+      setAuthError(e instanceof Error ? e.message : "Sign-in failed");
       throw e;
     } finally {
       setAuthBusy(false);
     }
+  };
+
+  const registerEmail = async (addr: string, password: string) => {
+    setAuthBusy(true);
+    setAuthError("");
+    try {
+      const result = await registerWithPassword(addr, password);
+      setToken(result.accessToken);
+      navigate(`/dashboard?tab=${tab}`, { replace: true });
+      await loadDeveloperData();
+    } catch (e) {
+      setAuthError(e instanceof Error ? e.message : "Registration failed");
+      throw e;
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const magicLink = async (addr: string) => {
+    await sendMagicLink(addr);
   };
 
   const signOut = () => {
@@ -265,7 +285,9 @@ export function DashboardPage() {
       error={authError}
       devBypass={authConfig.devBypass}
       onGoogleSignIn={signInGoogle}
-      onEmailSignIn={signInEmail}
+      onEmailRegister={registerEmail}
+      onEmailPasswordSignIn={signInEmailPassword}
+      onMagicLink={magicLink}
       onDevSignIn={() => {
         void ensureAuthSession(signInState).then((s) => {
           window.location.href = devSignInUrl(s);

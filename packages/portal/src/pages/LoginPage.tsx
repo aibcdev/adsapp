@@ -4,14 +4,17 @@ import { AibcLogo } from "../components/brand/AibcLogo";
 import { LoginAuthCard } from "../components/auth/LoginAuthCard";
 import {
   completeAuthFromState,
-  completeEmailSignIn,
-  consumeLoginRedirect,
-  devSignInUrl,
   ensureAuthSession,
   getStoredAuthState,
   googleRedirectUrl,
   linkExtensionSession,
+  registerWithPassword,
+  sendMagicLink,
+  signInWithPassword,
   storeReferralCode,
+  verifyMagicLink,
+  devSignInUrl,
+  consumeLoginRedirect,
 } from "../lib/auth";
 import { getToken, setToken } from "../lib/api";
 
@@ -135,26 +138,68 @@ export function LoginPage() {
     }
   };
 
-  const signInEmail = async (email: string) => {
+  useEffect(() => {
+    const magic = params.get("magic");
+    if (!magic) return;
+    setBusy(true);
+    void verifyMagicLink(magic)
+      .then((result) => {
+        setToken(result.accessToken);
+        navigate("/dashboard?tab=developer", { replace: true });
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : "Sign-in link expired"))
+      .finally(() => setBusy(false));
+  }, [params, navigate]);
+
+  const afterToken = (accessToken: string, userEmail: string) => {
+    setToken(accessToken);
+    if (source === "extension") {
+      navigate(`/login?poll=done&source=extension&email=${encodeURIComponent(userEmail)}`, { replace: true });
+      return;
+    }
+    const redirect = params.get("redirect") || consumeLoginRedirect();
+    if (redirect?.startsWith("/")) {
+      navigate(redirect, { replace: true });
+      return;
+    }
+    navigate("/dashboard?tab=developer", { replace: true });
+  };
+
+  const signInEmailPassword = async (addr: string, password: string) => {
     setBusy(true);
     setError("");
     try {
-      const s = await ensureAuthSession(state);
-      setState(s);
-      const result = await completeEmailSignIn(s, email);
-      setToken(result.accessToken);
-      if (source === "extension") {
-        navigate(`/login?poll=done&source=extension&email=${encodeURIComponent(result.email)}`, { replace: true });
-        return;
-      }
-      const redirect = params.get("redirect") || consumeLoginRedirect();
-      if (redirect?.startsWith("/")) {
-        navigate(redirect, { replace: true });
-        return;
-      }
-      navigate("/dashboard?tab=developer", { replace: true });
+      const result = await signInWithPassword(addr, password);
+      afterToken(result.accessToken, result.email);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Email sign-in failed");
+      setError(err instanceof Error ? err.message : "Sign-in failed");
+      throw err;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const registerEmail = async (addr: string, password: string) => {
+    setBusy(true);
+    setError("");
+    try {
+      const result = await registerWithPassword(addr, password);
+      afterToken(result.accessToken, result.email);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Registration failed");
+      throw err;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const magicLink = async (addr: string) => {
+    setBusy(true);
+    setError("");
+    try {
+      await sendMagicLink(addr);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not send link");
       throw err;
     } finally {
       setBusy(false);
@@ -196,7 +241,9 @@ export function LoginPage() {
           error={error}
           devBypass={authConfig.devBypass}
           onGoogleSignIn={signInGoogle}
-          onEmailSignIn={signInEmail}
+          onEmailRegister={registerEmail}
+          onEmailPasswordSignIn={signInEmailPassword}
+          onMagicLink={magicLink}
           onDevSignIn={() => {
             void ensureAuthSession(state).then((s) => {
               window.location.href = devSignInUrl(s);

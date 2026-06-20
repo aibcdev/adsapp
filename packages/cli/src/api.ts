@@ -1,6 +1,15 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { AUTH_FILE, DEFAULT_API, STATUSLINE_FILE, ensureAibcDir, readJson, writeJson, writeAdCache } from "./paths";
+import {
+  AIBC_DIR,
+  AUTH_FILE,
+  DEFAULT_API,
+  ensureAibcDir,
+  ensureDeviceId,
+  readJson,
+  writeJson,
+  writeAdCache,
+} from "./paths";
 
 interface AuthVault {
   accessToken?: string;
@@ -21,6 +30,19 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${DEFAULT_API}${path}`, { ...init, headers });
   if (!res.ok) throw new Error(`API ${path} failed (${res.status})`);
   return res.json() as Promise<T>;
+}
+
+export async function reportCliInstall(): Promise<void> {
+  const deviceId = ensureDeviceId();
+  try {
+    await fetch(`${DEFAULT_API}/v1/installs/report`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ channel: "cli", deviceId, source: "cli" }),
+    });
+  } catch {
+    /* non-blocking */
+  }
 }
 
 export async function login(): Promise<string> {
@@ -73,6 +95,8 @@ export async function refreshAds(): Promise<void> {
 
 export function installStatuslineScript(): void {
   ensureAibcDir();
-  const bundled = path.join(__dirname, "..", "assets", "statusline.cjs");
-  fs.copyFileSync(bundled, STATUSLINE_FILE);
+  const assetsDir = path.join(__dirname, "..", "assets");
+  for (const file of ["statusline.cjs", "heartbeat.cjs"]) {
+    fs.copyFileSync(path.join(assetsDir, file), path.join(AIBC_DIR, file));
+  }
 }

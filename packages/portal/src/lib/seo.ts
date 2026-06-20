@@ -71,6 +71,16 @@ const STATIC_SEO: Record<string, Omit<SeoConfig, "path">> = {
     description: "Sign in to your AIBC developer or advertiser dashboard.",
     noindex: true,
   },
+  "/forgot-password": {
+    title: `Forgot Password | ${SITE_NAME}`,
+    description: "Reset your AIBC Media account password.",
+    noindex: true,
+  },
+  "/reset-password": {
+    title: `Reset Password | ${SITE_NAME}`,
+    description: "Choose a new password for your AIBC Media account.",
+    noindex: true,
+  },
   "/dashboard": {
     title: `Dashboard | ${SITE_NAME}`,
     description: "Your AIBC earnings, payout settings, and account overview.",

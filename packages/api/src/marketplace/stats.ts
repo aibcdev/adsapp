@@ -1,17 +1,25 @@
 import { randomUUID } from "node:crypto";
 import type { Database as DbType } from "better-sqlite3";
+import {
+  countInstallEvents,
+  countInstallEventsSince,
+  INSTALL_CHANNEL_LABELS,
+  type InstallChannel,
+} from "./installs.js";
 
-export type MarketplaceId = "vscode" | "openvsx";
+export type StoreMarketplaceId = "vscode" | "openvsx";
 
-export const MARKETPLACE_LABELS: Record<MarketplaceId, string> = {
+export const STORE_MARKETPLACE_LABELS: Record<StoreMarketplaceId, string> = {
   vscode: "VS Code Marketplace",
-  openvsx: "Open VSX",
+  openvsx: "Open VSX Registry",
 };
 
 const VS_QUERY_URL =
   "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery?api-version=3.0-preview.1";
 const OPEN_VSX_URL = "https://open-vsx.org/api/AIBCMedia/aibc";
 const SNAPSHOT_MIN_INTERVAL_MS = 60 * 60 * 1000;
+
+const REPORTED_CHANNELS: InstallChannel[] = ["cursor", "windsurf", "direct", "cli", "vscode", "openvsx"];
 
 export function ensureMarketplaceTables(db: DbType): void {
   db.exec(`
@@ -60,12 +68,12 @@ async function fetchOpenVsxDownloads(): Promise<number> {
   return Math.round(data.downloadCount ?? 0);
 }
 
-const FETCHERS: Record<MarketplaceId, () => Promise<number>> = {
+const FETCHERS: Record<StoreMarketplaceId, () => Promise<number>> = {
   vscode: fetchVsMarketplaceDownloads,
   openvsx: fetchOpenVsxDownloads,
 };
 
-function latestSnapshot(db: DbType, marketplace: MarketplaceId) {
+function latestSnapshot(db: DbType, marketplace: StoreMarketplaceId) {
   return db
     .prepare(
       `SELECT total_count, recorded_at FROM marketplace_download_snapshots
@@ -74,7 +82,7 @@ function latestSnapshot(db: DbType, marketplace: MarketplaceId) {
     .get(marketplace) as { total_count: number; recorded_at: number } | undefined;
 }
 
-function baselineAt(db: DbType, marketplace: MarketplaceId, atOrBefore: number): number | null {
+function baselineAt(db: DbType, marketplace: StoreMarketplaceId, atOrBefore: number): number | null {
   const row = db
     .prepare(
       `SELECT total_count FROM marketplace_download_snapshots
@@ -85,12 +93,16 @@ function baselineAt(db: DbType, marketplace: MarketplaceId, atOrBefore: number):
   return row?.total_count ?? null;
 }
 
-function periodDelta(db: DbType, marketplace: MarketplaceId, periodStart: number): number | null {
+function periodDelta(db: DbType, marketplace: StoreMarketplaceId, periodStart: number): number | null {
   const latest = latestSnapshot(db, marketplace);
   if (!latest) return null;
   const baseline = baselineAt(db, marketplace, periodStart);
   if (baseline === null) return null;
   return Math.max(0, latest.total_count - baseline);
+}
+
+function installPeriodDelta(db: DbType, channel: InstallChannel, periodStart: number): number {
+  return countInstallEventsSince(db, channel, periodStart);
 }
 
 function startOfDayMs(now = Date.now()): number {
@@ -109,12 +121,12 @@ function startOfMonthMs(now = Date.now()): number {
 export async function refreshMarketplaceSnapshots(
   db: DbType,
   opts?: { force?: boolean },
-): Promise<{ syncedAt: number; errors: Partial<Record<MarketplaceId, string>> }> {
+): Promise<{ syncedAt: number; errors: Partial<Record<StoreMarketplaceId, string>> }> {
   ensureMarketplaceTables(db);
   const now = Date.now();
-  const errors: Partial<Record<MarketplaceId, string>> = {};
+  const errors: Partial<Record<StoreMarketplaceId, string>> = {};
 
-  for (const marketplace of Object.keys(FETCHERS) as MarketplaceId[]) {
+  for (const marketplace of Object.keys(FETCHERS) as StoreMarketplaceId[]) {
     const last = latestSnapshot(db, marketplace);
     if (!opts?.force && last && now - last.recorded_at < SNAPSHOT_MIN_INTERVAL_MS) {
       continue;
@@ -122,10 +134,6 @@ export async function refreshMarketplaceSnapshots(
 
     try {
       const total = await FETCHERS[marketplace]();
-      const prev = last?.total_count;
-      if (prev !== undefined && total < prev) {
-        // Marketplace APIs occasionally reset; still record snapshot.
-      }
       db.prepare(
         `INSERT INTO marketplace_download_snapshots (id, marketplace, total_count, recorded_at)
          VALUES (?, ?, ?, ?)`,
@@ -139,7 +147,7 @@ export async function refreshMarketplaceSnapshots(
 }
 
 export type MarketplaceDownloadRow = {
-  id: MarketplaceId;
+  id: string;
   label: string;
   note: string;
   total: number;
@@ -152,7 +160,7 @@ export type MarketplaceDownloadRow = {
 
 export function getMarketplaceDownloadStats(
   db: DbType,
-  syncErrors?: Partial<Record<MarketplaceId, string>>,
+  syncErrors?: Partial<Record<StoreMarketplaceId, string>>,
 ): {
   marketplaces: MarketplaceDownloadRow[];
   totals: { total: number; today: number | null; week: number | null; month: number | null };
@@ -164,15 +172,15 @@ export function getMarketplaceDownloadStats(
   const weekStart = Date.now() - 7 * 86_400_000;
   const monthStart = startOfMonthMs();
 
-  const notes: Record<MarketplaceId, string> = {
-    vscode: "VS Code and Cursor",
-    openvsx: "Windsurf (default), VSCodium, and other Open VSX editors",
-  };
-
   const marketplaces: MarketplaceDownloadRow[] = [];
   let lastSyncedAt: number | null = null;
 
-  for (const id of Object.keys(MARKETPLACE_LABELS) as MarketplaceId[]) {
+  const storeNotes: Record<StoreMarketplaceId, string> = {
+    vscode: "Microsoft store — includes VS Code installs (Cursor uses this store too)",
+    openvsx: "Open VSX — includes Windsurf default marketplace and VSCodium",
+  };
+
+  for (const id of Object.keys(STORE_MARKETPLACE_LABELS) as StoreMarketplaceId[]) {
     const latest = latestSnapshot(db, id);
     if (latest && (!lastSyncedAt || latest.recorded_at > lastSyncedAt)) {
       lastSyncedAt = latest.recorded_at;
@@ -180,8 +188,8 @@ export function getMarketplaceDownloadStats(
 
     marketplaces.push({
       id,
-      label: MARKETPLACE_LABELS[id],
-      note: notes[id],
+      label: STORE_MARKETPLACE_LABELS[id],
+      note: storeNotes[id],
       total: latest?.total_count ?? 0,
       today: periodDelta(db, id, dayStart),
       week: periodDelta(db, id, weekStart),
@@ -191,16 +199,61 @@ export function getMarketplaceDownloadStats(
     });
   }
 
-  const sumPeriod = (key: "today" | "week" | "month"): number | null => {
-    const values = marketplaces.map((m) => m[key]).filter((v): v is number => v !== null);
-    if (values.length === 0) return null;
-    return values.reduce((s, v) => s + v, 0);
+  const channelNotes: Partial<Record<InstallChannel, string>> = {
+    cursor: "Reported from Cursor installs (also in VS Marketplace total above)",
+    windsurf: "Reported from Windsurf installs (also in Open VSX total above)",
+    direct: "VSIX or install command run directly in the editor",
+    cli: "aibc install claude — terminal hook",
+    vscode: "VS Code installs reported from extension (non-marketplace path)",
+    openvsx: "Manual Open VSX installs reported from extension",
   };
+
+  for (const channel of REPORTED_CHANNELS) {
+    const total = countInstallEvents(db, channel);
+    marketplaces.push({
+      id: channel,
+      label: INSTALL_CHANNEL_LABELS[channel],
+      note: channelNotes[channel] || "Reported at install time",
+      total,
+      today: installPeriodDelta(db, channel, dayStart),
+      week: installPeriodDelta(db, channel, weekStart),
+      month: installPeriodDelta(db, channel, monthStart),
+      lastSyncedAt: lastSyncedAt,
+    });
+  }
+
+  const sumPeriod = (key: "today" | "week" | "month"): number | null => {
+    const storeValues = marketplaces
+      .filter((m) => m.id === "vscode" || m.id === "openvsx")
+      .map((m) => m[key])
+      .filter((v): v is number => v !== null);
+    const directValues = marketplaces
+      .filter((m) => m.id === "direct" || m.id === "cli")
+      .map((m) => m.total);
+    if (storeValues.length === 0 && directValues.length === 0) return null;
+    const storeSum = storeValues.reduce((s, v) => s + v, 0);
+    const directSum = directValues.reduce((s, v) => s + v, 0);
+    if (key === "today" || key === "week" || key === "month") {
+      const reported = marketplaces
+        .filter((m) => m.id === "direct" || m.id === "cli")
+        .map((m) => m[key])
+        .filter((v): v is number => v !== null);
+      return storeSum + (reported.length ? reported.reduce((s, v) => s + v, 0) : 0);
+    }
+    return storeSum + directSum;
+  };
+
+  const storeTotal = marketplaces
+    .filter((m) => m.id === "vscode" || m.id === "openvsx")
+    .reduce((s, m) => s + m.total, 0);
+  const extraTotal = marketplaces
+    .filter((m) => m.id === "direct" || m.id === "cli")
+    .reduce((s, m) => s + m.total, 0);
 
   return {
     marketplaces,
     totals: {
-      total: marketplaces.reduce((s, m) => s + m.total, 0),
+      total: storeTotal + extraTotal,
       today: sumPeriod("today"),
       week: sumPeriod("week"),
       month: sumPeriod("month"),

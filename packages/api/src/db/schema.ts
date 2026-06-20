@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 import { processMetricEvent } from "../billing/ledger.js";
 import { startOfDayMs, startOfMonthMs } from "../billing/earningsPeriod.js";
 import { ensureMarketplaceTables } from "../marketplace/stats.js";
+import { ensureInstallTables } from "../marketplace/installs.js";
+import { ensureEmailTokenTables } from "../auth/emailTokens.js";
 import { ensureClientProfile } from "../clients/profile.js";
 import { effectiveBidForClient, getSignalProfile } from "../clients/signalProfile.js";
 import { withAibcUtm } from "../advertiser/clickUrl.js";
@@ -135,6 +137,8 @@ export function createDb(): DbType {
   migratePayoutColumns(db);
   migrateEarningsColumns(db);
   migrateMarketplaceTables(db);
+  ensureInstallTables(db);
+  ensureEmailTokenTables(db);
   migrateCampaignAdvertiserExtras(db);
   migrateImpressionAnalyticsExtras(db);
   seedAds(db);
@@ -196,6 +200,7 @@ function migrateClientColumns(db: DbType) {
   if (!names.has("referred_by_client_id")) add("ALTER TABLE clients ADD COLUMN referred_by_client_id TEXT");
   if (!names.has("referral_qualified_at")) add("ALTER TABLE clients ADD COLUMN referral_qualified_at INTEGER");
   if (!names.has("referral_bonus_paid")) add("ALTER TABLE clients ADD COLUMN referral_bonus_paid INTEGER DEFAULT 0");
+  if (!names.has("password_hash")) add("ALTER TABLE clients ADD COLUMN password_hash TEXT");
   try {
     db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_clients_referral_code ON clients(referral_code) WHERE referral_code IS NOT NULL");
   } catch {

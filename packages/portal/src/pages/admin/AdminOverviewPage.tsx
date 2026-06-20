@@ -3,6 +3,7 @@ import { AdminGate } from "../../components/admin/AdminGate";
 import { AdminCampaignsPanel } from "../../components/admin/AdminCampaignsPanel";
 import { BidMarketPanel } from "../../components/admin/BidMarketPanel";
 import { MarketplaceDownloadsPanel } from "../../components/admin/MarketplaceDownloadsPanel";
+import { AcquisitionSourcesPanel } from "../../components/admin/AcquisitionSourcesPanel";
 import { adminFetch } from "../../lib/adminApi";
 import type { PricePoint } from "../../components/landing/PriceChart";
 import type { LeaderboardRow } from "../../components/landing/TickerTape";
@@ -23,6 +24,10 @@ type Overview = {
     usdPerAgentHour?: number;
     activeAgentsLastHour?: number;
     targetUsdPerAgentHour?: number;
+    activeCliNow?: number;
+    activeCli24h?: number;
+    totalCliDevices?: number;
+    cliInstallsReported?: number;
   };
   bidMarket: {
     top_bid: number;
@@ -57,6 +62,22 @@ type Overview = {
     }>;
     totals: { total: number; today: number | null; week: number | null; month: number | null };
     lastSyncedAt: number | null;
+  };
+  acquisition?: {
+    rows: Array<{
+      source: string;
+      medium: string;
+      campaign: string;
+      signups: number;
+      signups7d: number;
+    }>;
+    totals: {
+      signupsWithEmail: number;
+      attributed: number;
+      direct: number;
+      signups7d: number;
+      attributed7d: number;
+    };
   };
 };
 
@@ -138,9 +159,16 @@ function OverviewInner() {
           value={`$${(k.usdPerAgentHour ?? 0).toFixed(2)}`}
           sub={`Target $${(k.targetUsdPerAgentHour ?? 1).toFixed(2)} · ${k.activeAgentsLastHour ?? 0} active`}
         />
+        <KpiCard
+          label="CLI active now"
+          value={String(k.activeCliNow ?? 0)}
+          sub={`${k.activeCli24h ?? 0} in 24h · ${k.totalCliDevices ?? 0} devices`}
+        />
       </div>
 
       {data.downloads ? <MarketplaceDownloadsPanel downloads={data.downloads} /> : null}
+
+      {data.acquisition ? <AcquisitionSourcesPanel acquisition={data.acquisition} /> : null}
 
       <BidMarketPanel
         topBid={data.bidMarket.top_bid || k.topBid}

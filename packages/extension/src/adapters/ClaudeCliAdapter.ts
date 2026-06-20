@@ -7,6 +7,7 @@ import { atomicWriteFile } from "../util/atomicWrite.js";
 export const AIBC_DIR = path.join(os.homedir(), ".aibc");
 export const AD_CACHE_FILE = path.join(AIBC_DIR, "ad-cache.json");
 export const STATUSLINE_FILE = path.join(AIBC_DIR, "statusline.cjs");
+export const HEARTBEAT_FILE = path.join(AIBC_DIR, "heartbeat.cjs");
 export const SETTINGS_BACKUP = path.join(AIBC_DIR, "claude-settings.backup.json");
 export const CLAUDE_SETTINGS = path.join(os.homedir(), ".claude", "settings.json");
 
@@ -35,7 +36,7 @@ export function parseSettingsJson(raw: string): Record<string, unknown> {
 }
 
 export function cleanupAibcArtifacts(): void {
-  for (const file of [AD_CACHE_FILE, STATUSLINE_FILE, SETTINGS_BACKUP]) {
+  for (const file of [AD_CACHE_FILE, STATUSLINE_FILE, HEARTBEAT_FILE, SETTINGS_BACKUP]) {
     try {
       if (fs.existsSync(file)) fs.unlinkSync(file);
     } catch {
@@ -113,19 +114,22 @@ export class ClaudeCliAdapter {
 
   private ensureStatuslineScript(): void {
     fs.mkdirSync(AIBC_DIR, { recursive: true });
-    if (fs.existsSync(STATUSLINE_FILE)) return;
-
-    const bundled = path.join(__dirname, "assets", "cli", "statusline.cjs");
-    if (fs.existsSync(bundled)) {
-      fs.copyFileSync(bundled, STATUSLINE_FILE);
-      return;
-    }
-
-    atomicWriteFile(
-      STATUSLINE_FILE,
-      `const fs=require("fs"),p=require("path"),c=p.join(require("os").homedir(),".aibc","ad-cache.json");
+    const bundledDir = path.join(__dirname, "assets", "cli");
+    for (const file of ["statusline.cjs", "heartbeat.cjs"] as const) {
+      const bundled = path.join(bundledDir, file);
+      const dest = file === "statusline.cjs" ? STATUSLINE_FILE : HEARTBEAT_FILE;
+      if (fs.existsSync(bundled)) {
+        fs.copyFileSync(bundled, dest);
+        continue;
+      }
+      if (file === "statusline.cjs" && !fs.existsSync(STATUSLINE_FILE)) {
+        atomicWriteFile(
+          STATUSLINE_FILE,
+          `const fs=require("fs"),p=require("path"),c=p.join(require("os").homedir(),".aibc","ad-cache.json");
 try{const o=JSON.parse(fs.readFileSync(c,"utf8"));if(o.adText)process.stdout.write("ad· "+o.adText);}catch{}`,
-    );
+        );
+      }
+    }
   }
 
   private ensureSettings(): void {

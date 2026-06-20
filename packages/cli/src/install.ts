@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { installStatuslineScript } from "./api";
+import { installStatuslineScript, reportCliInstall } from "./api";
 import {
   AUTH_FILE,
   CLAUDE_SETTINGS,
@@ -8,6 +8,7 @@ import {
   SETTINGS_BACKUP,
   STATUSLINE_FILE,
   ensureAibcDir,
+  ensureDeviceId,
   readJson,
 } from "./paths";
 
@@ -18,6 +19,7 @@ interface ClaudeSettings {
 
 export function installClaudeTerminal(): void {
   ensureAibcDir();
+  ensureDeviceId();
   installStatuslineScript();
 
   const raw = fs.existsSync(CLAUDE_SETTINGS)
@@ -36,6 +38,7 @@ export function installClaudeTerminal(): void {
 
   fs.mkdirSync(path.dirname(CLAUDE_SETTINGS), { recursive: true });
   fs.writeFileSync(CLAUDE_SETTINGS, JSON.stringify(settings, null, 2));
+  void reportCliInstall();
   console.log("aibc installed for Claude Code terminal.");
   console.log("Restart your claude session to see ads in the status line.");
 }

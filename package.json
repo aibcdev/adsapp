@@ -29,6 +29,8 @@
     "publish:openvsx": "node scripts/publish-openvsx.mjs",
     "publish:all": "npm run publish:marketplace && npm run publish:openvsx",
     "create:partner": "node scripts/create-advertiser-partner.mjs",
+    "backdate:installs": "node scripts/backdate-install-events.mjs",
+    "clear:install-backfill": "node scripts/clear-install-backfill.mjs",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {

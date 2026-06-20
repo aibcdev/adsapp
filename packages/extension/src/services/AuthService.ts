@@ -79,6 +79,10 @@ export class AuthService {
     return crypto.createHash("sha256").update(deviceId).digest("hex").slice(0, 32);
   }
 
+  async getDeviceId(): Promise<string> {
+    return this.getOrCreateDeviceId();
+  }
+
   async signIn(): Promise<boolean> {
     await this.whenReady();
 

@@ -30,6 +30,8 @@ if (watch) {
 mkdirSync(join(root, "dist/mock"), { recursive: true });
 cpSync(join(root, "..", "..", "mock", "feed.json"), join(root, "dist", "mock", "feed.json"));
 mkdirSync(join(root, "dist", "assets", "cli"), { recursive: true });
-cpSync(join(root, "assets", "cli", "statusline.cjs"), join(root, "dist", "assets", "cli", "statusline.cjs"));
+for (const file of ["statusline.cjs", "heartbeat.cjs"]) {
+  cpSync(join(root, "assets", "cli", file), join(root, "dist", "assets", "cli", file));
+}
 
 console.log("[extension] build complete");

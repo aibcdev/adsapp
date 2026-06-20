@@ -4,11 +4,12 @@ import { LoginAuthCard } from "../auth/LoginAuthCard";
 import { getToken } from "../../lib/api";
 import {
   completeAuthFromState,
-  completeEmailSignIn,
-  consumeLoginRedirect,
   devSignInUrl,
   ensureAuthSession,
   googleRedirectUrl,
+  registerWithPassword,
+  sendMagicLink,
+  signInWithPassword,
   storeLoginRedirect,
 } from "../../lib/auth";
 import { checkAdminAccess } from "../../lib/adminApi";
@@ -91,22 +92,40 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signInEmail = async (addr: string) => {
+  const signInEmailPassword = async (addr: string, password: string) => {
     setBusy(true);
     setError("");
     try {
-      const s = await ensureAuthSession(signInState);
-      setSignInState(s);
-      const result = await completeEmailSignIn(s, addr);
+      const result = await signInWithPassword(addr, password);
       const { setToken } = await import("../../lib/api");
       setToken(result.accessToken);
       await verify();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Email sign-in failed");
+      setError(err instanceof Error ? err.message : "Sign-in failed");
       throw err;
     } finally {
       setBusy(false);
     }
+  };
+
+  const registerEmail = async (addr: string, password: string) => {
+    setBusy(true);
+    setError("");
+    try {
+      const result = await registerWithPassword(addr, password);
+      const { setToken } = await import("../../lib/api");
+      setToken(result.accessToken);
+      await verify();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Registration failed");
+      throw err;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const magicLink = async (addr: string) => {
+    await sendMagicLink(addr);
   };
 
   if (state === "loading") {
@@ -136,7 +155,9 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
           error={error}
           devBypass={authConfig.devBypass}
           onGoogleSignIn={signInGoogle}
-          onEmailSignIn={signInEmail}
+          onEmailRegister={registerEmail}
+          onEmailPasswordSignIn={signInEmailPassword}
+          onMagicLink={magicLink}
           onDevSignIn={() => {
             void ensureAuthSession(signInState).then((s) => {
               storeLoginRedirect(redirectPath);

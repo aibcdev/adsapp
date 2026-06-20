@@ -1,7 +1,6 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { publicApi } from "../lib/api";
-import { capturePartnerFromUrl } from "../lib/partnerRef";
 import { SiteHeader } from "../components/SiteHeader";
 import { SiteFooter } from "../components/SiteFooter";
 import { AibcAdvertisersMarketing } from "../components/aibc/AibcAdvertisersMarketing";
@@ -22,10 +21,6 @@ export function AdvertisersPage() {
   const [board, setBoard] = useState<Board | null>(null);
   const [points, setPoints] = useState<PricePoint[]>([]);
   const [topBid, setTopBid] = useState(0);
-
-  useEffect(() => {
-    capturePartnerFromUrl(window.location.search);
-  }, []);
 
   useEffect(() => {
     const load = () => {

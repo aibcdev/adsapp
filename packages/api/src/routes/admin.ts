@@ -13,6 +13,8 @@ import {
   getMarketplaceDownloadStats,
   refreshMarketplaceSnapshots,
 } from "../marketplace/stats.js";
+import { getCliActivityStats } from "../cli/activity.js";
+import { getAcquisitionStats } from "../clients/attribution.js";
 import { isSeedCampaignClient } from "../billing/seedInventory.js";
 import { computeYieldMetrics } from "../stats/yield.js";
 import { config } from "../config.js";
@@ -107,6 +109,14 @@ export function adminRoutes(db: DbType) {
     return c.json({ email: gate.client.email, isAdmin: true });
   });
 
+  app.get("/v1/admin/marketplace-downloads", async (c) => {
+    const gate = requireAdminEmail(db, c);
+    if (!gate.ok) return c.json({ error: gate.error }, gate.status);
+    const sync = await refreshMarketplaceSnapshots(db);
+    const downloads = getMarketplaceDownloadStats(db, sync.errors);
+    return c.json({ downloads, syncedAt: sync.syncedAt, errors: sync.errors });
+  });
+
   app.get("/v1/admin/overview", async (c) => {
     const gate = requireAdminEmail(db, c);
     if (!gate.ok) return c.json({ error: gate.error }, gate.status);
@@ -163,6 +173,8 @@ export function adminRoutes(db: DbType) {
     const topBid = leaderboard[0]?.bid_usd ?? 0;
     const campaigns = allPaidCampaigns(db);
     const yieldMetrics = computeYieldMetrics(db);
+    const cliActivity = getCliActivityStats(db);
+    const acquisition = getAcquisitionStats(db);
 
     return c.json({
       kpis: {
@@ -180,6 +192,10 @@ export function adminRoutes(db: DbType) {
         usdPerAgentHour: yieldMetrics.usdPerAgentHour,
         activeAgentsLastHour: yieldMetrics.activeAgentsLastHour,
         targetUsdPerAgentHour: yieldMetrics.targetUsdPerAgentHour,
+        activeCliNow: cliActivity.activeCliNow,
+        activeCli24h: cliActivity.activeCli24h,
+        totalCliDevices: cliActivity.totalCliDevices,
+        cliInstallsReported: cliActivity.cliInstallsReported,
       },
       bidMarket: {
         top_bid: topBid,
@@ -190,6 +206,7 @@ export function adminRoutes(db: DbType) {
       pricePoints: priceHistoryPoints(db, 30, { excludeSeed: true }),
       campaigns,
       downloads,
+      acquisition,
       yield: yieldMetrics,
     });
   });

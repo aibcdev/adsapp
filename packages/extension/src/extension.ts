@@ -6,6 +6,7 @@ import {
 } from "./adapters/ClaudeCodeAdapter";
 import { ClaudeCliAdapter, cleanupAibcArtifacts } from "./adapters/ClaudeCliAdapter";
 import { AuthService } from "./services/AuthService";
+import { reportExtensionInstall } from "./services/InstallReportService";
 import { AnalyticsService } from "./services/AnalyticsService";
 import { FeatureFlagService } from "./services/FeatureFlagService";
 import { FeedService } from "./services/FeedService";
@@ -63,7 +64,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   await analyticsService.initialize();
   const isFirst = await auth.markInstalled();
-  if (isFirst) await analyticsService.trackExtensionInstalled();
+  if (isFirst) {
+    await analyticsService.trackExtensionInstalled();
+    await reportExtensionInstall(api, auth);
+  }
   await analyticsService.trackExtensionActivated();
 
   statusBar = new StatusBarController();

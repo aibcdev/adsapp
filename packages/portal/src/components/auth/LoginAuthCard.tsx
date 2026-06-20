@@ -27,14 +27,6 @@ function GoogleIcon() {
   );
 }
 
-function AppleIcon() {
-  return (
-    <svg className="h-5 w-5 shrink-0 text-zinc-900" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M16.365 1.43c0 1.14-.417 2.087-1.249 2.84-.898.812-1.966 1.214-3.203 1.187-.033-1.09.406-2.087 1.311-2.992.905-.905 1.992-1.358 3.141-1.35.012.437.012.875 0 1.315zM20.754 17.094c-.741 1.703-1.641 3.281-2.703 4.734-1.422 1.922-2.586 3.25-3.492 3.984-.906.734-1.992 1.109-3.258 1.125-1.031 0-1.875-.297-2.531-.891-.656-.594-1.422-.906-2.297-.937-.906-.031-1.781.281-2.625.937-1.547 1.203-2.953 1.359-4.219.469 1.031-2.469 2.094-4.781 3.188-6.937.563-1.203 1.219-2.203 1.969-3 .75-.797 1.547-1.195 2.391-1.195.906 0 1.656.258 2.25.773.594.516 1.313.773 2.156.773.797 0 1.531-.258 2.203-.773.672-.516 1.453-.773 2.344-.773 1.125 0 2.063.656 2.813 1.969-2.25 1.219-3.375 2.938-3.375 5.156 0 1.969.703 3.594 2.109 4.875z" />
-    </svg>
-  );
-}
-
 function MailIcon() {
   return (
     <svg className="h-5 w-5 shrink-0 text-zinc-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
@@ -61,14 +53,18 @@ export function LoginAuthCard({
   busy = false,
   error,
   onGoogleSignIn,
-  onEmailSignIn,
+  onEmailRegister,
+  onEmailPasswordSignIn,
+  onMagicLink,
   onDevSignIn,
   devBypass = false,
 }: {
   busy?: boolean;
   error?: string;
   onGoogleSignIn: () => void | Promise<void>;
-  onEmailSignIn: (email: string) => void | Promise<void>;
+  onEmailRegister: (email: string, password: string) => void | Promise<void>;
+  onEmailPasswordSignIn: (email: string, password: string) => void | Promise<void>;
+  onMagicLink: (email: string) => void | Promise<void>;
   onDevSignIn?: () => void;
   devBypass?: boolean;
 }) {
@@ -77,18 +73,53 @@ export function LoginAuthCard({
   const [info, setInfo] = useState("");
   const [localError, setLocalError] = useState("");
 
-  const runEmail = async (mode: "signin" | "create" | "magic") => {
-    setLocalError("");
-    setInfo("");
+  const validEmail = () => {
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setLocalError("Enter a valid email address.");
+      return false;
+    }
+    return true;
+  };
+
+  const runRegister = async () => {
+    setLocalError("");
+    setInfo("");
+    if (!validEmail()) return;
+    if (password.length < 8) {
+      setLocalError("Password must be at least 8 characters.");
       return;
     }
     try {
-      await onEmailSignIn(email.trim().toLowerCase());
-      if (mode === "magic") setInfo("Signed in. Redirecting to your dashboard…");
+      await onEmailRegister(email.trim().toLowerCase(), password);
+    } catch (e) {
+      setLocalError(e instanceof Error ? e.message : "Could not create account");
+    }
+  };
+
+  const runSignIn = async () => {
+    setLocalError("");
+    setInfo("");
+    if (!validEmail()) return;
+    if (!password) {
+      setLocalError("Enter your password.");
+      return;
+    }
+    try {
+      await onEmailPasswordSignIn(email.trim().toLowerCase(), password);
     } catch (e) {
       setLocalError(e instanceof Error ? e.message : "Sign-in failed");
+    }
+  };
+
+  const runMagicLink = async () => {
+    setLocalError("");
+    setInfo("");
+    if (!validEmail()) return;
+    try {
+      await onMagicLink(email.trim().toLowerCase());
+      setInfo("Check your email for a sign-in link.");
+    } catch (e) {
+      setLocalError(e instanceof Error ? e.message : "Could not send sign-in link");
     }
   };
 
@@ -106,21 +137,8 @@ export function LoginAuthCard({
       <button
         type="button"
         disabled={busy}
-        onClick={() => setLocalError("Apple sign-in is not set up yet. Use Google or email below.")}
+        onClick={() => document.getElementById("aibc-login-email")?.focus()}
         className={oauthBtn}
-      >
-        <AppleIcon />
-        Continue with Apple
-      </button>
-
-      <button
-        type="button"
-        disabled={busy}
-        onClick={() => {
-          setLocalError("");
-          document.getElementById("aibc-login-email")?.focus();
-        }}
-        className={`${oauthBtn} mt-3`}
       >
         <MailIcon />
         Continue with email
@@ -141,7 +159,7 @@ export function LoginAuthCard({
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
+          placeholder="Password (8+ characters)"
           className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
         />
       </div>
@@ -150,7 +168,7 @@ export function LoginAuthCard({
         <button
           type="button"
           disabled={busy}
-          onClick={() => void runEmail("signin")}
+          onClick={() => void runSignIn()}
           className="rounded-xl border border-zinc-200 bg-white py-3 text-sm font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-50"
         >
           Sign in
@@ -158,7 +176,7 @@ export function LoginAuthCard({
         <button
           type="button"
           disabled={busy}
-          onClick={() => void runEmail("create")}
+          onClick={() => void runRegister()}
           className="rounded-xl border border-zinc-200 bg-white py-3 text-sm font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-50"
         >
           Create account
@@ -169,18 +187,10 @@ export function LoginAuthCard({
         <button
           type="button"
           disabled={busy}
-          onClick={() => void runEmail("magic")}
+          onClick={() => void runMagicLink()}
           className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-3 text-sm font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50"
         >
           Email me a sign-in link
-        </button>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => setInfo("No verification email needed — sign in with Google or use your email above.")}
-          className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-3 text-sm font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50"
-        >
-          Resend verification email
         </button>
       </div>
 
@@ -199,14 +209,9 @@ export function LoginAuthCard({
       ) : null}
 
       <div className="mt-6 flex items-center justify-between text-sm">
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void runEmail("magic")}
-          className="text-emerald-700 hover:text-emerald-800 disabled:opacity-50"
-        >
-          Use a magic link instead
-        </button>
+        <Link to="/forgot-password" className="text-emerald-700 hover:text-emerald-800">
+          Forgot password?
+        </Link>
         <Link to="/" className="text-zinc-500 hover:text-zinc-800">
           ← back
         </Link>

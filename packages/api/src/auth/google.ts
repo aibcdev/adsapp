@@ -2,7 +2,9 @@ import type { Database as DbType } from "better-sqlite3";
 import { config } from "../config.js";
 import { mintToken } from "../db/schema.js";
 import { ensureClientProfile } from "../clients/profile.js";
-import { resolveAuthClientId } from "../clients/identity.js";
+import { resolveAuthClientId, findCanonicalClientByEmail } from "../clients/identity.js";
+import { applyAuthStateAttribution } from "../clients/attribution.js";
+import { sendEmail, welcomeEmailHtml } from "../email/send.js";
 
 interface GoogleTokenResponse {
   access_token?: string;
@@ -56,13 +58,24 @@ export async function completeGoogleAuth(
   const email = user.email;
   if (!email) return { ok: false, error: "No email from Google" };
 
+  const isNew = !findCanonicalClientByEmail(db, email);
   const clientId = resolveAuthClientId(db, row.client_id, email);
   ensureClientProfile(db, clientId);
+  applyAuthStateAttribution(db, state, clientId);
 
   const token = mintToken(db, clientId, email);
   db.prepare(
     "UPDATE auth_states SET completed = 1, token = ?, email = ?, client_id = ? WHERE state = ?",
   ).run(token, email, clientId, state);
+
+  if (isNew) {
+    const sent = await sendEmail({
+      to: email,
+      subject: "Welcome to AIBC Media",
+      html: welcomeEmailHtml(email),
+    });
+    if (!sent.ok) console.warn("[email] welcome:", sent.error);
+  }
 
   return { ok: true, email };
 }

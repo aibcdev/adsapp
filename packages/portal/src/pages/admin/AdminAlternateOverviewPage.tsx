@@ -1,6 +1,24 @@
+import { useEffect, useState } from "react";
 import { AdminGate } from "../../components/admin/AdminGate";
 import { MarketplaceDownloadsPanel } from "../../components/admin/MarketplaceDownloadsPanel";
+import { adminFetch } from "../../lib/adminApi";
 import { ADMIN_ALTERNATE } from "../../lib/adminAlternateData";
+
+type DownloadsPayload = {
+  marketplaces: Array<{
+    id: string;
+    label: string;
+    note: string;
+    total: number;
+    today: number | null;
+    week: number | null;
+    month: number | null;
+    lastSyncedAt: number | null;
+    error?: string;
+  }>;
+  totals: { total: number; today: number | null; week: number | null; month: number | null };
+  lastSyncedAt: number | null;
+};
 
 function KpiCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -14,20 +32,24 @@ function KpiCard({ label, value, sub }: { label: string; value: string; sub?: st
 
 function AdminAlternateInner() {
   const k = ADMIN_ALTERNATE.kpis;
-  const downloads = {
-    ...ADMIN_ALTERNATE.downloads,
-    lastSyncedAt: ADMIN_ALTERNATE.syncedAt,
-    marketplaces: ADMIN_ALTERNATE.downloads.marketplaces.map((m) => ({
-      ...m,
-      lastSyncedAt: ADMIN_ALTERNATE.syncedAt,
-    })),
-  };
+  const [downloads, setDownloads] = useState<DownloadsPayload | null>(null);
+  const [dlErr, setDlErr] = useState("");
+
+  useEffect(() => {
+    void adminFetch("/v1/admin/marketplace-downloads")
+      .then(async (res) => {
+        const body = (await res.json()) as { downloads?: DownloadsPayload; error?: string };
+        if (!res.ok) throw new Error(body.error || "Could not load downloads");
+        setDownloads(body.downloads || null);
+      })
+      .catch((e) => setDlErr(e instanceof Error ? e.message : "Downloads unavailable"));
+  }, []);
 
   return (
     <div className="space-y-8">
       <div>
         <h2 className="font-instrument-serif text-2xl text-white">Admin alternate</h2>
-        <p className="mt-1 text-sm text-zinc-500">Network overview — presentation view</p>
+        <p className="mt-1 text-sm text-zinc-500">Presentation KPIs — live download counts below</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
@@ -54,7 +76,13 @@ function AdminAlternateInner() {
         />
       </div>
 
-      <MarketplaceDownloadsPanel downloads={downloads} />
+      {downloads ? (
+        <MarketplaceDownloadsPanel downloads={downloads} />
+      ) : dlErr ? (
+        <p className="text-sm text-red-400">{dlErr}</p>
+      ) : (
+        <p className="text-sm text-zinc-500">Loading download stats…</p>
+      )}
     </div>
   );
 }

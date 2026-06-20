@@ -8,7 +8,7 @@
     "start": "node dist/index.js",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/advertiser/partners.test.ts"
+    "test": "node --import tsx --test src/advertiser/partners.test.ts src/clients/attribution.test.ts"
   },
   "dependencies": {
     "@aibc/shared": "*",

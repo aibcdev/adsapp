@@ -2,11 +2,14 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { SiteSeo } from "./components/SiteSeo";
+import { AttributionCapture } from "./components/AttributionCapture";
 import { LandingPage } from "./pages/LandingPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { AdvertiserCampaignDetailPage } from "./pages/AdvertiserCampaignDetailPage";
 import { PrivacyPage } from "./pages/PrivacyPage";
 import { TermsPage } from "./pages/TermsPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ExtensionConnectPage } from "./pages/ExtensionConnectPage";
 import { AdvertisersPage } from "./pages/AdvertisersPage";
@@ -34,6 +37,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
       <SiteSeo />
+      <AttributionCapture />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
@@ -45,6 +49,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Route path="/publishers" element={<PublishersPage />} />
         <Route path="/waitlist/success" element={<Navigate to="/#install" replace />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/extension/connect" element={<ExtensionConnectPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/developers/how-it-works" element={<HowItWorksPage />} />
