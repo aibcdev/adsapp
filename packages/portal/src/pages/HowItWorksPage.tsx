@@ -58,6 +58,12 @@ export function HowItWorksPage() {
             <li className="rounded-xl border border-zinc-200 bg-white p-4"><strong className="text-zinc-900">Full control</strong> — pause or sign out anytime.</li>
           </ul>
           <Link to="/privacy" className="mt-6 inline-block text-sm font-semibold text-emerald-700 hover:underline">Read privacy policy</Link>
+          <p className="mt-4 text-sm text-zinc-600">
+            More on the{" "}
+            <Link to="/developers" className="font-semibold text-emerald-700 hover:underline">developer hub</Link>, the{" "}
+            <Link to="/faq" className="font-semibold text-emerald-700 hover:underline">FAQ</Link>, and{" "}
+            <Link to="/about" className="font-semibold text-emerald-700 hover:underline">about AIBC</Link>.
+          </p>
         </div>
       </section>
 

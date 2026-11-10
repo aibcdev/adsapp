@@ -5,6 +5,18 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# Aliases for the About and FAQ pages. Specific rules stay above the SPA fallback.
+# Also mirrored in packages/portal/public/_redirects
+[[redirects]]
+  from = "/about-us"
+  to = "/about"
+  status = 301
+
+[[redirects]]
+  from = "/faqs"
+  to = "/faq"
+  status = 301
+
 # SPA routing (React Router) — also mirrored in packages/portal/public/_redirects
 [[redirects]]
   from = "/*"

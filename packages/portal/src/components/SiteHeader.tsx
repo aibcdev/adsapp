@@ -56,6 +56,15 @@ export function SiteHeader() {
       </div>
 
       <div className="hidden items-center gap-6 md:flex">
+        <Link to="/about" className="text-sm font-medium text-zinc-600 transition hover:text-zinc-900">
+          About
+        </Link>
+        <Link to="/faq" className="text-sm font-medium text-zinc-600 transition hover:text-zinc-900">
+          FAQ
+        </Link>
+        <Link to="/guides" className="text-sm font-medium text-zinc-600 transition hover:text-zinc-900">
+          Guides
+        </Link>
         <Link to="/blog" className="text-sm font-medium text-zinc-600 transition hover:text-zinc-900">
           Blog
         </Link>
@@ -101,6 +110,15 @@ export function SiteHeader() {
             className={`rounded-full px-4 py-2 font-mono text-sm ${isPublishers ? "bg-emerald-50 text-zinc-900 font-semibold" : "text-zinc-500"}`}
           >
             For Publishers
+          </Link>
+          <Link to="/about" className="text-base text-zinc-700" onClick={closeMobile}>
+            About
+          </Link>
+          <Link to="/faq" className="text-base text-zinc-700" onClick={closeMobile}>
+            FAQ
+          </Link>
+          <Link to="/guides" className="text-base text-zinc-700" onClick={closeMobile}>
+            Guides
           </Link>
           <Link to="/blog" className="text-base text-zinc-700" onClick={closeMobile}>
             Blog

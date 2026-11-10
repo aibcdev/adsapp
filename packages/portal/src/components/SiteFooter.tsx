@@ -5,6 +5,7 @@ import { AibcLogo } from "./brand/AibcLogo";
 
 const DEVELOPER_LINKS = [
   { label: "Blog", to: "/blog" },
+  { label: "Developer hub", to: "/developers" },
   { label: "How It Works", to: "/developers/how-it-works" },
   { label: "Payouts", to: "/developers/payouts" },
   { label: "Get Paid Using Claude", to: "/integrations/claude" },
@@ -75,6 +76,21 @@ export function SiteFooter() {
                   </Link>
                 </li>
                 <li>
+                  <Link to="/guides" className="text-zinc-600 transition hover:text-emerald-700">
+                    Advertising guides
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/vs" className="text-zinc-600 transition hover:text-emerald-700">
+                    AIBC vs Kickbacks
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/faq" className="text-zinc-600 transition hover:text-emerald-700">
+                    FAQ
+                  </Link>
+                </li>
+                <li>
                   <Link to="/dashboard?tab=advertiser" className="text-zinc-600 transition hover:text-emerald-700">
                     Advertiser dashboard
                   </Link>
@@ -139,6 +155,15 @@ export function SiteFooter() {
         <div className="flex flex-wrap items-center justify-center gap-6 font-mono text-sm font-medium uppercase tracking-wide text-zinc-500">
           <Link to="/" className={`transition-colors hover:text-zinc-900 ${isDevelopers && location.pathname === "/" ? "text-zinc-900" : ""}`}>
             Home
+          </Link>
+          <Link to="/about" className="transition-colors hover:text-zinc-900">
+            About
+          </Link>
+          <Link to="/faq" className="transition-colors hover:text-zinc-900">
+            FAQ
+          </Link>
+          <Link to="/guides" className="transition-colors hover:text-zinc-900">
+            Guides
           </Link>
           <Link to="/privacy" className="transition-colors hover:text-zinc-900">
             Privacy
