@@ -33,6 +33,18 @@ const QUICK_LINKS = [
     href: "/publishers",
     cta: "Learn more",
   },
+  {
+    title: "FAQ",
+    desc: "Pricing, payouts, privacy, and how spinner ads work.",
+    href: "/faq",
+    cta: "Read answers",
+  },
+  {
+    title: "About",
+    desc: "What AIBC Media runs, and what it does not collect.",
+    href: "/about",
+    cta: "About us",
+  },
 ];
 
 export function ContactPage() {

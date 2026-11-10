@@ -12,6 +12,11 @@ const SITE = "https://aibcmedia.com";
 const staticPages = [
   { loc: "/", priority: "1.0", changefreq: "weekly" },
   { loc: "/blog", priority: "0.9", changefreq: "daily" },
+  { loc: "/about", priority: "0.8", changefreq: "monthly" },
+  { loc: "/faq", priority: "0.8", changefreq: "monthly" },
+  { loc: "/guides", priority: "0.8", changefreq: "monthly" },
+  { loc: "/developers", priority: "0.8", changefreq: "monthly" },
+  { loc: "/vs", priority: "0.7", changefreq: "monthly" },
   { loc: "/advertisers", priority: "0.8", changefreq: "monthly" },
   { loc: "/developers/how-it-works", priority: "0.8", changefreq: "monthly" },
   { loc: "/developers/payouts", priority: "0.7", changefreq: "monthly" },

@@ -31,6 +31,11 @@ import { PayoutsPage } from "./pages/PayoutsPage";
 import { IntegrationRoutePage } from "./pages/IntegrationRoutePage";
 import { BlogIndexPage } from "./pages/BlogIndexPage";
 import { BlogPostPage } from "./pages/BlogPostPage";
+import { AboutPage } from "./pages/AboutPage";
+import { FaqPage } from "./pages/FaqPage";
+import { GuidesIndexPage } from "./pages/GuidesIndexPage";
+import { DevelopersIndexPage } from "./pages/DevelopersIndexPage";
+import { VsIndexPage } from "./pages/VsIndexPage";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -53,8 +58,15 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/extension/connect" element={<ExtensionConnectPage />} />
         <Route path="/terms" element={<TermsPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/about-us" element={<Navigate to="/about" replace />} />
+        <Route path="/faq" element={<FaqPage />} />
+        <Route path="/faqs" element={<Navigate to="/faq" replace />} />
+        <Route path="/guides" element={<GuidesIndexPage />} />
+        <Route path="/developers" element={<DevelopersIndexPage />} />
         <Route path="/developers/how-it-works" element={<HowItWorksPage />} />
         <Route path="/developers/payouts" element={<PayoutsPage />} />
+        <Route path="/vs" element={<VsIndexPage />} />
         <Route path="/integrations/:slug" element={<IntegrationRoutePage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/blog" element={<BlogIndexPage />} />

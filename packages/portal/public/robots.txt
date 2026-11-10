@@ -1,8 +1,19 @@
+# Public pages are crawlable; private application routes remain excluded.
 User-agent: *
-Allow: /
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
 Disallow: /admin
 Disallow: /dashboard
 Disallow: /login
 Disallow: /extension/connect
+Disallow: /api/
+Allow: /
 
 Sitemap: https://aibcmedia.com/sitemap.xml

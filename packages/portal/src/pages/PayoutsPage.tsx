@@ -76,6 +76,12 @@ export function PayoutsPage() {
         </div>
       </section>
 
+      <p className="mx-auto max-w-3xl px-6 pb-2 text-center text-sm text-zinc-600 md:px-12">
+        The rest of the developer path is on the{" "}
+        <Link to="/developers" className="font-semibold text-emerald-700 hover:underline">developer hub</Link>
+        {" "}and the{" "}
+        <Link to="/faq" className="font-semibold text-emerald-700 hover:underline">FAQ</Link>.
+      </p>
       <FaqSection
         items={[
           { q: "What is the minimum payout?", a: "$10 USD." },

@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
+import { SiteLink } from "./SiteLink";
 
 export function MarketingPageHero({
   eyebrow,
@@ -24,12 +24,12 @@ export function MarketingPageHero({
         <h1 className="mt-4 font-brand-heading text-4xl leading-tight text-zinc-900 md:text-5xl lg:text-6xl">{title}</h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-zinc-600">{description}</p>
         {primaryCta ? (
-          <Link
+          <SiteLink
             to={primaryHref}
             className="mt-8 inline-flex rounded-xl bg-emerald-600 px-8 py-3.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
           >
             {primaryCta}
-          </Link>
+          </SiteLink>
         ) : null}
         {stats?.length ? (
           <div className="mx-auto mt-10 grid max-w-2xl grid-cols-2 gap-4 md:grid-cols-4">

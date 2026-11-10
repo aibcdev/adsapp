@@ -640,7 +640,11 @@ export function AibcAdvertisersMarketing({ afterHero }: { afterHero?: ReactNode 
               Common questions
             </h2>
             <p className="text-zinc-600 text-base font-medium max-w-xl mx-auto">
-              Approval times, brand safety, ad formats, and tracking — answered plainly.
+              Approval times, brand safety, ad formats, and tracking — answered plainly. The compiled{" "}
+              <Link to="/faq" className="font-semibold text-emerald-700 hover:underline">FAQ</Link>
+              {" "}and the{" "}
+              <Link to="/guides" className="font-semibold text-emerald-700 hover:underline">advertising guides</Link>
+              {" "}use the same published numbers.
             </p>
           </div>
 

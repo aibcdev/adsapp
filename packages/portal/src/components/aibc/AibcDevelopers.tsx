@@ -248,6 +248,12 @@ export function AibcDevelopers({ monthlyUsd = 40 }: { monthlyUsd?: number }) {
             <h2 className="font-brand-heading text-4xl md:text-6xl text-zinc-950">
               Questions <BrandAccent>answered</BrandAccent>
             </h2>
+            <p className="mt-4 text-sm text-zinc-600">
+              The full list, including pricing and privacy, is on the{" "}
+              <Link to="/faq" className="font-semibold text-emerald-700 hover:underline">FAQ</Link>.
+              {" "}The walkthrough starts on the{" "}
+              <Link to="/developers" className="font-semibold text-emerald-700 hover:underline">developer hub</Link>.
+            </p>
           </div>
 
           <div className="space-y-4">

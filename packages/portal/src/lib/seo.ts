@@ -1,4 +1,5 @@
 import { DEVELOPER_SHARE_PCT } from "@aibc/shared";
+import { AEO_SEO } from "./aeoContent";
 import { INTEGRATIONS } from "./integrations";
 
 export const SITE_URL = "https://aibcmedia.com";
@@ -64,6 +65,7 @@ const STATIC_SEO: Record<string, Omit<SeoConfig, "path">> = {
     description:
       "Founder notes on AI coding, developer income, and monetizing your IDE with Claude, Cursor, and VS Code.",
   },
+  ...AEO_SEO,
   "/publishers": {
     title: `Publishers | ${SITE_NAME}`,
     description: "Publisher information for the AIBC developer advertising network.",

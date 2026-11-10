@@ -26,6 +26,9 @@ export function PublishersPage() {
             <Link to="/advertisers" className="aibc-btn-secondary px-8 py-3.5">
               I want to advertise
             </Link>
+            <Link to="/faq" className="text-sm font-semibold text-emerald-700 hover:underline">
+              Publisher questions in the FAQ
+            </Link>
           </div>
         </div>
       </section>
